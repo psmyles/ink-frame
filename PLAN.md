@@ -537,7 +537,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ---
 
 ## 13. Progress checklist
-- [ ] Phase 0 — scaffold
+- [x] Phase 0 — scaffold
 - [ ] Phase 1 — Supabase account + PAT available to sessions (user)
 - [ ] Phase 1B — contract · migrations · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved

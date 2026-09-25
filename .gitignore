@@ -1,0 +1,55 @@
+# Secrets: tokens, keys and passwords live only in these files (PLAN.md §0)
+.env
+.env.*
+*.env
+!.env.example
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+*.swp
+
+# Supabase CLI
+backend/supabase/.temp/
+backend/supabase/.branches/
+supabase/.temp/
+
+# Node (tools/golden)
+node_modules/
+
+# Dart / Flutter
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+coverage/
+app/**/Flutter/ephemeral/
+app/**/Pods/
+app/**/.symlinks/
+app/android/.gradle/
+app/android/local.properties
+app/android/**/GeneratedPluginRegistrant.java
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/flutter_export_environment.sh
+app/ios/Runner/GeneratedPluginRegistrant.*
+*.keystore
+*.jks
+key.properties
+
+# PlatformIO
+.pio/
+firmware/.vscode/c_cpp_properties.json
+firmware/.vscode/launch.json
+firmware/.vscode/ipch/
+
+# Firmware signing keys (OTA, PLAN.md §10) never go in the repo
+*.pem
+*.key
+
+# Bundled backend output (tools/dev/bundle-backend)
+dist/
