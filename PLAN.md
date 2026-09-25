@@ -468,7 +468,7 @@ Notes:
 6. **Spikes**, results in `docs/spikes/`:
    - (a) Management API coverage with the PAT: create project, SQL query, function deploy, auth config, restore, usage/egress endpoints. The dev token has org access (org `psmyles`, `xzkqkhlbnexqldkhuohf`), so create-project and restore can be tested in the spare free slot.
    - (b) Auth config: can Google be enabled with client IDs only (no secret) for ID-token sign-in? Apple with the bundle ID only?
-   - (c) Supabase OAuth App + PKCE without a client secret.
+   - (c) Supabase OAuth App + PKCE without a client secret. **Deferred to the start of Phase 3e** (nothing earlier depends on it); script ready in `tools/dev/oauth-connect.ts`, needs the user to register the OAuth App first (§6.1).
 7. `tools/frame_sim` (Dart CLI): `claim --token`, `sync` (keeps a local cache dir mirrored), `status`, `render` (writes the current image + a manifest summary). Also `tools/dev` scripts: upload test PNGs as a user, reset the dev project, and bundle the backend for the app.
 - **Exit:** the curl/`frame_sim` scenario in §12.1 passes against the dev project; spike findings are recorded; §14 is updated.
 
@@ -487,7 +487,7 @@ Milestones will be refined in Phase 2. Baseline:
 - **3b** `lib/imaging/` port + indexed PNG encoder + golden tests (§8.3–8.4).
 - **3c** Core screens per `docs/app-flow.md`: spaces, frames, photos (add/crop/preview/upload/delete/reorder), settings, usage.
 - **3d** Invites and members; display names.
-- **3e** Provisioning wizard (PAT in dev → OAuth in prod), schema upgrade, restore, delete space.
+- **3e** Spike (c) first (user registers the Supabase OAuth App; run `tools/dev/oauth-connect.ts`). Then the provisioning wizard (PAT in dev → OAuth in prod), schema upgrade, restore, delete space.
 - **3f** BLE add-frame flow (app side). Before hardware exists, the dev-mode "pair with token" path and `frame_sim` stand in for the frame.
 - **Exit:** the §12.2 scenarios pass on Windows desktop and on at least one phone.
 
@@ -548,7 +548,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
