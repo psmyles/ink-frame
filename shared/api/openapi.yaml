@@ -195,7 +195,7 @@ paths:
                 settings:
                   image_interval_s: 14400
                   display_order: random
-                  sync_interval_s: 14400
+                  sync_interval_s: 86400
                   quiet_start: '22:00'
                   quiet_end: '07:00'
                   tz_posix: CET-1CEST,M3.5.0,M10.5.0/3
@@ -661,7 +661,7 @@ paths:
       tags: [invites]
       operationId: revokeInvite
       summary: Revoke an invite
-      description: Its creator, the frame owner (frame invite) or an admin.
+      description: Its creator, the frame owner (frame invite) or the admin.
       security:
         - userJwt: []
       parameters:
@@ -738,7 +738,7 @@ paths:
       operationId: removeProjectMember
       summary: Remove someone from the family space
       description: |
-        Admin only; an admin can't remove themselves this way (see `DELETE
+        Admin only; the admin can't remove themselves this way (see `DELETE
         /app-api/me`). Same clean-up as a member deleting their own account: their
         photos stay (`uploaded_by` becomes `null`), frames they own pass to the
         calling admin (who becomes `owner` in `frame_members`), and their memberships
@@ -797,24 +797,34 @@ paths:
       summary: Delete your account in this family space
       description: |
         Required by the App Store. Deletes the caller's memberships and auth user.
-        Their photos stay on the frames, with `uploaded_by` set to `null`; frame
-        owners can still delete them.
+
+        Their photos: with `delete_photos=true` (the app's "Also delete my photos"
+        checkbox), every photo they uploaded is deleted, rows and objects, and
+        `manifest_version` is bumped on each affected frame. Otherwise the photos
+        stay, with `uploaded_by` set to `null`, and frame owners can still delete
+        them.
 
         Frames the caller owns:
-        - **Member:** each frame passes to the admin (the earliest-joined admin if
-          there are several), who becomes its `owner`. The frames keep running.
+        - **Member:** each frame passes to the admin, who becomes its `owner`. The
+          frames keep running. If the space has no admin, the frames are deleted as
+          below.
         - **Admin:** the frames and every photo on them are deleted, and they get
           `410` on their next sync.
 
-        An admin may do this at any time, even with other members in the space. The
+        The admin may do this at any time, even with other members in the space. The
         app must first show a warning listing the consequences: their frames are
-        removed, and if they are the last admin, the space is left with no admin, so
-        nobody can create project invites, remove members, upgrade the schema or
-        restore a paused project (PLAN.md §15).
+        removed, and the space is left with no admin, so nobody can create project
+        invites, remove members, upgrade the schema or restore a paused project
+        (PLAN.md §15).
       security:
         - userJwt: []
       parameters:
         - $ref: '#/components/parameters/ApiKey'
+        - name: delete_photos
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+          description: Also delete every photo the caller uploaded.
       responses:
         '204': { description: Deleted. }
         '401': { $ref: '#/components/responses/Unauthenticated' }
@@ -827,7 +837,7 @@ paths:
       summary: Storage usage and limits
       description: |
         Project totals, one entry per frame the caller belongs to, and per-user
-        entries (only the caller's own, or every member's for an admin). A `null`
+        entries (only the caller's own, or every member's for the admin). A `null`
         limit means unlimited. `free_tier_bytes` is the Supabase free-tier storage
         limit, shown next to the project total.
       security:
@@ -985,6 +995,7 @@ components:
     ProjectRole:
       type: string
       enum: [admin, member]
+      description: At most one `admin` per family space.
     DisplayOrder:
       type: string
       enum: [random, sequential]
@@ -1082,7 +1093,7 @@ components:
           type: integer
           minimum: 3600
           maximum: 172800
-          description: 1 hour to 2 days. Default 14400 (4 hours).
+          description: 1 hour to 2 days. Default 86400 (24 hours).
         quiet_start:
           oneOf:
             - { $ref: '#/components/schemas/LocalTime' }
