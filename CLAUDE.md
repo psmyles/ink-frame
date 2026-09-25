@@ -22,4 +22,7 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `set -a; . backend/.env.local; set +a; supabase functions deploy device-api app-api --project-ref "$SUPABASE_PROJECT_REF" --use-api --workdir backend`: deploy the Edge Functions (no Docker needed).
 - `deno run --allow-read --allow-write tools/dev/gen-tz.ts`: regenerate `functions/_shared/tz.ts` from the system tzdata.
 - Pin `npm:` versions in the functions to releases at least 24 h old; Deno refuses newer ones by default.
+- `deno run --allow-all tools/dev/sim-scenario.ts`: the §12.1 scenario with the real `frame_sim` against the dev project.
+- `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
+- `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.
 - `deno test --allow-net --allow-env --allow-read backend/supabase/tests/`: integration tests against the project in `backend/.env.local` (~90 s; cleans up after itself; skips if the project already has an admin).

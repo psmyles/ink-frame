@@ -469,7 +469,7 @@ Notes:
    - (a) Management API coverage with the PAT: create project, SQL query, function deploy, auth config, restore, usage/egress endpoints. The dev token has org access (org `psmyles`, `xzkqkhlbnexqldkhuohf`), so create-project and restore can be tested in the spare free slot.
    - (b) Auth config: can Google be enabled with client IDs only (no secret) for ID-token sign-in? Apple with the bundle ID only?
    - (c) Supabase OAuth App + PKCE without a client secret. **Deferred to the start of Phase 3e** (nothing earlier depends on it); script ready in `tools/dev/oauth-connect.ts`, needs the user to register the OAuth App first (§6.1).
-7. `tools/frame_sim` (Dart CLI): `claim --token`, `sync` (keeps a local cache dir mirrored), `status`, `render` (writes the current image + a manifest summary). Also `tools/dev` scripts: upload test PNGs as a user, reset the dev project, and bundle the backend for the app.
+7. `tools/frame_sim` (Dart CLI): `claim --token`, `sync` (keeps a local cache dir mirrored), `status`, `render` (writes the current image + a manifest summary), `reset`. Also `tools/dev` scripts: `migrate`, `deploy-functions` (raw API), `provision` (the wizard's steps), `delete-project`, `gen-seed`, `gen-tz`, `oauth-connect` (spike c) and `sim-scenario` (§12.1 with `frame_sim`). A separate "bundle the backend" step isn't needed: the app ships the migration and function **sources** as assets (copied in Phase 3e). "Upload test PNGs as a user" and "reset the dev project" are left until Phase 3 needs them.
 - **Exit:** the curl/`frame_sim` scenario in §12.1 passes against the dev project; spike findings are recorded; §14 is updated.
 
 ### Phase 2 — Flutter app flow and UI planning session (User + Claude) ✅ gate
@@ -506,6 +506,7 @@ Milestones will be refined in Phase 2. Baseline:
 
 ### 12.1 Backend (Phase 1B)
 Implemented in `backend/supabase/tests/backend_test.ts` (23 steps, all passing 2026-09-25). The suite creates its own admin, so it **skips when the target project already has one**: once the developer is the dev project's admin (Phase 3), run it against the spare project.
+The scenario also runs with the real `frame_sim` binary: `tools/dev/sim-scenario.ts` (passing 2026-09-25; uses a temporary member, so it works whether or not the project has an admin).
 - RLS tests:
   - a non-member can't read anything
   - an auth user without membership is blocked
@@ -548,7 +549,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim · dev tools
+- [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim ✅ · dev tools ✅
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -586,6 +587,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: **Phase 1B done** (spike (c) deferred to the start of Phase 3e, as nothing earlier needs the Supabase OAuth App). `tools/frame_sim` (Dart CLI, 8 unit tests against a fake device-api) mirrors the firmware's cache layout and sync rules: downloads go to `cache/tmp` and are checked against sha256 before a rename, the manifest version only advances when every image arrived, `410` wipes the cache and secret, new arrivals are shown first. `tools/dev/sim-scenario.ts` passes the §12.1 scenario with it against the dev project.
 - 2026-09-25: Spikes (a) and (b). A throwaway project created entirely through the Management API (`tools/dev/provision.ts`: create → healthy in ~4 s → migrations → multipart function deploy → auth config, 17 s total) passed all 23 backend tests, then was paused (~67 s; functions answer HTTP 540), restored (~2 min 47 s; data, schema and cron intact) and deleted. Google/Apple providers accept client IDs with no secret. The wizard deploys function **source** through the multipart endpoint (server-side bundling), so no eszip bundling step is needed. The OAuth App form only allows HTTPS or localhost callbacks, so mobile uses an HTTPS bounce page to `inkframe://` (§6.1). Details in `docs/spikes/`.
 - 2026-09-25: Backend tests are Deno integration tests through the real APIs instead of pgTAP: they sign in as real users (email/password test users on the dev project, `@test.invalid`, created and deleted by the run), so grants, RLS, storage policies and both functions are covered together, which pgTAP inside the database can't do for Storage or the functions. 23 steps cover the §12.1 scenario, RLS, every permission rule and most error codes. They found one bug: owner-only actions answered `not_frame_member` instead of `not_frame_owner` to project members who aren't on the frame (fixed in migration 0005).
 - 2026-09-25: `device-api` and `app-api` written (Hono + zod, `functions/_shared`) and deployed to the dev project with `supabase functions deploy --use-api` (server-side bundling, no Docker). Both run with `verify_jwt = false` (`backend/supabase/config.toml`); `app-api` verifies the user JWT itself with `auth.getUser`. Writes go through `svc_*` SQL functions (migration 0004), one transaction each, callable only by `service_role`; errors carry the contract's codes. **§14 resolved:** the Functions gateway doesn't need an `apikey` header when `verify_jwt` is off, so `anon_key` is dropped from the frame's NVS and BLE payload. `tz_posix` comes from `_shared/tz.ts`, generated from the system tzdata (2026c, 597 zones incl. aliases) by `tools/dev/gen-tz.ts`. The maintenance endpoint became an orphan-object sweep; stale pending rows are dropped by SQL. npm versions are pinned to releases at least a day old because Deno's default minimum dependency age (24 h) refuses newer ones.

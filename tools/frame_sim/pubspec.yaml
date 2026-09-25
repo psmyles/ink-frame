@@ -1,0 +1,17 @@
+name: frame_sim
+description: Stands in for an Ink Frame on the command line (claim, sync, mirror, render). PLAN.md §11 Phase 1B.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.0
+
+executables:
+  frame_sim:
+dependencies:
+  args: ^2.7.0
+  crypto: ^3.0.7
+  http: ^1.6.0
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.32.0

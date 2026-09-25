@@ -53,3 +53,6 @@ firmware/.vscode/ipch/
 
 # Bundled backend output (tools/dev/bundle-backend)
 dist/
+
+# frame_sim state (holds a device secret)
+.frame_sim/
