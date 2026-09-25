@@ -1,0 +1,13 @@
+# Supabase CLI settings for deploying the Edge Functions (tools/dev, PLAN.md §7).
+# Schema changes don't go through the CLI: tools/dev/migrate.ts applies
+# migrations/ through the Management API, like the app's setup wizard.
+project_id = "ink-frame"
+
+# Both functions check auth themselves: device-api uses the device secret, and
+# app-api verifies the user's JWT (publishable keys aren't JWTs, so the gateway
+# check can't be relied on).
+[functions.device-api]
+verify_jwt = false
+
+[functions.app-api]
+verify_jwt = false

@@ -279,7 +279,8 @@ Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jo
 
 ### 7.5 Scheduled jobs (pg_cron)
 - **Hourly, SQL** (`private.hourly_cleanup`): expired or used pairing tokens, expired or used-up invites, and auth users older than 24 h with no membership (people who signed in but never joined, and people who left).
-- **Hourly, via `pg_net`** (`private.request_maintenance` → `POST app-api/internal/maintenance` with `x-maintenance-secret`): purge `pending` images older than 24 h, rows and objects. Storage objects can't be deleted with SQL on Supabase (`protect_objects_delete` trigger), hence the function call.
+- **Hourly, SQL** also drops `pending` image rows older than 24 h (0004).
+- **Hourly, via `pg_net`** (`private.request_maintenance` → `POST app-api/internal/maintenance` with `x-maintenance-secret`): delete `frame-images` objects older than 1 h that no `images` row points to (stale uploads, and objects left behind when a delete failed after its row was gone). Storage objects can't be deleted with SQL on Supabase (`protect_objects_delete` trigger), hence the function call.
 - No daily usage refresh: usage is computed on request.
 
 ### 7.6 API contract
@@ -390,7 +391,7 @@ Moved into modules with the logic unchanged unless noted:
 **Removed:** WebServer, soft-AP, `WEBPAGE_HTML`, the upload/delete/list/settings handlers, `config.txt`, `countImagesOnSD`.
 
 ### 9.3 Persistent state
-- **NVS:** Wi-Fi SSID and password, `api_base_url`, `anon_key` (if the functions gateway requires it), `device_secret`, `frame_id`, settings, `tz_posix`, last successful sync time.
+- **NVS:** Wi-Fi SSID and password, `api_base_url`, `device_secret`, `frame_id`, settings, `tz_posix`, last successful sync time.
 - **SD:** `/cache/{image_id}.png` + `/cache/manifest.txt` (`id sha256 bytes position` per line; always written to a tmp file and then renamed).
 - **RTC memory:** `lastImageIndex`, `sequentialIndex`, `syncBackoffLevel`. System time survives deep sleep, and NTP corrects it at every sync.
 
@@ -422,7 +423,7 @@ SHOW: in quiet hours → sleep until quiet_end without refreshing
 2. Characteristics:
    - `info` (read: hw_id, model_id, fw_version)
    - `wifi_scan` (notify: SSIDs + RSSI)
-   - `provision` (write, chunked JSON: `ssid`, `password`, `api_base_url`, `anon_key`, `pairing_token`)
+   - `provision` (write, chunked JSON: `ssid`, `password`, `api_base_url`, `pairing_token`)
    - `status` (notify: `wifi_connecting|wifi_failed|claiming|claimed|error:<code>`)
 3. The link is encrypted by OS pairing with the passkey shown on screen, so the password and token are never sent in plaintext.
 4. Join Wi-Fi → `POST /claim` → store the secret → notify `claimed` → first sync → ready screen.
@@ -546,7 +547,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -560,7 +561,8 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 - Supabase OAuth App: scopes, and whether **PKCE works without a client secret**. If not, add a small token-exchange function in `central/`.
 - Google provider: native ID-token sign-in **without a client secret**, and several client IDs (iOS, Android, Web, Desktop) allowed at once. Apple provider: bundle ID only for native.
 - Windows desktop: the Google loopback PKCE flow, and whether `universal_ble` can do LESC passkey pairing on Windows (and macOS).
-- Whether the Edge Functions gateway needs the anon key as `apikey` for device calls (this decides whether `anon_key` goes into NVS).
+- ✅ ~~Whether the Edge Functions gateway needs the anon key as `apikey` for device calls.~~ **No**, with `verify_jwt = false` (2026-09-25), so frames don't store `anon_key`.
+- ESP32 newlib: parses POSIX TZ strings with angle-bracket names (e.g. `<+1030>-10:30<+11>-11,M10.1.0,M4.1.0`), as produced by `_shared/tz.ts`.
 - PNGdec: 4-bit indexed PNG through `getLineAsRGB565`.
 - Arduino-ESP32: bootloader app rollback support.
 - E1002: status-LED GPIO; whether there is an external RTC (use it for quiet hours if present).
@@ -582,6 +584,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: `device-api` and `app-api` written (Hono + zod, `functions/_shared`) and deployed to the dev project with `supabase functions deploy --use-api` (server-side bundling, no Docker). Both run with `verify_jwt = false` (`backend/supabase/config.toml`); `app-api` verifies the user JWT itself with `auth.getUser`. Writes go through `svc_*` SQL functions (migration 0004), one transaction each, callable only by `service_role`; errors carry the contract's codes. **§14 resolved:** the Functions gateway doesn't need an `apikey` header when `verify_jwt` is off, so `anon_key` is dropped from the frame's NVS and BLE payload. `tz_posix` comes from `_shared/tz.ts`, generated from the system tzdata (2026c, 597 zones incl. aliases) by `tools/dev/gen-tz.ts`. The maintenance endpoint became an orphan-object sweep; stale pending rows are dropped by SQL. npm versions are pinned to releases at least a day old because Deno's default minimum dependency age (24 h) refuses newer ones.
 - 2026-09-25: Migrations 0001–0003 written and applied to the dev project through the Management API (`tools/dev/migrate.ts`, the same path as the wizard). Schema changes from the original §7.1: secrets moved to an unexposed `private` schema (`frame_secrets`, `invite_codes`, `pairing_tokens`, `removed_frames`, `config`); `frames.owner_id` dropped in favour of `frame_members.role = 'owner'` (one source of truth); `last_sync_status` dropped (only successful syncs reach the server; `last_seen_at` covers it); usage views replaced by on-request computation in `app-api`. `seed.sql` is an idempotent upsert generated from `shared/presets.json` and applied after migrations on every run; `reTerminal E1002 7.3` maps to `reterminal-e1002`, other preset ids are slugged. Facts found on the dev project: `pg_cron` 1.6.4, `pg_net` 0.20.4 and `pgtap` 1.3.3 are available; the query endpoint runs as `postgres` and accepts multi-statement transactions; `storage.objects` has a `protect_objects_delete` trigger, so objects are deleted only through the Storage API (added `POST /app-api/internal/maintenance` to the contract). Contract also gained an optional `timezone` on `POST /pairing-tokens`.
 - 2026-09-25: Considered and **rejected** handing the admin role to another member on account deletion. The family's Supabase project lives in the admin's Supabase account, so the admin role can't meaningfully move with it. An admin leaving means the space is left without an admin, as set out in §15.
 - 2026-09-25: At most one admin per space (partial unique index). `DELETE /me` gains `delete_photos` for an "Also delete my photos" checkbox. Defaults: image interval 4 h, sync interval 24 h (sync reverted from 4 h). If a member deletes their account while the space has no admin, their frames are deleted.

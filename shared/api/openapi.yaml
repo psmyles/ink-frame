@@ -23,9 +23,8 @@ info:
       Unix seconds (the firmware has no date parser).
     - Every error response uses the `Error` schema. `error.code` is stable and meant
       for code; `error.message` is English text for logs.
-    - The `apikey` header (the project's public key: legacy anon JWT or
-      `sb_publishable_…`) is sent on every call if the Functions gateway requires it.
-      Whether it does is an open question (PLAN.md §14).
+    - No `apikey` header is needed: both functions run with `verify_jwt = false` and
+      the gateway doesn't require one then (verified 2026-09-25). Clients may send it.
 servers:
   - url: https://{project_ref}.supabase.co/functions/v1
     variables:
@@ -892,12 +891,14 @@ paths:
     post:
       tags: [internal]
       operationId: runMaintenance
-      summary: Hourly clean-up that needs the Storage API
+      summary: Hourly sweep of orphaned storage objects
       description: |
-        Called hourly by `pg_cron` through `pg_net`. Deletes `pending` images older than
-        24 h, rows and objects. Storage objects can't be deleted with SQL (Supabase's
-        `protect_objects_delete` trigger), which is why this isn't a pure SQL job. The
-        pure-database clean-up runs in SQL (PLAN.md §7.5).
+        Called hourly by `pg_cron` through `pg_net`. Deletes objects in `frame-images`
+        older than 1 h that no `images` row points to: uploads whose `pending` row the
+        SQL clean-up removed after 24 h, and anything left behind when an object delete
+        failed after its row was deleted. Storage objects can't be deleted with SQL
+        (Supabase's `protect_objects_delete` trigger), which is why this isn't a pure
+        SQL job (PLAN.md §7.5).
       security:
         - maintenanceSecret: []
       responses:
@@ -907,9 +908,9 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [purged_images]
+                required: [deleted_objects]
                 properties:
-                  purged_images: { type: integer }
+                  deleted_objects: { type: integer }
         '401':
           description: '`unauthenticated`: missing or wrong secret.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
@@ -939,7 +940,7 @@ components:
       name: apikey
       in: header
       required: false
-      description: The project's public key (legacy anon JWT or `sb_publishable_…`), if the Functions gateway requires it (PLAN.md §14).
+      description: The project's public key (legacy anon JWT or `sb_publishable_…`). Not required; accepted if sent.
       schema: { type: string }
     FrameId:
       name: frame_id
