@@ -54,7 +54,7 @@ The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab))
 | App | Native Flutter, **no webview**. Dithering ported to Dart; output PNG compressed (indexed palette) |
 | App platforms | **iOS + Android** (store targets) + **desktop** (Windows required as the developer's machine; macOS/Linux nice-to-have), with desktop fully functional for testing |
 | Frame onboarding | **BLE** from the app: Wi-Fi details + family API URL + pairing token |
-| Sync | Fixed schedule (default 24 h) + **short green-button press = sync now** |
+| Sync | Fixed schedule (default 4 h) + **short green-button press = sync now** |
 | Deletes | Frame **mirrors the cloud exactly** |
 | Offline/hotspot mode | **Removed.** No soft-AP and no web server; the SD card is only a cache |
 | Settings synced from the cloud | Image change interval, display order, sync interval, quiet hours |
@@ -213,10 +213,10 @@ The same package is deployed to the dev project (through the CLI) and to every f
 | `palettes` | `id`, `name`, `colors jsonb` (`[{name, color, deviceColor}]`, same shape as `presets.json`) |
 | `device_models` | `id` (e.g. `reterminal-e1002`), `name`, `width`, `height`, `palette_id`. Seeded from `shared/presets.json`, refreshed by migrations |
 | `frames` | `id uuid`, `hw_id text unique`, `model_id`, `name`, `owner_id`, `device_secret_hash`, `fw_version`, `manifest_version bigint`, `last_seen_at`, `last_sync_status`, `battery_pct`, `rssi`, `sd_free_bytes`, `created_at` |
-| `frame_settings` | `frame_id pk`, `image_interval_s` (3600), `display_order` (`random`/`sequential`), `sync_interval_s` (86400), `quiet_start`/`quiet_end` (nullable `time`), `timezone` (IANA), `updated_at` |
+| `frame_settings` | `frame_id pk`, `image_interval_s` (14400), `display_order` (`random`/`sequential`), `sync_interval_s` (14400), `quiet_start`/`quiet_end` (nullable `time`), `timezone` (IANA), `updated_at` |
 | `frame_members` | `frame_id`, `user_id`, `role` (`owner`/`member`), pk(frame_id, user_id) |
 | `invites` | `id`, `code_hash`, `frame_id` (null = project-only), `created_by`, `expires_at`, `max_uses`, `uses` |
-| `images` | `id uuid`, `frame_id`, `uploaded_by`, `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double`, `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
+| `images` | `id uuid`, `frame_id`, `uploaded_by` (nullable, `on delete set null`: photos outlive a deleted account), `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double`, `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
 | `pairing_tokens` | `token_hash`, `user_id`, `frame_name`, `expires_at` (10 min), `used_at` |
 | `removed_frames` | `device_secret_hash pk`, `removed_at`. Tombstone written when a frame is deleted, so `/sync` can answer `410` (removed) instead of `401` (unknown secret) |
 | `quota_config` | `scope` (`frame`/`user`/`project`), `max_images`, `max_bytes` (null = unlimited). **Values TBD.** Placeholder: project `max_bytes` ≈ 90% of the free-tier storage limit |
@@ -239,7 +239,7 @@ The same package is deployed to the dev project (through the CLI) and to every f
 - **`POST /sync`** `{manifest_version, fw_version, battery_pct, rssi, sd_free_bytes, local_ids[]}` →
   ```json
   { "manifest_version": 42,
-    "settings": { "image_interval_s": 3600, "display_order": "random", "sync_interval_s": 86400,
+    "settings": { "image_interval_s": 14400, "display_order": "random", "sync_interval_s": 14400,
                   "quiet_start": "22:00", "quiet_end": "07:00", "tz_posix": "CET-1CEST,M3.5.0,M10.5.0/3" },
     "images": [ { "id": "…", "sha256": "…", "bytes": 61234, "position": 1.0, "url": "<signed, 1h>" } ],
     "server_time": 1790000000 }
@@ -567,14 +567,15 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 - **Apple sign-in on Windows/Linux:** decided in Phase 2.
 - **Set by the API contract** (`shared/api/openapi.yaml`), confirmed by the user 2026-09-25:
   - ✅ A member who leaves or is removed from a frame: **their photos stay** on it; the owner can delete them.
-  - ✅ Deleting an account (`DELETE /me`), or an admin removing someone from the space: **their photos everywhere are deleted**. Frames a **member** owns **pass to the admin** and keep running. Only when the **admin** deletes their account are their frames deleted (`410`).
-  - ✅ The only admin can't delete their account while other members remain (`409 sole_admin`); they delete the whole space instead. There is no endpoint for changing roles.
+  - ✅ Deleting an account (`DELETE /me`), or an admin removing someone from the space: **only the account and memberships are deleted; their photos stay** (`uploaded_by` → null). Frames a **member** owns **pass to the admin** and keep running. Only when the **admin** deletes their account are their frames (and every photo on them) deleted (`410`).
+  - ✅ The admin can delete their account **at any time**, even with other members in the space, after a clear warning of the consequences: their frames are removed, and a space with no admin left can't create project invites, remove members, upgrade the schema or restore a pause. There is no endpoint for changing roles.
   - ✅ Reorder moves **one image at a time** ("place after X"), not a whole-list replace, so it can't conflict with uploads in progress.
-  - ✅ Settings ranges: image interval **1 h–2 days**; sync interval **1 h–2 days**.
+  - ✅ Settings ranges: image interval **1 h–2 days**; sync interval **1 h–2 days**. Both default to **4 h**.
   - ✅ Invites: single use and 7 days by default; at most 50 uses and 30 days. Codes are 10 Crockford base32 characters (`XXXXX-XXXXX`).
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: Further user changes: (1) deleting an account, or an admin removing a member, deletes only the account and memberships; photos stay, so `images.uploaded_by` is nullable; (2) the admin may delete their account at any time after a warning (`sole_admin` 409 removed); the space can then be left with no admin; (3) image and sync intervals both default to 4 h (was 1 h / 24 h).
 - 2026-09-25: User confirmed the §15 contract defaults with two changes: (1) a member's frames are **not** deleted when they leave the space or delete their account; ownership passes to the admin, and only the admin's own account deletion deletes frames; (2) image and sync intervals both range 1 h–2 days. A 2-day sync cap also keeps every family project well inside the 7-day inactivity window.
 - 2026-09-25: API contract written (`shared/api/openapi.yaml`, OpenAPI 3.1, lints clean). Added the `removed_frames` tombstone table (§7.1). The project has both a legacy anon key and a `sb_publishable_` key, so the contract calls it the "public key" and accepts either. Behaviour defaults the plan left open are listed in §15.
 - 2026-09-25: The user replaced the token with one that has full access to org `psmyles` (`xzkqkhlbnexqldkhuohf`). Organization endpoints, org members, project keys, auth config, functions and SQL all return 200/201. The project-scoped limitation in the next entry no longer applies.
