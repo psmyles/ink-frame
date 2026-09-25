@@ -13,8 +13,10 @@ import {
   cleanup,
   created,
   env,
+  fetch,
   makePng,
   newUser,
+  purgeLeftovers,
   sha256Hex,
   sql,
   upload,
@@ -48,6 +50,8 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   async fn(t) {
+    const stale = await purgeLeftovers();
+    if (stale) console.warn(`Removed ${stale} test users left by an interrupted run.`);
     const [{ admins }] = await sql<{ admins: number }>(env,
       "select count(*)::int as admins from public.project_members where role = 'admin'");
     if (admins > 0) {

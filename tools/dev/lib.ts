@@ -21,6 +21,32 @@ export async function loadEnv(): Promise<Env> {
   return { token, ref };
 }
 
+// Management API call. Throws on non-2xx; returns parsed JSON (or null when empty).
+export async function mgmt<T = any>(
+  env: Pick<Env, "token">,
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<T> {
+  const res = await fetch(`https://api.supabase.com${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${env.token}`,
+      ...(body !== undefined && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+    },
+    body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new MgmtError(res.status, `${method} ${path} → ${res.status}: ${text}`);
+  return (text ? JSON.parse(text) : null) as T;
+}
+
+export class MgmtError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+}
+
 // Runs SQL through the Management API as postgres. Multiple statements are allowed.
 export async function sql<T = Record<string, unknown>>(env: Env, query: string): Promise<T[]> {
   const res = await fetch(`https://api.supabase.com/v1/projects/${env.ref}/database/query`, {

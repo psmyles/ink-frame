@@ -22,7 +22,16 @@ const key = (type: string) => keys.find((k) => k.type === type)?.api_key ?? "";
 export const PUBLIC_KEY = key("publishable");
 const SECRET_KEY = key("secret");
 
-const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
+// Every request fails after this long, so a stalled call fails the step instead of
+// hanging the run.
+export const TIMEOUT_MS = 30_000;
+const timedFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(TIMEOUT_MS) });
+
+const noSession = {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: timedFetch },
+};
 export const admin = createClient(PROJECT_URL, SECRET_KEY, noSession);
 export const anon = createClient(PROJECT_URL, PUBLIC_KEY, noSession);
 
@@ -63,6 +72,7 @@ export async function call(
     method,
     headers,
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const text = await res.text();
   return { status: res.status, body: text ? JSON.parse(text) : null };
@@ -140,21 +150,38 @@ export async function upload(u: User, frameId: string, png: Uint8Array<ArrayBuff
     body: { frame_id: frameId, sha256: await sha256Hex(png), bytes: png.length, width: w, height: h },
   });
   if (req.status !== 200) return req;
-  const put = await fetch(req.body.upload_url, { method: "PUT", headers: { "Content-Type": "image/png" }, body: png });
+  const put = await timedFetch(req.body.upload_url, { method: "PUT", headers: { "Content-Type": "image/png" }, body: png });
   if (!put.ok) throw new Error(`upload PUT failed ${put.status}: ${await put.text()}`);
   await put.body?.cancel();
   return call("POST", "/app-api/images/finalize", { token: u.token, body: { image_id: req.body.image_id } });
 }
 
+export { timedFetch as fetch };
+
+async function removeFrames(frameIds: string[]) {
+  if (!frameIds.length) return;
+  const list = frameIds.map((f) => `'${f}'`).join(",");
+  const rows = await sql<{ storage_path: string }>(env,
+    `select storage_path from public.images where frame_id in (${list})`);
+  if (rows.length) await admin.storage.from("frame-images").remove(rows.map((r) => r.storage_path));
+  await sql(env, `delete from public.frames where id in (${list})`);
+}
+
 // Removes everything the run created: storage objects, frames, auth users (which
 // cascades memberships, tokens and invites).
 export async function cleanup() {
-  if (created.frames.length) {
-    const list = created.frames.map((f) => `'${f}'`).join(",");
-    const rows = await sql<{ storage_path: string }>(env,
-      `select storage_path from public.images where frame_id in (${list})`);
-    if (rows.length) await admin.storage.from("frame-images").remove(rows.map((r) => r.storage_path));
-    await sql(env, `delete from public.frames where id in (${list})`);
-  }
+  await removeFrames(created.frames);
   for (const id of created.users) await admin.auth.admin.deleteUser(id);
+}
+
+// Removes what an interrupted run left behind: frames with a test user as a member,
+// and every @test.invalid user. Returns how many users it found.
+export async function purgeLeftovers(): Promise<number> {
+  const frames = await sql<{ id: string }>(env, `
+    select distinct fm.frame_id as id from public.frame_members fm
+    join auth.users u on u.id = fm.user_id where u.email like '%@test.invalid'`);
+  await removeFrames(frames.map((f) => f.id));
+  const users = await sql<{ id: string }>(env, `select id from auth.users where email like '%@test.invalid'`);
+  for (const u of users) await admin.auth.admin.deleteUser(u.id);
+  return users.length;
 }
