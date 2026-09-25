@@ -170,17 +170,17 @@ ink-frame/
 ## 6. Family project provisioning
 
 ### 6.1 Developer one-time setup
-- **Supabase:** register an **OAuth App** in the developer's Supabase org → client id and redirect URIs (`inkframe://supabase-oauth` for mobile, loopback for desktop).
+- **Supabase:** register an **OAuth App** in the developer's Supabase org (dashboard only; no API) → client id. Callback URLs must be **HTTPS or localhost**, so: `http://localhost:<port>/callback` for desktop, and for mobile an HTTPS bounce page on the project's GitHub Pages site (next to the firmware feed) that forwards `code`/`state` to `inkframe://supabase-oauth`. Safe with PKCE: the code is useless without the verifier, which never leaves the device.
 - **Google Cloud:** OAuth client IDs for **iOS, Android, Web, Desktop**.
 - **Apple Developer:** App ID with Sign in with Apple.
 - These IDs go in the app's build config (`app/lib/config/`, plus per-platform files). Nothing secret is embedded unless §14 forces it.
 
 ### 6.2 Wizard steps ("Set up a new family space")
 1. **Connect Supabase:** authorization code + PKCE in the system browser. In dev, this is skipped by pasting a **PAT** (a dev-only setting).
-2. **Choose or create an org and region → create the project** (`POST /v1/projects`, generated DB password kept in secure storage). Poll until healthy (~1–2 min, with a progress screen).
+2. **Choose or create an org and region → create the project** (`POST /v1/projects`, generated DB password kept in secure storage). Poll `GET /v1/projects/{ref}` and `/health?services=db,auth,rest,storage` until healthy (measured ~4 s; keep a progress screen in case it's slower).
    - The free plan allows **2 active projects per account**. If the limit is hit, show a clear message.
 3. **Apply migrations:** run the bundled SQL from `backend/supabase/migrations/` through `POST /v1/projects/{ref}/database/query`, in order, recording `schema_version`. This creates tables, RLS, buckets and policies, cron jobs and seed data.
-4. **Deploy the Edge Functions** `device-api` and `app-api` (pre-bundled by `tools/dev/bundle-backend`) through the Management API.
+4. **Deploy the Edge Functions** `device-api` and `app-api` through the Management API's multipart deploy (`POST /v1/projects/{ref}/functions/deploy`): the app uploads the function **source files** it bundles as assets, and Supabase bundles them server-side (`tools/dev/deploy-functions.ts` is the reference).
 5. **Configure auth** through `PATCH /v1/projects/{ref}/config/auth`:
    - enable Google (all our client IDs) and Apple (bundle ID)
    - turn off email signup
@@ -195,7 +195,7 @@ ink-frame/
 - Rule: migrations must stay backward compatible with the previous app version.
 
 ### 6.4 Paused projects
-- **App:** detects a pause (API errors, plus Management API status on the admin's device). The admin gets a **Restore** button (`POST /v1/projects/{ref}/restore`); members see "Ask \<admin\>".
+- **App:** detects a pause from **HTTP 540** ("Project paused") on any function call, plus Management API status on the admin's device. Restore takes ~3 min (measured), and the functions may return 500 for a few seconds after the project is healthy. The admin gets a **Restore** button (`POST /v1/projects/{ref}/restore`); members see "Ask \<admin\>".
 - **Frame:** keeps showing cached photos and retries on its backoff.
 - Daily frame syncs should prevent a pause (verify, §14).
 
@@ -548,7 +548,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a)(b)(c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -558,9 +558,10 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 
 ## 14. Verify list (assumptions not yet confirmed; check before relying on them)
 - Supabase free-tier limits today (storage, egress, DB size, Edge Function calls, MAU), the **2 active free projects** rule, and whether daily Edge Function + DB traffic from a frame counts as activity against the **7-day inactivity pause**.
-- Management API coverage: project create, SQL query endpoint, **Edge Function deploy**, auth config (`external_google_*`, `external_apple_*`), project restore, usage/egress endpoints.
+- ✅ ~~Management API coverage~~: all confirmed with a PAT, see `docs/spikes/a-management-api.md`. **Exception:** no storage-size or egress endpoint (only hourly request counts), so the app shows storage from the database and can't show egress. **2 active free projects** rule confirmed (400, message quoted in the spike doc).
 - Supabase OAuth App: scopes, and whether **PKCE works without a client secret**. If not, add a small token-exchange function in `central/`.
-- Google provider: native ID-token sign-in **without a client secret**, and several client IDs (iOS, Android, Web, Desktop) allowed at once. Apple provider: bundle ID only for native.
+- Google provider: native ID-token sign-in **without a client secret**, and several client IDs (iOS, Android, Web, Desktop) allowed at once. Apple provider: bundle ID only for native. **Config part ✅** (accepted with no secret; IDs stored as one comma-separated list, `docs/spikes/b-auth-config.md`). Actual sign-in still to verify with real client IDs in Phase 3a.
+- Mobile OAuth redirect via an HTTPS bounce page on GitHub Pages (§6.1): the Supabase OAuth App accepts it as a callback URL, and the system browser hands `inkframe://` back to the app on iOS and Android.
 - Windows desktop: the Google loopback PKCE flow, and whether `universal_ble` can do LESC passkey pairing on Windows (and macOS).
 - ✅ ~~Whether the Edge Functions gateway needs the anon key as `apikey` for device calls.~~ **No**, with `verify_jwt = false` (2026-09-25), so frames don't store `anon_key`.
 - ESP32 newlib: parses POSIX TZ strings with angle-bracket names (e.g. `<+1030>-10:30<+11>-11,M10.1.0,M4.1.0`), as produced by `_shared/tz.ts`.
@@ -585,6 +586,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: Spikes (a) and (b). A throwaway project created entirely through the Management API (`tools/dev/provision.ts`: create → healthy in ~4 s → migrations → multipart function deploy → auth config, 17 s total) passed all 23 backend tests, then was paused (~67 s; functions answer HTTP 540), restored (~2 min 47 s; data, schema and cron intact) and deleted. Google/Apple providers accept client IDs with no secret. The wizard deploys function **source** through the multipart endpoint (server-side bundling), so no eszip bundling step is needed. The OAuth App form only allows HTTPS or localhost callbacks, so mobile uses an HTTPS bounce page to `inkframe://` (§6.1). Details in `docs/spikes/`.
 - 2026-09-25: Backend tests are Deno integration tests through the real APIs instead of pgTAP: they sign in as real users (email/password test users on the dev project, `@test.invalid`, created and deleted by the run), so grants, RLS, storage policies and both functions are covered together, which pgTAP inside the database can't do for Storage or the functions. 23 steps cover the §12.1 scenario, RLS, every permission rule and most error codes. They found one bug: owner-only actions answered `not_frame_member` instead of `not_frame_owner` to project members who aren't on the frame (fixed in migration 0005).
 - 2026-09-25: `device-api` and `app-api` written (Hono + zod, `functions/_shared`) and deployed to the dev project with `supabase functions deploy --use-api` (server-side bundling, no Docker). Both run with `verify_jwt = false` (`backend/supabase/config.toml`); `app-api` verifies the user JWT itself with `auth.getUser`. Writes go through `svc_*` SQL functions (migration 0004), one transaction each, callable only by `service_role`; errors carry the contract's codes. **§14 resolved:** the Functions gateway doesn't need an `apikey` header when `verify_jwt` is off, so `anon_key` is dropped from the frame's NVS and BLE payload. `tz_posix` comes from `_shared/tz.ts`, generated from the system tzdata (2026c, 597 zones incl. aliases) by `tools/dev/gen-tz.ts`. The maintenance endpoint became an orphan-object sweep; stale pending rows are dropped by SQL. npm versions are pinned to releases at least a day old because Deno's default minimum dependency age (24 h) refuses newer ones.
 - 2026-09-25: Migrations 0001–0003 written and applied to the dev project through the Management API (`tools/dev/migrate.ts`, the same path as the wizard). Schema changes from the original §7.1: secrets moved to an unexposed `private` schema (`frame_secrets`, `invite_codes`, `pairing_tokens`, `removed_frames`, `config`); `frames.owner_id` dropped in favour of `frame_members.role = 'owner'` (one source of truth); `last_sync_status` dropped (only successful syncs reach the server; `last_seen_at` covers it); usage views replaced by on-request computation in `app-api`. `seed.sql` is an idempotent upsert generated from `shared/presets.json` and applied after migrations on every run; `reTerminal E1002 7.3` maps to `reterminal-e1002`, other preset ids are slugged. Facts found on the dev project: `pg_cron` 1.6.4, `pg_net` 0.20.4 and `pgtap` 1.3.3 are available; the query endpoint runs as `postgres` and accepts multi-statement transactions; `storage.objects` has a `protect_objects_delete` trigger, so objects are deleted only through the Storage API (added `POST /app-api/internal/maintenance` to the contract). Contract also gained an optional `timezone` on `POST /pairing-tokens`.
