@@ -456,9 +456,9 @@ Notes:
 2. Migrations (§7.1–7.2, 7.5) + `seed.sql` generated from `shared/presets.json`.
 3. `device-api` and `app-api` (§7.3–7.4) + shared helpers.
 4. Tests: pgTAP RLS tests and Deno function tests (using the Supabase CLI local stack if Docker is available, otherwise against the dev project).
-5. Create and link the **dev project** with the PAT (CLI `supabase link`, `db push`, `functions deploy`), or through the Management API.
+5. Link the **dev project** (already created by the user: ref `vrhsxzedzhvujnirsuhg`, region `ap-south-1`) with the PAT (CLI `supabase link`, `db push`, `functions deploy`), or through the Management API.
 6. **Spikes**, results in `docs/spikes/`:
-   - (a) Management API coverage with the PAT: create project, SQL query, function deploy, auth config, restore, usage/egress endpoints.
+   - (a) Management API coverage with the PAT: create project, SQL query, function deploy, auth config, restore, usage/egress endpoints. The dev token has org access (org `psmyles`, `xzkqkhlbnexqldkhuohf`), so create-project and restore can be tested in the spare free slot.
    - (b) Auth config: can Google be enabled with client IDs only (no secret) for ID-token sign-in? Apple with the bundle ID only?
    - (c) Supabase OAuth App + PKCE without a client secret.
 7. `tools/frame_sim` (Dart CLI): `claim --token`, `sync` (keeps a local cache dir mirrored), `status`, `render` (writes the current image + a manifest summary). Also `tools/dev` scripts: upload test PNGs as a user, reset the dev project, and bundle the backend for the app.
@@ -538,7 +538,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
-- [ ] Phase 1 — Supabase account + PAT available to sessions (user)
+- [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
 - [ ] Phase 1B — contract · migrations · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
@@ -566,4 +566,6 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 - **Apple sign-in on Windows/Linux:** decided in Phase 2.
 
 ## 16. Decision log
+- 2026-09-25: The user replaced the token with one that has full access to org `psmyles` (`xzkqkhlbnexqldkhuohf`). Organization endpoints, org members, project keys, auth config, functions and SQL all return 200/201. The project-scoped limitation in the next entry no longer applies.
+- 2026-09-25: Phase 1. The user created the dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, region `ap-south-1`) and a token stored in `backend/.env.local` as `SUPABASE_ACCESS_TOKEN`. The token is scoped to that project: SQL, API keys, auth config and functions work (200), but `GET /v1/organizations` returns `[]` and the org endpoint returns 403. Enough for backend work; spike (a) create-project/restore and the §12.2 wizard test need an account-wide token.
 - 2026-09-25: Initial plan. One Supabase project per family (was: a shared central project). Google/Apple kept over anonymous auth, for recovery. Display names typed at join. Desktop must be fully functional. Build order: Supabase account/token → backend → Flutter planning session → Flutter → firmware.
