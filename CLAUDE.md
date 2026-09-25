@@ -22,3 +22,4 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `set -a; . backend/.env.local; set +a; supabase functions deploy device-api app-api --project-ref "$SUPABASE_PROJECT_REF" --use-api --workdir backend`: deploy the Edge Functions (no Docker needed).
 - `deno run --allow-read --allow-write tools/dev/gen-tz.ts`: regenerate `functions/_shared/tz.ts` from the system tzdata.
 - Pin `npm:` versions in the functions to releases at least 24 h old; Deno refuses newer ones by default.
+- `deno test --allow-net --allow-env --allow-read backend/supabase/tests/`: integration tests against the project in `backend/.env.local` (~90 s; cleans up after itself; skips if the project already has an admin).

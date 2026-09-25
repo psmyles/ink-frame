@@ -114,7 +114,7 @@ ink-frame/
     functions/app-api/        Deno/TypeScript Edge Function (Hono router)
     functions/_shared/        shared TS (auth helpers, tz table, errors)
     seed.sql                  generated from shared/presets.json
-    tests/                    pgTAP (RLS) + Deno tests
+    tests/                    Deno integration tests (RLS, functions, §12.1 scenario) against a dev project
   app/                        Flutter app (android/ ios/ windows/ macos/ [linux/])
   firmware/                   PlatformIO project
   tools/
@@ -463,7 +463,7 @@ Notes:
 1. `shared/api/openapi.yaml` (contract first).
 2. Migrations (§7.1–7.2, 7.5) + `seed.sql` generated from `shared/presets.json`.
 3. `device-api` and `app-api` (§7.3–7.4) + shared helpers.
-4. Tests: pgTAP RLS tests and Deno function tests (using the Supabase CLI local stack if Docker is available, otherwise against the dev project).
+4. Tests: Deno integration tests through the real APIs (PostgREST, Storage, Edge Functions) with real user sessions, against the dev project (`backend/supabase/tests/`).
 5. Link the **dev project** (already created by the user: ref `vrhsxzedzhvujnirsuhg`, region `ap-south-1`) with the PAT (CLI `supabase link`, `db push`, `functions deploy`), or through the Management API.
 6. **Spikes**, results in `docs/spikes/`:
    - (a) Management API coverage with the PAT: create project, SQL query, function deploy, auth config, restore, usage/egress endpoints. The dev token has org access (org `psmyles`, `xzkqkhlbnexqldkhuohf`), so create-project and restore can be tested in the spare free slot.
@@ -505,6 +505,7 @@ Milestones will be refined in Phase 2. Baseline:
 ## 12. Verification
 
 ### 12.1 Backend (Phase 1B)
+Implemented in `backend/supabase/tests/backend_test.ts` (23 steps, all passing 2026-09-25). The suite creates its own admin, so it **skips when the target project already has one**: once the developer is the dev project's admin (Phase 3), run it against the spare project.
 - pgTAP RLS tests:
   - a non-member can't read anything
   - an auth user without membership is blocked
@@ -547,7 +548,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -584,6 +585,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: Backend tests are Deno integration tests through the real APIs instead of pgTAP: they sign in as real users (email/password test users on the dev project, `@test.invalid`, created and deleted by the run), so grants, RLS, storage policies and both functions are covered together, which pgTAP inside the database can't do for Storage or the functions. 23 steps cover the §12.1 scenario, RLS, every permission rule and most error codes. They found one bug: owner-only actions answered `not_frame_member` instead of `not_frame_owner` to project members who aren't on the frame (fixed in migration 0005).
 - 2026-09-25: `device-api` and `app-api` written (Hono + zod, `functions/_shared`) and deployed to the dev project with `supabase functions deploy --use-api` (server-side bundling, no Docker). Both run with `verify_jwt = false` (`backend/supabase/config.toml`); `app-api` verifies the user JWT itself with `auth.getUser`. Writes go through `svc_*` SQL functions (migration 0004), one transaction each, callable only by `service_role`; errors carry the contract's codes. **§14 resolved:** the Functions gateway doesn't need an `apikey` header when `verify_jwt` is off, so `anon_key` is dropped from the frame's NVS and BLE payload. `tz_posix` comes from `_shared/tz.ts`, generated from the system tzdata (2026c, 597 zones incl. aliases) by `tools/dev/gen-tz.ts`. The maintenance endpoint became an orphan-object sweep; stale pending rows are dropped by SQL. npm versions are pinned to releases at least a day old because Deno's default minimum dependency age (24 h) refuses newer ones.
 - 2026-09-25: Migrations 0001–0003 written and applied to the dev project through the Management API (`tools/dev/migrate.ts`, the same path as the wizard). Schema changes from the original §7.1: secrets moved to an unexposed `private` schema (`frame_secrets`, `invite_codes`, `pairing_tokens`, `removed_frames`, `config`); `frames.owner_id` dropped in favour of `frame_members.role = 'owner'` (one source of truth); `last_sync_status` dropped (only successful syncs reach the server; `last_seen_at` covers it); usage views replaced by on-request computation in `app-api`. `seed.sql` is an idempotent upsert generated from `shared/presets.json` and applied after migrations on every run; `reTerminal E1002 7.3` maps to `reterminal-e1002`, other preset ids are slugged. Facts found on the dev project: `pg_cron` 1.6.4, `pg_net` 0.20.4 and `pgtap` 1.3.3 are available; the query endpoint runs as `postgres` and accepts multi-statement transactions; `storage.objects` has a `protect_objects_delete` trigger, so objects are deleted only through the Storage API (added `POST /app-api/internal/maintenance` to the contract). Contract also gained an optional `timezone` on `POST /pairing-tokens`.
 - 2026-09-25: Considered and **rejected** handing the admin role to another member on account deletion. The family's Supabase project lives in the admin's Supabase account, so the admin role can't meaningfully move with it. An admin leaving means the space is left without an admin, as set out in §15.
