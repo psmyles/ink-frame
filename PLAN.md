@@ -506,7 +506,7 @@ Milestones will be refined in Phase 2. Baseline:
 
 ### 12.1 Backend (Phase 1B)
 Implemented in `backend/supabase/tests/backend_test.ts` (23 steps, all passing 2026-09-25). The suite creates its own admin, so it **skips when the target project already has one**: once the developer is the dev project's admin (Phase 3), run it against the spare project.
-- pgTAP RLS tests:
+- RLS tests:
   - a non-member can't read anything
   - an auth user without membership is blocked
   - a member can't delete others' photos
