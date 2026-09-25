@@ -218,6 +218,7 @@ The same package is deployed to the dev project (through the CLI) and to every f
 | `invites` | `id`, `code_hash`, `frame_id` (null = project-only), `created_by`, `expires_at`, `max_uses`, `uses` |
 | `images` | `id uuid`, `frame_id`, `uploaded_by`, `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double`, `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
 | `pairing_tokens` | `token_hash`, `user_id`, `frame_name`, `expires_at` (10 min), `used_at` |
+| `removed_frames` | `device_secret_hash pk`, `removed_at`. Tombstone written when a frame is deleted, so `/sync` can answer `410` (removed) instead of `401` (unknown secret) |
 | `quota_config` | `scope` (`frame`/`user`/`project`), `max_images`, `max_bytes` (null = unlimited). **Values TBD.** Placeholder: project `max_bytes` ≈ 90% of the free-tier storage limit |
 | Views | `frame_usage`, `user_usage`, `project_usage` (sum of `images.bytes`), shown in the app against the free-tier limit |
 
@@ -539,7 +540,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract · migrations · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -564,8 +565,18 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 - **Order of photos from several members in sequential mode:** default is upload time; the owner can reorder.
 - **Quota starting values:** `quota_config`, to be decided (placeholder: project ≈ 90% of the free storage limit; no per-frame/per-user limit).
 - **Apple sign-in on Windows/Linux:** decided in Phase 2.
+- **Set by the API contract** (`shared/api/openapi.yaml`), confirmed by the user 2026-09-25:
+  - ✅ A member who leaves or is removed from a frame: **their photos stay** on it; the owner can delete them.
+  - ✅ Deleting an account (`DELETE /me`), or an admin removing someone from the space: **their photos everywhere are deleted**. Frames a **member** owns **pass to the admin** and keep running. Only when the **admin** deletes their account are their frames deleted (`410`).
+  - ✅ The only admin can't delete their account while other members remain (`409 sole_admin`); they delete the whole space instead. There is no endpoint for changing roles.
+  - ✅ Reorder moves **one image at a time** ("place after X"), not a whole-list replace, so it can't conflict with uploads in progress.
+  - ✅ Settings ranges: image interval **1 h–2 days**; sync interval **1 h–2 days**.
+  - ✅ Invites: single use and 7 days by default; at most 50 uses and 30 days. Codes are 10 Crockford base32 characters (`XXXXX-XXXXX`).
+  - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: User confirmed the §15 contract defaults with two changes: (1) a member's frames are **not** deleted when they leave the space or delete their account; ownership passes to the admin, and only the admin's own account deletion deletes frames; (2) image and sync intervals both range 1 h–2 days. A 2-day sync cap also keeps every family project well inside the 7-day inactivity window.
+- 2026-09-25: API contract written (`shared/api/openapi.yaml`, OpenAPI 3.1, lints clean). Added the `removed_frames` tombstone table (§7.1). The project has both a legacy anon key and a `sb_publishable_` key, so the contract calls it the "public key" and accepts either. Behaviour defaults the plan left open are listed in §15.
 - 2026-09-25: The user replaced the token with one that has full access to org `psmyles` (`xzkqkhlbnexqldkhuohf`). Organization endpoints, org members, project keys, auth config, functions and SQL all return 200/201. The project-scoped limitation in the next entry no longer applies.
 - 2026-09-25: Phase 1. The user created the dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, region `ap-south-1`) and a token stored in `backend/.env.local` as `SUPABASE_ACCESS_TOKEN`. The token is scoped to that project: SQL, API keys, auth config and functions work (200), but `GET /v1/organizations` returns `[]` and the org endpoint returns 403. Enough for backend work; spike (a) create-project/restore and the §12.2 wizard test need an account-wide token.
 - 2026-09-25: Initial plan. One Supabase project per family (was: a shared central project). Google/Apple kept over anonymous auth, for recovery. Display names typed at join. Desktop must be fully functional. Build order: Supabase account/token → backend → Flutter planning session → Flutter → firmware.
