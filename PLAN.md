@@ -206,23 +206,28 @@ ink-frame/
 The same package is deployed to the dev project (through the CLI) and to every family project (through the wizard).
 
 ### 7.1 Schema
+Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jobs). Tables in `public` are readable under RLS; secrets and server-only state live in the unexposed `private` schema.
+
 | Table | Key columns / notes |
 |---|---|
-| `schema_version` | `version int`, `applied_at` |
+| `schema_version` | `version int pk`, `applied_at` |
 | `project_members` | `user_id pk → auth.users`, `role` (`admin`/`member`; **at most one admin**, enforced by a partial unique index), `display_name`, `invited_by`, `created_at` |
 | `palettes` | `id`, `name`, `colors jsonb` (`[{name, color, deviceColor}]`, same shape as `presets.json`) |
-| `device_models` | `id` (e.g. `reterminal-e1002`), `name`, `width`, `height`, `palette_id`. Seeded from `shared/presets.json`, refreshed by migrations |
-| `frames` | `id uuid`, `hw_id text unique`, `model_id`, `name`, `owner_id`, `device_secret_hash`, `fw_version`, `manifest_version bigint`, `last_seen_at`, `last_sync_status`, `battery_pct`, `rssi`, `sd_free_bytes`, `created_at` |
-| `frame_settings` | `frame_id pk`, `image_interval_s` (14400), `display_order` (`random`/`sequential`), `sync_interval_s` (86400), `quiet_start`/`quiet_end` (nullable `time`), `timezone` (IANA), `updated_at` |
-| `frame_members` | `frame_id`, `user_id`, `role` (`owner`/`member`), pk(frame_id, user_id) |
-| `invites` | `id`, `code_hash`, `frame_id` (null = project-only), `created_by`, `expires_at`, `max_uses`, `uses` |
-| `images` | `id uuid`, `frame_id`, `uploaded_by` (nullable, `on delete set null`: photos outlive a deleted account), `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double`, `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
-| `pairing_tokens` | `token_hash`, `user_id`, `frame_name`, `expires_at` (10 min), `used_at` |
-| `removed_frames` | `device_secret_hash pk`, `removed_at`. Tombstone written when a frame is deleted, so `/sync` can answer `410` (removed) instead of `401` (unknown secret) |
-| `quota_config` | `scope` (`frame`/`user`/`project`), `max_images`, `max_bytes` (null = unlimited). **Values TBD.** Placeholder: project `max_bytes` ≈ 90% of the free-tier storage limit |
-| Views | `frame_usage`, `user_usage`, `project_usage` (sum of `images.bytes`), shown in the app against the free-tier limit |
+| `device_models` | `id` (e.g. `reterminal-e1002`), `name`, `width`, `height`, `palette_id`. Upserted by `seed.sql`, generated from `shared/presets.json` |
+| `frames` | `id uuid`, `hw_id text unique`, `model_id`, `name`, `fw_version`, `manifest_version bigint`, `last_seen_at`, `battery_pct`, `rssi`, `sd_free_bytes`, `created_at`. No owner column: ownership is `frame_members.role = 'owner'` |
+| `frame_members` | `frame_id`, `user_id → project_members` (leaving the space removes frame memberships), `role` (`owner`/`member`; **one owner per frame**, partial unique index), pk(frame_id, user_id) |
+| `frame_settings` | `frame_id pk`, `image_interval_s` (14400), `display_order` (`random`/`sequential`), `sync_interval_s` (86400), `quiet_start`/`quiet_end` (nullable `time`, both or neither), `timezone` (IANA, default `UTC`), `updated_at` |
+| `images` | `id uuid`, `frame_id`, `uploaded_by` (nullable, `on delete set null`: photos outlive a deleted account), `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double` (set when `ready`), `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
+| `invites` | `id`, `frame_id` (null = project-only), `created_by`, `expires_at`, `max_uses`, `uses` |
+| `quota_config` | `scope` (`frame`/`user`/`project`), `max_images`, `max_bytes` (null = unlimited). **Values TBD.** Placeholder: project `max_bytes` = 90% of 1 GiB |
+| `private.frame_secrets` | `frame_id pk`, `secret_hash` (SHA-256 hex of the device secret) |
+| `private.removed_frames` | `secret_hash pk`, `removed_at`. Tombstone written when a frame is deleted, so `/sync` can answer `410` (removed) instead of `401` (unknown secret) |
+| `private.invite_codes` | `invite_id pk`, `code_hash` |
+| `private.pairing_tokens` | `token_hash`, `user_id`, `frame_name`, `timezone`, `expires_at` (10 min), `used_at` |
+| `private.config` | key/value: `maintenance_secret` (random, made by 0003), `project_url` (written by the migration runner) |
+| Usage | Computed by `app-api` for `GET /usage` (sum of `images.bytes`), shown in the app against the free-tier limit. Added with the functions |
 
-- **RLS:** members can `select` the rows they belong to. **All writes go through `app-api`** (service role), so quota checks, `manifest_version` bumps and permission rules live in one place.
+- **RLS:** members can `select` the rows they belong to. **All writes go through `app-api`** (service role), so quota checks, `manifest_version` bumps and permission rules live in one place. Clients get `SELECT` grants only; Supabase's default grants on `public` are revoked (including default privileges for future objects), so every new table or function must be granted explicitly.
 - **Permissions:**
   - Photos: a member deletes their own; the frame owner deletes any.
   - Frame settings, reorder and frame invites: frame owner.
@@ -273,8 +278,9 @@ The same package is deployed to the dev project (through the CLI) and to every f
 - `DELETE /me[?delete_photos=true]` → account deletion (required by the App Store). The deletion flow has an **"Also delete my photos" checkbox** (sets `delete_photos`); unchecked, the photos stay with `uploaded_by` → null. For the admin, the app also offers "delete the whole family space" through the Management API.
 
 ### 7.5 Scheduled jobs (pg_cron)
-- **Hourly:** purge `pending` images older than 24 h (and their objects), expired pairing tokens and invites, and auth users with no membership for more than 24 h.
-- **Daily:** refresh `project_usage`.
+- **Hourly, SQL** (`private.hourly_cleanup`): expired or used pairing tokens, expired or used-up invites, and auth users older than 24 h with no membership (people who signed in but never joined, and people who left).
+- **Hourly, via `pg_net`** (`private.request_maintenance` → `POST app-api/internal/maintenance` with `x-maintenance-secret`): purge `pending` images older than 24 h, rows and objects. Storage objects can't be deleted with SQL on Supabase (`protect_objects_delete` trigger), hence the function call.
+- No daily usage refresh: usage is computed on request.
 
 ### 7.6 API contract
 `shared/api/openapi.yaml` is the contract for both functions. It is written first in Phase 1B, and the functions, `frame_sim`, the Dart client and the firmware all follow it.
@@ -540,7 +546,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 ## 13. Progress checklist
 - [x] Phase 0 — scaffold
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
-- [ ] Phase 1B — contract ✅ · migrations · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
+- [ ] Phase 1B — contract ✅ · migrations ✅ · device-api · app-api · tests · dev project deployed · spikes (a)(b)(c) · frame_sim · dev tools
 - [ ] Phase 2 — `docs/app-flow.md` approved
 - [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
@@ -576,6 +582,7 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
   - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
 
 ## 16. Decision log
+- 2026-09-25: Migrations 0001–0003 written and applied to the dev project through the Management API (`tools/dev/migrate.ts`, the same path as the wizard). Schema changes from the original §7.1: secrets moved to an unexposed `private` schema (`frame_secrets`, `invite_codes`, `pairing_tokens`, `removed_frames`, `config`); `frames.owner_id` dropped in favour of `frame_members.role = 'owner'` (one source of truth); `last_sync_status` dropped (only successful syncs reach the server; `last_seen_at` covers it); usage views replaced by on-request computation in `app-api`. `seed.sql` is an idempotent upsert generated from `shared/presets.json` and applied after migrations on every run; `reTerminal E1002 7.3` maps to `reterminal-e1002`, other preset ids are slugged. Facts found on the dev project: `pg_cron` 1.6.4, `pg_net` 0.20.4 and `pgtap` 1.3.3 are available; the query endpoint runs as `postgres` and accepts multi-statement transactions; `storage.objects` has a `protect_objects_delete` trigger, so objects are deleted only through the Storage API (added `POST /app-api/internal/maintenance` to the contract). Contract also gained an optional `timezone` on `POST /pairing-tokens`.
 - 2026-09-25: Considered and **rejected** handing the admin role to another member on account deletion. The family's Supabase project lives in the admin's Supabase account, so the admin role can't meaningfully move with it. An admin leaving means the space is left without an admin, as set out in §15.
 - 2026-09-25: At most one admin per space (partial unique index). `DELETE /me` gains `delete_photos` for an "Also delete my photos" checkbox. Defaults: image interval 4 h, sync interval 24 h (sync reverted from 4 h). If a member deletes their account while the space has no admin, their frames are deleted.
 - 2026-09-25: Further user changes: (1) deleting an account, or an admin removing a member, deletes only the account and memberships; photos stay, so `images.uploaded_by` is nullable; (2) the admin may delete their account at any time after a warning (`sole_admin` 409 removed); the space can then be left with no admin; (3) image and sync intervals both default to 4 h (was 1 h / 24 h).
