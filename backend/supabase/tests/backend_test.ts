@@ -72,6 +72,7 @@ Deno.test({
     let version = 0;
     const imageIds: string[] = [];
     const pngs: Uint8Array<ArrayBuffer>[] = [];
+    const upToDate = async () => (await A.db.from("frame").select("up_to_date").single()).data?.up_to_date;
 
     try {
       await t.step("set up: frame, owner, member, outsider", async () => {
@@ -112,6 +113,7 @@ Deno.test({
         });
         assert(Math.abs(s.body.server_time - Date.now() / 1000) < 120);
         version = s.body.manifest_version;
+        assertEquals(await upToDate(), true);
       });
 
       await t.step("claim errors: wrong model, unknown model, not the owner", async () => {
@@ -142,6 +144,7 @@ Deno.test({
         }
         const again = await call("POST", "/app-api/images/finalize", { token: A.token, body: { image_id: imageIds[0] } });
         assertEquals(again.status, 200, "finalize is idempotent");
+        assertEquals(await upToDate(), false, "changes waiting");
       });
 
       await t.step("upload errors", async () => {
@@ -196,6 +199,7 @@ Deno.test({
           assertEquals(await sha256Hex(bytes), img.sha256);
           assertEquals(img.sha256, await sha256Hex(pngs[n]));
         }
+        assertEquals(await upToDate(), true);
       });
 
       await t.step("unchanged manifest omits images; local ids get no url", async () => {
@@ -320,11 +324,13 @@ Deno.test({
         assertEquals(r.body.image_interval_s, 7200);
         assertEquals(r.body.quiet_start, "22:00");
         assertEquals(r.body.connected, true);
+        assertEquals(r.body.up_to_date, false, "settings waiting");
 
         const s = await sync(device.secret, version, imageIds);
         assertEquals(s.body.settings.tz_posix, "IST-5:30");
         assertEquals(s.body.settings.quiet_end, "07:00");
         assertEquals(s.body.images, undefined, "settings changes don't bump the manifest");
+        assertEquals(await upToDate(), true);
 
         const patch = (token: string, body: unknown) => call("PATCH", "/app-api/frame/settings", { token, body });
         expectError(await patch(A.token, { quiet_start: null }), 422, "quiet_hours_incomplete");
@@ -379,7 +385,7 @@ Deno.test({
         expectError(await call("POST", "/app-api/frame/disconnect", { token: B.token }), 403, "not_owner");
         assertEquals((await call("POST", "/app-api/frame/disconnect", { token: A.token })).status, 204);
         expectError(await sync(device.secret, 0), 410, "frame_removed");
-        assertEquals((await A.db.from("frame").select("hw_id")).data, [{ hw_id: null }]);
+        assertEquals((await A.db.from("frame").select("hw_id, up_to_date")).data, [{ hw_id: null, up_to_date: false }]);
       });
 
       await t.step("switching the panel model clears photos and disconnects", async () => {

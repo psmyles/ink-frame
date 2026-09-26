@@ -997,7 +997,7 @@ components:
 
     Frame:
       type: object
-      required: [id, name, model_id, connected, image_interval_s, display_order, sync_interval_s,
+      required: [id, name, model_id, connected, up_to_date, image_interval_s, display_order, sync_interval_s,
                  quiet_start, quiet_end, timezone]
       properties:
         id: { $ref: '#/components/schemas/Uuid' }
@@ -1006,6 +1006,12 @@ components:
         connected:
           type: boolean
           description: Whether hardware is connected.
+        up_to_date:
+          type: boolean
+          description: >-
+            The connected hardware received the latest photos and settings at its last
+            check ("Up to date"); false means "Changes waiting" (or not connected). Also a
+            column of `public.frame`, which members read directly.
         fw_version: { type: [string, 'null'] }
         last_seen_at: { type: [string, 'null'], format: date-time }
         battery_pct: { type: [integer, 'null'] }

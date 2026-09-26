@@ -55,7 +55,7 @@ create function private.frame_json(f public.frame) returns jsonb
 language sql immutable as $$
   select jsonb_build_object(
     'id', f.id, 'name', f.name, 'model_id', f.model_id, 'connected', f.hw_id is not null,
-    'fw_version', f.fw_version, 'last_seen_at', f.last_seen_at, 'battery_pct', f.battery_pct,
+    'up_to_date', f.up_to_date, 'fw_version', f.fw_version, 'last_seen_at', f.last_seen_at, 'battery_pct', f.battery_pct,
     'image_interval_s', f.image_interval_s, 'display_order', f.display_order,
     'sync_interval_s', f.sync_interval_s,
     'quiet_start', to_char(f.quiet_start, 'HH24:MI'), 'quiet_end', to_char(f.quiet_end, 'HH24:MI'),
@@ -88,7 +88,7 @@ begin
     select secret_hash from private.frame_secret on conflict do nothing;
   delete from private.frame_secret where true;
   update public.frame set hw_id = null, fw_version = null, last_seen_at = null,
-    battery_pct = null, rssi = null, sd_free_bytes = null where true;
+    battery_pct = null, rssi = null, sd_free_bytes = null, synced_manifest_version = null where true;
 end;
 $$;
 
@@ -147,7 +147,7 @@ begin
 
   update public.frame set
     last_seen_at = now(), fw_version = p_fw_version, battery_pct = p_battery_pct,
-    rssi = p_rssi, sd_free_bytes = p_sd_free_bytes
+    rssi = p_rssi, sd_free_bytes = p_sd_free_bytes, synced_manifest_version = manifest_version
   where true
   returning * into f;
 

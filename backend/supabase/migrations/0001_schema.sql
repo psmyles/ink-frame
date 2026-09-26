@@ -52,6 +52,12 @@ create table public.frame (
   timezone            text not null default 'UTC' check (char_length(timezone) <= 64),
   settings_updated_at timestamptz not null default now(),
   created_at          timestamptz not null default now(),
+  -- The manifest version /sync last returned to the connected hardware.
+  synced_manifest_version bigint,
+  -- The hardware has the latest photos and settings ("Up to date" / "Changes waiting").
+  up_to_date          boolean not null generated always as (coalesce(
+    hw_id is not null and synced_manifest_version = manifest_version
+    and last_seen_at >= settings_updated_at, false)) stored,
   check ((quiet_start is null) = (quiet_end is null))
 );
 
