@@ -92,7 +92,7 @@ Set up a frame
 
 ### 1.4 Returning on a new device
 The app needs each frame's address to sign in, and only owners can invite. The addresses (project URL + publishable key) aren't secret, so:
-- **Account → "Use on another device"** shows a QR and a link holding the addresses of **all** your frames (no invite codes).
+- **Account → "Use on another device"** shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`.
 - On the new device, "Already use Ink Frame? Sign in" = scan or paste that (or any invite link) → sign in once → every frame where you're still a member appears. A frame you've since been removed from is skipped with a note.
 - An owner on a new device also reconnects Supabase from the frame's settings (§4.4) to regain owner tools.
 
@@ -321,12 +321,12 @@ English only in v1. All strings in ARB files via `flutter_localizations`/`intl` 
 
 ---
 
-## 9. Backend changes this draft needs (if approved)
+## 9. Backend changes this draft needed (done 2026-09-26)
 
 | Change | Why | Size |
 |---|---|---|
-| `frame.synced_manifest_version`, set by `/sync` to the version it returned; exposed in the `Frame` schema | D7: "Up to date / Changes waiting" | migration, 1 line in `svc_sync_frame` |
-| `central/` GitHub Pages: `/join` page (invite and "another device" links) and `/oauth` bounce page (Supabase OAuth on mobile) | D4 and PLAN.md §6.1 | two static pages |
+| `frame.synced_manifest_version`, set by `/sync` to the version it returned, and a generated `frame.up_to_date` (also in the `Frame` schema) that is also false while settings are waiting | D7: "Up to date / Changes waiting" | ✅ migrations 0001/0004 |
+| `central/` GitHub Pages: `/join` page (invite and "another device" links) and `/oauth` bounce page (Supabase OAuth on mobile) | D4 and PLAN.md §6.1 | ✅ `central/site/` (see `central/README.md`) |
 
 Both go through the contract first (CLAUDE.md rule).
 

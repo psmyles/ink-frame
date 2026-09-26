@@ -25,6 +25,7 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - Pin `npm:` versions in the functions to releases at least 24 h old; Deno refuses newer ones by default.
 - `deno run --allow-all tools/dev/sim-scenario.ts`: the §12.1 scenario with the real `frame_sim` against the dev project (same owner requirement as the tests).
 - `deno run --allow-read --allow-net --allow-env tools/dev/reset-dev.ts --yes`: drop and re-apply all migrations on the dev project (unreleased migrations only).
+- `deno test central/tests/`: link parsing for the `central/site` pages (published to GitHub Pages by `.github/workflows/pages.yml`).
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.
 - `deno test --allow-net --allow-env --allow-read backend/supabase/tests/`: integration tests against the project in `backend/.env.local` (~100 s; sets up the project's frame itself, cleans up after itself; skips if the project already has a real owner).

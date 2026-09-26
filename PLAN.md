@@ -123,7 +123,7 @@ ink-frame/
     golden/                   Node script: runs reference dithering.js → shared/test-vectors
     frame_sim/                Dart CLI frame simulator (claim/sync/mirror/render)
     dev/                      dev scripts (upload test PNGs, reset dev project, bundle backend)
-  central/                    firmware feed publishing (+ OAuth token-exchange fn if needed)
+  central/                    GitHub Pages site: /join and /oauth pages; firmware feed (Phase 4); (+ OAuth token-exchange fn if needed)
   docs/
     app-flow.md               ← produced by Phase 2
     spikes/                   findings from Phase 1B spikes
@@ -163,7 +163,7 @@ ink-frame/
 - A pg_cron job deletes auth users that have no membership after 24 h.
 
 ### 5.5 Joining a frame
-- **Invite payload:** `inkframe://join?u=<project_url>&k=<anon_key>&c=<invite_code>`, shared as a QR code or link (an HTTPS wrapper is proposed in `docs/app-flow.md`). On desktop, pasting the link works too.
+- **Invite link:** `https://psmyles.github.io/ink-frame/join#u=<project_url>&k=<publishable_key>&c=<invite_code>`, shared as a QR code or link. The page (`central/site/join/`) opens `inkframe://join?…` on phones; on desktop the link is pasted into the app. "Use on another device" links repeat `u`/`k` once per frame and have no `c`. The fragment never reaches the server.
 - **Join flow:** the app saves the project → the user signs in with Google/Apple → types a **display name** (pre-filled from their other frames) → `POST /invites/accept {code, display_name}`.
 - The app keeps a **list of frames** (URL + anon key + session per frame) and shows them together.
 
@@ -587,6 +587,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
   - ✅ Pause copy gives the reason: "asleep because it wasn't used for a while".
 
 ## 16. Decision log
+- 2026-09-26: **Phase 2 approved** (`docs/app-flow.md`, D1–D5 and D7–D11 as recommended; layout chosen by window width only, so a narrow desktop window is the phone layout). Its backend additions are done: `frame.synced_manifest_version` (set by `/sync`) and a generated `frame.up_to_date` column, also in the `Frame` schema; and `central/site/` with the `/join` and `/oauth` pages (link parsing tested in `central/tests/`), published to GitHub Pages by `.github/workflows/pages.yml`.
 - 2026-09-26: **One Supabase project per frame** (was: one per family, holding many frames). Photos are processed for one panel's resolution and palette, so projects never mix panel types. The person who sets up a frame is its **owner** and hosts it in their free Supabase account (2 active free projects = 2 frames per account). Roles collapse to owner + members; one invite type; the app lists frames across projects. Panel model is chosen at setup; replacement hardware of the same model keeps the photos, a different model needs a model switch that clears them. User-facing words: frame, owner, people, "checks for new photos", "connect the frame", "asleep because it wasn't used for a while"; never space/project/admin/sync. The unreleased migrations 0001–0005 were replaced by a simpler schema (one `frame` row, `members`), and the dev project was reset. Supersedes the space/admin decisions below.
 - 2026-09-25: **Phase 1B done** (spike (c) deferred to the start of Phase 3e, as nothing earlier needs the Supabase OAuth App). `tools/frame_sim` (Dart CLI, 8 unit tests against a fake device-api) mirrors the firmware's cache layout and sync rules: downloads go to `cache/tmp` and are checked against sha256 before a rename, the manifest version only advances when every image arrived, `410` wipes the cache and secret, new arrivals are shown first. `tools/dev/sim-scenario.ts` passes the §12.1 scenario with it against the dev project.
 - 2026-09-25: Spikes (a) and (b). A throwaway project created entirely through the Management API (`tools/dev/provision.ts`: create → healthy in ~4 s → migrations → multipart function deploy → auth config, 17 s total) passed all 23 backend tests, then was paused (~67 s; functions answer HTTP 540), restored (~2 min 47 s; data, schema and cron intact) and deleted. Google/Apple providers accept client IDs with no secret. The wizard deploys function **source** through the multipart endpoint (server-side bundling), so no eszip bundling step is needed. The OAuth App form only allows HTTPS or localhost callbacks, so mobile uses an HTTPS bounce page to `inkframe://` (§6.1). Details in `docs/spikes/`.

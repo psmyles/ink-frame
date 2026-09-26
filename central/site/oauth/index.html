@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Ink Frame sign-in</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true"></div>
+    <section id="ok" hidden>
+      <h1>Returning to Ink Frame…</h1>
+      <p>If the app doesn't open, tap the button.</p>
+      <a id="open" class="button" href="#">Open Ink Frame</a>
+    </section>
+    <section id="broken" hidden>
+      <h1>Something went wrong</h1>
+      <p>Go back to Ink Frame and try connecting your Supabase account again.</p>
+    </section>
+  </main>
+
+  <script type="module">
+    // Supabase OAuth callback on phones (PLAN.md §6.1): Supabase only accepts HTTPS or
+    // localhost callbacks, so this page forwards code/state to the app. The code is
+    // useless without the PKCE verifier, which never leaves the phone.
+    import { oauthTarget } from "../assets/links.js";
+
+    const target = oauthTarget(location.search);
+    history.replaceState(null, "", location.pathname);
+    if (target) {
+      document.getElementById("ok").hidden = false;
+      document.getElementById("open").href = target;
+      location.replace(target);
+    } else {
+      document.getElementById("broken").hidden = false;
+    }
+  </script>
+</body>
+</html>

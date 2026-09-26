@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Ink Frame invite</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true"></div>
+
+    <section id="invite" hidden>
+      <h1>You're invited to add photos to a frame</h1>
+      <p>Open this link in the Ink Frame app to join.</p>
+    </section>
+
+    <section id="devices" hidden>
+      <h1>Open your frames in Ink Frame</h1>
+      <p id="devices-text">Sign in on this device to see your frames.</p>
+    </section>
+
+    <section id="broken" hidden>
+      <h1>This link doesn't work</h1>
+      <p>It may have been cut short when it was copied. Ask for the link again.</p>
+    </section>
+
+    <div id="actions" hidden>
+      <a id="open" class="button" href="#">Open in Ink Frame</a>
+      <p id="desktop-hint" class="small" hidden>
+        On a computer: copy this link, then in Ink Frame choose <strong>Join with an invite</strong> and paste it.
+      </p>
+      <button id="copy" class="button secondary" type="button">Copy link</button>
+      <div id="code-box" hidden>
+        <p class="small">Or type this invite code in the app:</p>
+        <div id="code" class="code"></div>
+      </div>
+      <p class="small">Don't have the app yet?</p>
+      <div id="stores" class="stores">
+        <span class="small">Ink Frame is coming soon to the App Store and Google Play.</span>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { parseJoin, platformOf } from "../assets/links.js";
+
+    // Filled in once the app is in the stores.
+    const STORES = { ios: null, android: null };
+
+    const $ = (id) => document.getElementById(id);
+    const link = parseJoin(location.hash);
+    const platform = platformOf(navigator.userAgent);
+
+    if (!link) {
+      $("broken").hidden = false;
+    } else {
+      if (link.code) {
+        $("invite").hidden = false;
+        $("code").textContent = link.code;
+        $("code-box").hidden = false;
+      } else {
+        $("devices").hidden = false;
+        const n = link.frames.length;
+        $("devices-text").textContent =
+          `Sign in on this device to see your ${n === 1 ? "frame" : `${n} frames`}.`;
+      }
+      $("actions").hidden = false;
+      $("open").href = link.appUrl;
+      $("desktop-hint").hidden = platform !== "desktop";
+
+      const stores = [
+        STORES.ios && `<a href="${STORES.ios}">App Store</a>`,
+        STORES.android && `<a href="${STORES.android}">Google Play</a>`,
+      ].filter(Boolean);
+      if (stores.length) $("stores").innerHTML = stores.join("");
+
+      $("copy").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          $("copy").textContent = "Copied";
+        } catch {
+          $("copy").textContent = "Copy failed; copy the address bar instead";
+        }
+      });
+
+      // Phones go straight to the app; if it isn't installed, the page stays.
+      if (platform !== "desktop") location.href = link.appUrl;
+    }
+  </script>
+</body>
+</html>
