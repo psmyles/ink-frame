@@ -11,7 +11,7 @@
 | # | Question | Recommendation |
 |---|---|---|
 | D1 | Navigation model | **Home = every frame you're on**, whoever set it up. No switcher, no bottom tabs; Account opens from the header. Desktop uses two panes (§2) |
-| D2 | Dithering control | **Presets first** ("Balanced", "Smooth", "Crisp", "Grainy"); the full ink-frame-lab controls sit behind "Advanced" (§3.3) |
+| D2 | Dithering control | **Automatic, no choices shown** (revised 2026-09-26 at the user's request): plain-language Brightness/Contrast/Colour and a dot pattern sit behind a collapsed "Adjust" (§3.3) |
 | D3 | Upload queue | **In memory for v1**, with per-photo retry; a queue that survives an app restart comes later (§3.5) |
 | D4 | Invite links | **HTTPS links** via a small page on GitHub Pages that opens the app, since `inkframe://` links aren't clickable in most messengers (§5.1). Needs a `central/` addition |
 | D5 | Apple sign-in on Windows/Linux | **Not offered.** Google only, plus email/password in dev mode on dev projects (§7.1) |
@@ -164,23 +164,25 @@ Home (every frame you're on)
 │ │   crop box locked to 800×480 (5:3)   │ │  pinch/drag or mouse wheel/drag
 │ │                                      │ │
 │ └──────────────────────────────────────┘ │
-│  [ Original | On the frame ]             │  toggle: shows the dithered preview
-│  Look:  (Balanced) Smooth  Crisp  Grainy │  presets (D2)
-│         Advanced ▸                        │
+│  [ Original | On the frame ]   ⟳ Rotate  │  toggle: how the frame will show it
+│  Adjust ▸                                 │  collapsed; most people never open it
 │ ┌──┐┌──┐┌──┐┌──┐┌──┐                     │  strip of picked photos; ✕ removes one
 │ └──┘└──┘└──┘└──┘└──┘                     │
 └──────────────────────────────────────────┘
 ```
+- **No choices by default** (user request 2026-09-26): every photo gets **Automatic**, which tunes each photo to look as close to the original as the frame's inks allow (§3.3.1). The main screen only has the crop, rotate, the preview toggle and the strip.
 - **Crop**: aspect locked to the frame's model; defaults to centre crop (as `getCroppedCanvas()`); rotation in 90° steps.
-- **Preview**: "On the frame" shows the dithered result in the calibrated `color` values. Rendering runs in an isolate and updates ~300 ms after the crop stops moving.
-- **Presets** (D2), all from ink-frame-lab's options:
-  - *Balanced* (default): Floyd–Steinberg, serpentine
-  - *Smooth*: Jarvis, serpentine
-  - *Crisp*: Atkinson
-  - *Grainy*: random (luma)
-- **Advanced** (collapsible): algorithm (error diffusion / ordered / random / none), kernel (all 9), serpentine, Bayer size, random type. "Apply to all photos" button.
-- The last-used look is remembered per frame model.
+- **Preview**: "On the frame" shows the processed result in the panel's calibrated colours. Rendering runs in an isolate and updates ~300 ms after the crop stops moving.
+- **Adjust** (collapsed, plain words only; changes apply to the current photo, with "Use for all photos"):
+  - **Automatic (recommended)**: on by default.
+  - **Brightness**, **Contrast**, **Colour**: sliders centred on Automatic's choice (or on neutral when Automatic is off).
+  - **More options ▸** (collapsed again): **Dot pattern**: *Fine* (default), *Smooth*, *Crisp*, *Grid*, *Grainy*; and **Reset**.
+  - Words avoided in the UI: dither, kernel, error diffusion, serpentine, Bayer, gamma, saturation.
+- The last-used adjustments are remembered per frame model.
 - **Upload N** starts the queue and returns to the Frame screen.
+
+#### 3.3.1 Automatic
+Chosen by measurement (`app/test/imaging/fidelity_bench_test.dart`, 12 real photos) against opendithering's Auto-tune, which the user asked for as the default; the details and numbers are in PLAN.md §8.3.
 
 ### 3.4 Processing and upload
 Per photo: crop → resize → dither → indexed PNG → sha256 → `request-upload` → PUT → `finalize` (PLAN.md §8.3). The grid shows **placeholder tiles with progress** at the end of the grid.

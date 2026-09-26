@@ -2,10 +2,14 @@
 /// colours the panel really shows (dithering and preview) and the pure colours the
 /// firmware expects in the PNG (index for index).
 class Palette {
-  Palette({required this.id, required this.colors, required this.deviceColors})
-      : assert(colors.length == deviceColors.length && colors.length >= 2 && colors.length <= 16);
+  Palette({required this.id, required this.colors, required this.deviceColors, List<String>? names})
+      : names = names ?? const [],
+        assert(colors.length == deviceColors.length && colors.length >= 2 && colors.length <= 16);
 
   final String id;
+
+  /// Colour names ("black", "white", …), used to find the panel's black and white.
+  final List<String> names;
 
   /// Calibrated RGB, three ints per colour, for dithering and previews.
   final List<List<int>> colors;
@@ -22,6 +26,7 @@ class Palette {
       id: j['id'] as String,
       colors: [for (final c in entries) hexToRgb(c['color'] as String)],
       deviceColors: [for (final c in entries) hexToRgb(c['deviceColor'] as String)],
+      names: [for (final c in entries) c['name'] as String? ?? ''],
     );
   }
 
