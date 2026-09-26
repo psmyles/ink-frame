@@ -3,19 +3,20 @@
 // → render → delete frame (410, cache wiped).
 //   deno run --allow-all tools/dev/sim-scenario.ts
 //
-// Uses a temporary @test.invalid member (no admin needed) and removes everything it
+// Sets up the project's frame with a temporary @test.invalid owner, so it needs a
+// project without a real owner (like the integration tests). Removes everything it
 // created. Compiles frame_sim to a temp dir first.
 
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
 import {
-  addMember,
   call,
   cleanup,
-  created,
   env,
+  hasRealFrame,
   makePng,
   newUser,
   purgeLeftovers,
+  setupFrame,
   upload,
 } from "../../backend/supabase/tests/_lib.ts";
 
@@ -45,16 +46,15 @@ try {
   assertEquals(c.code, 0, c.out);
 
   await purgeLeftovers();
+  if (await hasRealFrame()) throw new Error("This project has a real frame owner; use a throwaway project.");
   const M = await newUser("sim");
-  await addMember(M, "member", "Sim tester");
+  await setupFrame(M, "Sim tester", "Sim frame");
 
-  step("1. pair");
-  const t = await call("POST", "/app-api/pairing-tokens", { token: M.token, body: { frame_name: "Sim frame", timezone: "Europe/Berlin" } });
+  step("1. connect");
+  const t = await call("POST", "/app-api/pairing-tokens", { token: M.token });
   assertEquals(t.status, 201);
   const claim = await sim("claim", "--ref", env.ref, "--token", t.body.pairing_token);
   assertEquals(claim.code, 0);
-  const frameId = /claimed frame ([0-9a-f-]{36})/.exec(claim.out)![1];
-  created.frames.push(frameId);
   const empty = await sim("sync");
   assertMatch(empty.out, /: 0 images/);
   assertMatch(empty.out, /TZ CET-1CEST/);
@@ -62,7 +62,7 @@ try {
   step("2. upload 3 → sync downloads 3");
   const ids: string[] = [];
   for (let i = 0; i < 3; i++) {
-    const r = await upload(M, frameId, await makePng(800, 480, 100 + i));
+    const r = await upload(M, await makePng(800, 480, 100 + i));
     assertEquals(r.status, 200, JSON.stringify(r.body));
     ids.push(r.body.id);
   }
@@ -82,7 +82,7 @@ try {
   assertEquals(await manifestIds(), [ids[2], ids[1]]);
 
   step("5. settings change → reflected");
-  await call("PATCH", `/app-api/frames/${frameId}/settings`, {
+  await call("PATCH", "/app-api/frame/settings", {
     token: M.token, body: { display_order: "sequential", quiet_start: "22:00", quiet_end: "07:00" },
   });
   const s5 = await sim("sync");
@@ -99,8 +99,8 @@ try {
   assertEquals([...png.subarray(1, 4)], [0x50, 0x4e, 0x47]);
   await sim("status");
 
-  step("7. delete the frame → 410, cache wiped");
-  assertEquals((await call("DELETE", `/app-api/frames/${frameId}`, { token: M.token })).status, 204);
+  step("7. disconnect the frame → 410, cache wiped");
+  assertEquals((await call("POST", "/app-api/frame/disconnect", { token: M.token })).status, 204);
   const gone = await sim("sync");
   assertEquals(gone.code, 1);
   assertMatch(gone.out, /This frame was removed/);

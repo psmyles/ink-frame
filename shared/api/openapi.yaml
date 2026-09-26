@@ -1,22 +1,23 @@
 openapi: 3.1.0
 info:
-  title: Ink Frame family-project API
-  version: 1.0.0
+  title: Ink Frame frame-project API
+  version: 2.0.0
   description: |
-    Contract for the two Edge Functions deployed into every family Supabase project
-    (PLAN.md §7.3, §7.4). The functions, `tools/frame_sim`, the Dart client and the
-    firmware all follow this file. Change it first, then the code on both sides.
+    Contract for the two Edge Functions deployed into every frame's Supabase project
+    (PLAN.md §7.3, §7.4). **One project holds one frame.** The functions,
+    `tools/frame_sim`, the Dart client and the firmware all follow this file. Change it
+    first, then the code on both sides.
 
-    **device-api** is called by frames (and `frame_sim`). A frame knows only
+    **device-api** is called by the frame hardware (and `frame_sim`). A frame knows only
     `api_base_url` (delivered over BLE, e.g. `https://<ref>.supabase.co/functions/v1`)
     and its device secret. Storage reaches it only as opaque signed URLs.
 
     **app-api** is called by the app with the user's Supabase Auth JWT. It handles every
-    write. Reads (frames, images, members, settings, usage views) go straight to
-    PostgREST and Storage under RLS and are not part of this contract.
+    write. Reads (the frame, members, images, quotas) go straight to PostgREST and
+    Storage under RLS and are not part of this contract.
 
-    Not covered here: the admin's own `project_members` row is created by the setup
-    wizard with SQL through the Management API (PLAN.md §6.2 step 6).
+    Not covered here: the setup wizard describes the frame and adds its owner with SQL
+    through the Management API (`private.setup_frame`, `private.set_owner`; PLAN.md §6.2).
 
     Conventions:
     - JSON bodies, UTF-8. App timestamps are RFC 3339 strings; device timestamps are
@@ -30,21 +31,17 @@ servers:
     variables:
       project_ref:
         default: vrhsxzedzhvujnirsuhg
-        description: Family project ref. The default is the dev project.
+        description: The frame's project ref. The default is the dev project.
 
 tags:
   - name: device
-    description: device-api. Called by frames.
-  - name: pairing
-    description: app-api. Tokens for adding a frame.
+    description: device-api. Called by the frame hardware.
+  - name: frame
+    description: app-api. The frame's name, model, settings and hardware (owner).
   - name: images
     description: app-api. Upload, delete and reorder photos.
-  - name: frames
-    description: app-api. Rename, remove and configure frames.
-  - name: invites
-    description: app-api. Invite codes and joining a family space.
-  - name: members
-    description: app-api. Removing frame and project members.
+  - name: people
+    description: app-api. Invites and members.
   - name: account
     description: app-api. The caller's own profile, account and usage.
   - name: internal
@@ -56,18 +53,17 @@ paths:
     post:
       tags: [device]
       operationId: claimFrame
-      summary: Claim a frame with a one-time pairing token
+      summary: Connect hardware to the frame with a one-time pairing token
       description: |
-        Called once by the frame after it joins Wi-Fi during pairing.
+        Called by the hardware after it joins Wi-Fi during setup. `model_id` must be the
+        frame's model (chosen at setup), else `409 model_mismatch`.
 
-        - New `hw_id` in this project: creates the frame (owner = the token's user,
-          name = the token's `frame_name`), a default settings row and an owner
-          `frame_members` row.
-        - `hw_id` already paired here to **the same owner** (re-provisioning after
-          holding the green button for 3 s): keeps the frame, its photos and settings,
-          updates `model_id`/`fw_version`, and issues a new secret. The old secret stops
-          working.
-        - `hw_id` already paired here to **a different owner**: `409`.
+        - No hardware connected yet: this hardware becomes the frame's.
+        - Same `hw_id` as connected (re-provisioning after holding the green button for
+          3 s): a new secret; the old one stops working (`401`).
+        - Different `hw_id` (replacement hardware of the same model): the new hardware
+          takes over and keeps the photos. The old device's secret is tombstoned, so it
+          gets `410` at its next sync and wipes itself.
 
         `device_secret` is 32 random bytes, base64url without padding, returned only
         here. The server stores its SHA-256.
@@ -89,7 +85,7 @@ paths:
                 fw_version: { $ref: '#/components/schemas/FwVersion' }
       responses:
         '200':
-          description: Claimed.
+          description: Connected.
           content:
             application/json:
               schema:
@@ -106,7 +102,10 @@ paths:
           description: '`invalid_pairing_token`: unknown, expired or already used.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '409':
-          description: '`hw_id_conflict`: this hardware is paired to a different owner in this project.'
+          description: |
+            `model_mismatch`: the hardware is a different model from the frame's.
+            `error.details`: `frame_model`, `device_model`. The owner can switch the
+            frame's model (`PATCH /app-api/frame`, clears the photos) and try again.
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '422':
           description: '`unknown_model`: `model_id` is not in `device_models`.'
@@ -129,8 +128,8 @@ paths:
           what is not listed.
         - `url` (signed, valid 1 h) is included only for ids **not** in `local_ids`.
 
-        A removed frame gets `410`; the backend keeps a tombstone of the secret hash so
-        it can tell "removed" (`410`) from "never valid" (`401`).
+        A disconnected or replaced device gets `410`; the backend keeps a tombstone of
+        the secret hash so it can tell "removed" (`410`) from "never valid" (`401`).
       security:
         - deviceSecret: []
       parameters:
@@ -204,7 +203,7 @@ paths:
                     sha256: 9b74c9897bac770ffc029102a200c5de9b74c9897bac770ffc029102a200c5de
                     bytes: 61234
                     position: 1.0
-                    url: https://vrhsxzedzhvujnirsuhg.supabase.co/storage/v1/object/sign/frame-images/1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed/3f1c9a52-8d0e-4b7a-9c61-2a5e0f4d7b18.png?token=eyJhbGciOi
+                    url: https://vrhsxzedzhvujnirsuhg.supabase.co/storage/v1/object/sign/frame-images/3f1c9a52-8d0e-4b7a-9c61-2a5e0f4d7b18.png?token=eyJhbGciOi
                   - id: 7a0d2e44-1b3c-4f5e-8a9b-0c1d2e3f4a5b
                     sha256: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
                     bytes: 58811
@@ -215,18 +214,22 @@ paths:
           description: '`invalid_device_secret`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '410':
-          description: '`frame_removed`: the frame was deleted in the app. The frame wipes its cache and secret.'
+          description: '`frame_removed`: this device was disconnected or replaced. It wipes its cache and secret.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   # ────────────────────────────── app-api ───────────────────────────────
-  /app-api/pairing-tokens:
-    post:
-      tags: [pairing]
-      operationId: createPairingToken
-      summary: Create a one-time pairing token for a new frame
+  /app-api/frame:
+    patch:
+      tags: [frame]
+      operationId: updateFrame
+      summary: Rename the frame or switch its panel model
       description: |
-        Any project member. The token is valid for 10 minutes and one claim. The app
-        sends it to the frame over BLE (or, in dev mode, to `frame_sim claim --token`).
+        Owner only. Send the fields to change.
+
+        Changing `model_id` deletes **every photo** (they were made for the old panel)
+        and disconnects the current hardware (it gets `410`). When photos exist this
+        needs `clear_photos: true`, else `409 photos_would_be_cleared` with
+        `error.details.images` = how many.
       security:
         - userJwt: []
       parameters:
@@ -238,15 +241,73 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [frame_name]
+              minProperties: 1
               properties:
-                frame_name: { $ref: '#/components/schemas/FrameName' }
-                timezone:
-                  type: string
-                  maxLength: 64
-                  description: |
-                    IANA name of the app's local timezone. The new frame's settings start
-                    with it; unknown names fall back to `UTC`. Default `UTC`.
+                name: { $ref: '#/components/schemas/FrameName' }
+                model_id: { $ref: '#/components/schemas/ModelId' }
+                clear_photos:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: The frame after the change.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Frame' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/NotOwner' }
+        '409':
+          description: '`photos_would_be_cleared`.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '422':
+          description: '`unknown_model`.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /app-api/frame/settings:
+    patch:
+      tags: [frame]
+      operationId: updateFrameSettings
+      summary: Change the frame's settings
+      description: |
+        Owner only. Send only the fields to change. `quiet_start` and `quiet_end` must
+        end up both set or both `null`; they may span midnight. Changes reach the frame
+        at its next sync (`settings` is returned on every sync, so `manifest_version`
+        is not bumped).
+      security:
+        - userJwt: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FrameSettingsPatch' }
+      responses:
+        '200':
+          description: The frame after the change.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Frame' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/NotOwner' }
+        '422':
+          description: '`unknown_timezone` or `quiet_hours_incomplete`.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /app-api/pairing-tokens:
+    post:
+      tags: [frame]
+      operationId: createPairingToken
+      summary: Create a one-time token for connecting hardware
+      description: |
+        Owner only. Valid for 10 minutes and one claim. The app sends it to the hardware
+        over BLE (or, in dev mode, to `frame_sim claim --token`).
+      security:
+        - userJwt: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
       responses:
         '201':
           description: Created.
@@ -258,9 +319,25 @@ paths:
                 properties:
                   pairing_token: { $ref: '#/components/schemas/PairingToken' }
                   expires_at: { type: string, format: date-time }
-        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotProjectMember' }
+        '403': { $ref: '#/components/responses/NotOwner' }
+
+  /app-api/frame/disconnect:
+    post:
+      tags: [frame]
+      operationId: disconnectFrame
+      summary: Disconnect the hardware
+      description: |
+        Owner only. The connected device gets `410` at its next sync and wipes itself;
+        the photos stay, ready for new hardware. Does nothing if none is connected.
+      security:
+        - userJwt: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
+      responses:
+        '204': { description: Disconnected. }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/NotOwner' }
 
   /app-api/images/request-upload:
     post:
@@ -268,15 +345,14 @@ paths:
       operationId: requestImageUpload
       summary: Reserve an image and get a signed upload URL
       description: |
-        Frame members only. Checks membership, that `width`×`height` equal the frame
-        model's resolution, `bytes` ≤ 524288, and quotas (frame, user, project). Then
-        inserts a `pending` row and returns a signed upload URL for
-        `frame-images/{frame_id}/{image_id}.png`.
+        Members. Checks that `width`×`height` equal the frame model's resolution,
+        `bytes` ≤ 524288, and quotas (frame, user). Then inserts a `pending` row and
+        returns a signed upload URL for `frame-images/{image_id}.png`.
 
         Upload with `PUT upload_url`, `Content-Type: image/png`, body = the PNG bytes.
         Then call `/app-api/images/finalize`.
 
-        Dedupe on `(frame_id, sha256)`:
+        Dedupe on `sha256`:
         - a `ready` image with this hash exists → `409 duplicate_image`, with its id in
           `error.details.image_id`
         - a `pending` one exists (an earlier upload failed) → the same `image_id` with
@@ -292,9 +368,8 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [frame_id, sha256, bytes, width, height]
+              required: [sha256, bytes, width, height]
               properties:
-                frame_id: { $ref: '#/components/schemas/Uuid' }
                 sha256: { $ref: '#/components/schemas/Sha256' }
                 bytes:
                   type: integer
@@ -319,10 +394,9 @@ paths:
                   expires_at: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotFrameMember' }
-        '404': { $ref: '#/components/responses/FrameNotFound' }
+        '403': { $ref: '#/components/responses/NotMember' }
         '409':
-          description: '`duplicate_image`: already on this frame. `error.details.image_id` is the existing id.'
+          description: '`duplicate_image`: already on the frame. `error.details.image_id` is the existing id.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '413':
           description: '`too_large`: `bytes` over 524288.'
@@ -330,7 +404,7 @@ paths:
         '422':
           description: |
             `dimension_mismatch` (details: `expected_width`, `expected_height`) or
-            `quota_exceeded` (details: `scope` = frame|user|project, `limit`, `used`,
+            `quota_exceeded` (details: `scope` = frame|user, `limit`, `used`,
             `unit` = images|bytes).
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
@@ -342,7 +416,7 @@ paths:
       description: |
         Only the uploader. Checks that the object exists, its size equals `bytes`, it
         starts with the PNG signature, and its IHDR width/height match. Then marks it
-        `ready`, gives it the last `position` on the frame, and bumps the frame's
+        `ready`, gives it the last `position`, and bumps the frame's
         `manifest_version`. Calling it again on a `ready` image returns the image
         unchanged.
 
@@ -371,7 +445,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403':
-          description: '`not_uploader`.'
+          description: '`not_member` or `not_uploader`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '404':
           description: '`image_not_found`.'
@@ -389,10 +463,10 @@ paths:
       operationId: deleteImages
       summary: Delete one or more images
       description: |
-        All-or-nothing. Each image must be the caller's own, or on a frame the caller
-        owns; otherwise nothing is deleted and the response is `403`. Deletes rows and
-        objects and bumps `manifest_version` on each affected frame. Ids that no longer
-        exist are ignored (so a retry succeeds).
+        All-or-nothing. Each image must be the caller's own, or the caller must be the
+        owner; otherwise nothing is deleted and the response is `403`. Deletes rows and
+        objects and bumps `manifest_version`. Ids that no longer exist are ignored (so a
+        retry succeeds).
       security:
         - userJwt: []
       parameters:
@@ -427,7 +501,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403':
-          description: '`not_allowed`: at least one image is someone else''s on a frame the caller does not own. `error.details.image_ids` lists them.'
+          description: '`not_member`, or `not_allowed`: at least one image is someone else''s and the caller isn''t the owner. `error.details.image_ids` lists them.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   /app-api/images/reorder:
@@ -436,11 +510,9 @@ paths:
       operationId: reorderImage
       summary: Move one image to a new place in the frame's order
       description: |
-        Frame owner only. Places `image_id` directly after `after_image_id`, or first
-        when that is `null`. The server sets `position` to the midpoint of its new
-        neighbours (renumbering the frame 1, 2, 3… when the gap gets too small) and
-        bumps `manifest_version`. Moving one image at a time keeps concurrent uploads
-        from invalidating a whole-list reorder.
+        Owner only. Places `image_id` directly after `after_image_id`, or first when
+        that is `null`. The server sets `position` to the midpoint of its new neighbours
+        (renumbering 1, 2, 3… when the gap gets too small) and bumps `manifest_version`.
       security:
         - userJwt: []
       parameters:
@@ -459,7 +531,7 @@ paths:
                   oneOf:
                     - { $ref: '#/components/schemas/Uuid' }
                     - { type: 'null' }
-                  description: Must be a `ready` image on the same frame, or `null` for first.
+                  description: Must be a `ready` image, or `null` for first.
       responses:
         '200':
           description: Moved. Returns the moved image with its new position.
@@ -468,141 +540,22 @@ paths:
               schema: { $ref: '#/components/schemas/Image' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotFrameOwner' }
+        '403': { $ref: '#/components/responses/NotOwner' }
         '404':
-          description: '`image_not_found`: either image is missing, not `ready`, or they are on different frames.'
-          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-
-  /app-api/frames/{frame_id}:
-    parameters:
-      - $ref: '#/components/parameters/FrameId'
-    patch:
-      tags: [frames]
-      operationId: renameFrame
-      summary: Rename a frame
-      description: Frame owner only.
-      security:
-        - userJwt: []
-      parameters:
-        - $ref: '#/components/parameters/ApiKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: false
-              required: [name]
-              properties:
-                name: { $ref: '#/components/schemas/FrameName' }
-      responses:
-        '200':
-          description: Renamed.
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [frame_id, name]
-                properties:
-                  frame_id: { $ref: '#/components/schemas/Uuid' }
-                  name: { $ref: '#/components/schemas/FrameName' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotFrameOwner' }
-        '404': { $ref: '#/components/responses/FrameNotFound' }
-    delete:
-      tags: [frames]
-      operationId: deleteFrame
-      summary: Remove a frame
-      description: |
-        Frame owner only. Deletes the frame's images (rows and objects), settings,
-        members and invites, and leaves a tombstone so the frame gets `410` on its
-        next sync and wipes itself.
-      security:
-        - userJwt: []
-      parameters:
-        - $ref: '#/components/parameters/ApiKey'
-      responses:
-        '204': { description: Removed. }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotFrameOwner' }
-        '404': { $ref: '#/components/responses/FrameNotFound' }
-
-  /app-api/frames/{frame_id}/settings:
-    parameters:
-      - $ref: '#/components/parameters/FrameId'
-    patch:
-      tags: [frames]
-      operationId: updateFrameSettings
-      summary: Change frame settings
-      description: |
-        Frame owner only. Send only the fields to change. `quiet_start` and
-        `quiet_end` must end up both set or both `null`; they may span midnight.
-        Changes reach the frame at its next sync (`settings` is returned on every
-        sync, so `manifest_version` is not bumped).
-      security:
-        - userJwt: []
-      parameters:
-        - $ref: '#/components/parameters/ApiKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/FrameSettingsPatch' }
-      responses:
-        '200':
-          description: The full settings after the change.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/FrameSettings' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotFrameOwner' }
-        '404': { $ref: '#/components/responses/FrameNotFound' }
-        '422':
-          description: '`unknown_timezone` or `quiet_hours_incomplete`.'
-          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-
-  /app-api/frames/{frame_id}/members/{user_id}:
-    parameters:
-      - $ref: '#/components/parameters/FrameId'
-      - $ref: '#/components/parameters/UserId'
-    delete:
-      tags: [members]
-      operationId: removeFrameMember
-      summary: Remove a member from a frame, or leave it
-      description: |
-        The frame owner removes a member, or a member removes themselves. The owner
-        can't be removed (delete the frame instead). The member's photos stay on the
-        frame; the owner can delete them.
-      security:
-        - userJwt: []
-      parameters:
-        - $ref: '#/components/parameters/ApiKey'
-      responses:
-        '204': { description: Removed. }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403':
-          description: '`not_allowed`, or `cannot_remove_owner`.'
-          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-        '404':
-          description: '`frame_not_found` or `member_not_found`.'
+          description: '`image_not_found`: either image is missing or not `ready`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   /app-api/invites:
     post:
-      tags: [invites]
+      tags: [people]
       operationId: createInvite
       summary: Create an invite code
       description: |
-        With `frame_id`: frame owner only; accepting makes the invitee a project member
-        (if not already) and a member of that frame. Without `frame_id`: admin only;
-        project membership only.
+        Owner only. Accepting makes the invitee a member of this frame.
 
         The code is 10 characters of Crockford base32, shown as `XXXXX-XXXXX`
         (hyphen and case ignored on input). Only its hash is stored, so it is returned
-        just once. The app builds the join link:
-        `inkframe://join?u=<project_url>&k=<public_key>&c=<code>` (PLAN.md §5.5).
+        just once. The app builds the join link (PLAN.md §5.5).
       security:
         - userJwt: []
       parameters:
@@ -615,11 +568,6 @@ paths:
               type: object
               additionalProperties: false
               properties:
-                frame_id:
-                  oneOf:
-                    - { $ref: '#/components/schemas/Uuid' }
-                    - { type: 'null' }
-                  default: null
                 max_uses:
                   type: integer
                   minimum: 1
@@ -644,18 +592,11 @@ paths:
                   code:
                     type: string
                     pattern: '^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$'
-                  frame_id:
-                    oneOf:
-                      - { $ref: '#/components/schemas/Uuid' }
-                      - { type: 'null' }
                   expires_at: { type: string, format: date-time }
                   max_uses: { type: integer }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403':
-          description: '`not_frame_owner` (frame invite) or `not_admin` (project invite).'
-          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-        '404': { $ref: '#/components/responses/FrameNotFound' }
+        '403': { $ref: '#/components/responses/NotOwner' }
 
   /app-api/invites/{invite_id}:
     parameters:
@@ -664,10 +605,10 @@ paths:
         required: true
         schema: { $ref: '#/components/schemas/Uuid' }
     delete:
-      tags: [invites]
+      tags: [people]
       operationId: revokeInvite
       summary: Revoke an invite
-      description: Its creator, the frame owner (frame invite) or the admin.
+      description: Owner only.
       security:
         - userJwt: []
       parameters:
@@ -675,24 +616,22 @@ paths:
       responses:
         '204': { description: Revoked. }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403':
-          description: '`not_allowed`.'
-          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '403': { $ref: '#/components/responses/NotOwner' }
         '404':
           description: '`invite_not_found`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   /app-api/invites/accept:
     post:
-      tags: [invites]
+      tags: [people]
       operationId: acceptInvite
-      summary: Join the family space (and a frame) with an invite code
+      summary: Join the frame with an invite code
       description: |
-        The one app-api call that does **not** require an existing `project_members`
-        row: a freshly signed-in user calls it to join. `display_name` is required
-        when the caller is not yet a project member, and ignored otherwise (use
-        `PATCH /app-api/me`). Unknown, expired, revoked and used-up codes all give the
-        same `404`, so the response doesn't reveal which codes exist.
+        The one app-api call that does **not** require an existing `members` row: a
+        freshly signed-in user calls it to join. `display_name` is required when the
+        caller is not yet a member, and ignored otherwise (use `PATCH /app-api/me`).
+        Unknown, expired, revoked and used-up codes all give the same `404`, so the
+        response doesn't reveal which codes exist.
       security:
         - userJwt: []
       parameters:
@@ -714,19 +653,14 @@ paths:
                 display_name: { $ref: '#/components/schemas/DisplayName' }
       responses:
         '200':
-          description: Joined.
+          description: Joined (or already a member).
           content:
             application/json:
               schema:
                 type: object
-                required: [project_role, frame_id]
+                required: [role]
                 properties:
-                  project_role: { $ref: '#/components/schemas/ProjectRole' }
-                  frame_id:
-                    oneOf:
-                      - { $ref: '#/components/schemas/Uuid' }
-                      - { type: 'null' }
-                    description: The frame joined, or `null` for a project-only invite.
+                  role: { $ref: '#/components/schemas/Role' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '404':
@@ -736,19 +670,21 @@ paths:
           description: '`display_name_required`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
-  /app-api/project-members/{user_id}:
+  /app-api/members/{user_id}:
     parameters:
-      - $ref: '#/components/parameters/UserId'
+      - name: user_id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Uuid' }
     delete:
-      tags: [members]
-      operationId: removeProjectMember
-      summary: Remove someone from the family space
+      tags: [people]
+      operationId: removeMember
+      summary: Remove someone from the frame, or leave it
       description: |
-        Admin only; the admin can't remove themselves this way (see `DELETE
-        /app-api/me`). Same clean-up as a member deleting their own account: their
-        photos stay (`uploaded_by` becomes `null`), frames they own pass to the
-        calling admin (who becomes `owner` in `frame_members`), and their memberships
-        are removed. Their auth user is removed by the hourly job.
+        The owner removes a member, or a member removes themselves. The owner can't be
+        removed (deleting the frame is done through the Management API). The person's
+        photos stay; the owner can delete them. Their auth user is removed by the hourly
+        clean-up.
       security:
         - userJwt: []
       parameters:
@@ -757,7 +693,7 @@ paths:
         '204': { description: Removed. }
         '401': { $ref: '#/components/responses/Unauthenticated' }
         '403':
-          description: '`not_admin` or `cannot_remove_self`.'
+          description: '`not_member`, `not_allowed` or `cannot_remove_owner`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '404':
           description: '`member_not_found`.'
@@ -767,7 +703,7 @@ paths:
     patch:
       tags: [account]
       operationId: updateMe
-      summary: Change your display name
+      summary: Change your display name on this frame
       security:
         - userJwt: []
       parameters:
@@ -793,35 +729,23 @@ paths:
                 properties:
                   user_id: { $ref: '#/components/schemas/Uuid' }
                   display_name: { $ref: '#/components/schemas/DisplayName' }
-                  role: { $ref: '#/components/schemas/ProjectRole' }
+                  role: { $ref: '#/components/schemas/Role' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotProjectMember' }
+        '403': { $ref: '#/components/responses/NotMember' }
     delete:
       tags: [account]
       operationId: deleteMe
-      summary: Delete your account in this family space
+      summary: Leave the frame and delete your account in its project
       description: |
-        Required by the App Store. Deletes the caller's memberships and auth user.
+        Required by the App Store. Deletes the caller's membership and auth user in this
+        frame's project. With `delete_photos=true` (the app's "Also delete my photos"
+        checkbox) every photo they uploaded is deleted and `manifest_version` bumped;
+        otherwise the photos stay with `uploaded_by` set to `null`.
 
-        Their photos: with `delete_photos=true` (the app's "Also delete my photos"
-        checkbox), every photo they uploaded is deleted, rows and objects, and
-        `manifest_version` is bumped on each affected frame. Otherwise the photos
-        stay, with `uploaded_by` set to `null`, and frame owners can still delete
-        them.
-
-        Frames the caller owns:
-        - **Member:** each frame passes to the admin, who becomes its `owner`. The
-          frames keep running. If the space has no admin, the frames are deleted as
-          below.
-        - **Admin:** the frames and every photo on them are deleted, and they get
-          `410` on their next sync.
-
-        The admin may do this at any time, even with other members in the space. The
-        app must first show a warning listing the consequences: their frames are
-        removed, and the space is left with no admin, so nobody can create project
-        invites, remove members, upgrade the schema or restore a paused project
-        (PLAN.md §15).
+        The owner gets `409 owner_must_delete_frame`: for them, deleting their account
+        means deleting the whole frame, which the app does through the Management API
+        after a warning (PLAN.md §7.4).
       security:
         - userJwt: []
       parameters:
@@ -833,8 +757,12 @@ paths:
           description: Also delete every photo the caller uploaded.
       responses:
         '204': { description: Deleted. }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotProjectMember' }
+        '403': { $ref: '#/components/responses/NotMember' }
+        '409':
+          description: '`owner_must_delete_frame`.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   /app-api/usage:
     get:
@@ -842,10 +770,9 @@ paths:
       operationId: getUsage
       summary: Storage usage and limits
       description: |
-        Project totals, one entry per frame the caller belongs to, and per-user
-        entries (only the caller's own, or every member's for the admin). A `null`
-        limit means unlimited. `free_tier_bytes` is the Supabase free-tier storage
-        limit, shown next to the project total.
+        The frame's totals against its limits and the Supabase free-tier storage, and
+        per-person entries (everyone for the owner, only yourself for members). A `null`
+        limit means unlimited.
       security:
         - userJwt: []
       parameters:
@@ -857,24 +784,15 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [project, frames, users]
+                required: [frame, users]
                 properties:
-                  project:
+                  frame:
                     allOf:
                       - { $ref: '#/components/schemas/UsageEntry' }
                       - type: object
                         required: [free_tier_bytes]
                         properties:
                           free_tier_bytes: { type: integer, format: int64 }
-                  frames:
-                    type: array
-                    items:
-                      allOf:
-                        - { $ref: '#/components/schemas/UsageEntry' }
-                        - type: object
-                          required: [frame_id]
-                          properties:
-                            frame_id: { $ref: '#/components/schemas/Uuid' }
                   users:
                     type: array
                     items:
@@ -885,7 +803,7 @@ paths:
                           properties:
                             user_id: { $ref: '#/components/schemas/Uuid' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
-        '403': { $ref: '#/components/responses/NotProjectMember' }
+        '403': { $ref: '#/components/responses/NotMember' }
 
   /app-api/internal/maintenance:
     post:
@@ -917,23 +835,23 @@ paths:
 
 components:
   securitySchemes:
-    maintenanceSecret:
-      type: apiKey
-      in: header
-      name: x-maintenance-secret
-      description: Random secret generated by the migrations and stored in `private.config`; only the database and the function (service role) can read it.
     deviceSecret:
       type: http
       scheme: bearer
-      description: The frame's `device_secret` from `/device-api/claim`. Not a JWT.
+      description: The hardware's `device_secret` from `/device-api/claim`. Not a JWT.
     userJwt:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Supabase Auth access token from Google/Apple ID-token sign-in on this family
-        project. Every call except `/app-api/invites/accept` also needs a
-        `project_members` row (`403 not_project_member` otherwise).
+        Supabase Auth access token from Google/Apple ID-token sign-in on this frame's
+        project. Every call except `/app-api/invites/accept` also needs a `members` row
+        (`403 not_member` otherwise).
+    maintenanceSecret:
+      type: apiKey
+      in: header
+      name: x-maintenance-secret
+      description: Random secret generated by the migrations and stored in `private.config`; only the database and the function (service role) can read it.
 
   parameters:
     ApiKey:
@@ -942,16 +860,6 @@ components:
       required: false
       description: The project's public key (legacy anon JWT or `sb_publishable_…`). Not required; accepted if sent.
       schema: { type: string }
-    FrameId:
-      name: frame_id
-      in: path
-      required: true
-      schema: { $ref: '#/components/schemas/Uuid' }
-    UserId:
-      name: user_id
-      in: path
-      required: true
-      schema: { $ref: '#/components/schemas/Uuid' }
 
   responses:
     BadRequest:
@@ -960,17 +868,11 @@ components:
     Unauthenticated:
       description: '`unauthenticated`: missing, invalid or expired JWT.'
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-    NotProjectMember:
-      description: '`not_project_member`.'
+    NotMember:
+      description: '`not_member`.'
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-    NotFrameMember:
-      description: '`not_project_member` or `not_frame_member`.'
-      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-    NotFrameOwner:
-      description: '`not_project_member` or `not_frame_owner`.'
-      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
-    FrameNotFound:
-      description: '`frame_not_found`.'
+    NotOwner:
+      description: '`not_member` or `not_owner`.'
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   schemas:
@@ -1031,10 +933,10 @@ components:
       minLength: 1
       maxLength: 40
       description: Trimmed by the server.
-    ProjectRole:
+    Role:
       type: string
-      enum: [admin, member]
-      description: At most one `admin` per family space.
+      enum: [owner, member]
+      description: Exactly one `owner` per frame.
     DisplayOrder:
       type: string
       enum: [random, sequential]
@@ -1042,6 +944,10 @@ components:
       type: string
       pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
       description: '`HH:MM`, 24-hour, in the frame''s timezone.'
+    NullableLocalTime:
+      oneOf:
+        - { $ref: '#/components/schemas/LocalTime' }
+        - { type: 'null' }
 
     DeviceSettings:
       type: object
@@ -1050,14 +956,8 @@ components:
         image_interval_s: { type: integer }
         display_order: { $ref: '#/components/schemas/DisplayOrder' }
         sync_interval_s: { type: integer }
-        quiet_start:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
-        quiet_end:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
+        quiet_start: { $ref: '#/components/schemas/NullableLocalTime' }
+        quiet_end: { $ref: '#/components/schemas/NullableLocalTime' }
         tz_posix:
           type: string
           description: POSIX TZ string for `setenv("TZ")`, derived from the IANA timezone.
@@ -1077,10 +977,9 @@ components:
 
     Image:
       type: object
-      required: [id, frame_id, uploaded_by, sha256, bytes, width, height, position, status, created_at]
+      required: [id, uploaded_by, sha256, bytes, width, height, position, status, created_at]
       properties:
         id: { $ref: '#/components/schemas/Uuid' }
-        frame_id: { $ref: '#/components/schemas/Uuid' }
         uploaded_by:
           oneOf:
             - { $ref: '#/components/schemas/Uuid' }
@@ -1096,26 +995,28 @@ components:
           enum: [pending, ready]
         created_at: { type: string, format: date-time }
 
-    FrameSettings:
+    Frame:
       type: object
-      required: [frame_id, image_interval_s, display_order, sync_interval_s, quiet_start, quiet_end, timezone, updated_at]
+      required: [id, name, model_id, connected, image_interval_s, display_order, sync_interval_s,
+                 quiet_start, quiet_end, timezone]
       properties:
-        frame_id: { $ref: '#/components/schemas/Uuid' }
+        id: { $ref: '#/components/schemas/Uuid' }
+        name: { $ref: '#/components/schemas/FrameName' }
+        model_id: { $ref: '#/components/schemas/ModelId' }
+        connected:
+          type: boolean
+          description: Whether hardware is connected.
+        fw_version: { type: [string, 'null'] }
+        last_seen_at: { type: [string, 'null'], format: date-time }
+        battery_pct: { type: [integer, 'null'] }
         image_interval_s: { type: integer }
         display_order: { $ref: '#/components/schemas/DisplayOrder' }
         sync_interval_s: { type: integer }
-        quiet_start:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
-        quiet_end:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
+        quiet_start: { $ref: '#/components/schemas/NullableLocalTime' }
+        quiet_end: { $ref: '#/components/schemas/NullableLocalTime' }
         timezone:
           type: string
           description: IANA name, e.g. `Europe/Berlin`.
-        updated_at: { type: string, format: date-time }
 
     FrameSettingsPatch:
       type: object
@@ -1133,14 +1034,8 @@ components:
           minimum: 3600
           maximum: 172800
           description: 1 hour to 2 days. Default 86400 (24 hours).
-        quiet_start:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
-        quiet_end:
-          oneOf:
-            - { $ref: '#/components/schemas/LocalTime' }
-            - { type: 'null' }
+        quiet_start: { $ref: '#/components/schemas/NullableLocalTime' }
+        quiet_end: { $ref: '#/components/schemas/NullableLocalTime' }
         timezone:
           type: string
           maxLength: 64

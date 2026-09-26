@@ -1,6 +1,7 @@
 // app-api: every write the app makes (PLAN.md §7.4, shared/api/openapi.yaml).
-// Auth: the user's Supabase JWT, verified here (verify_jwt is off, config.toml).
-// Membership and permissions are checked by the svc_* SQL functions.
+// One project = one frame. Auth: the user's Supabase JWT, verified here (verify_jwt
+// is off, config.toml). Membership and permissions are checked by the svc_* SQL
+// functions.
 
 import { Hono } from "npm:hono@4.13.8";
 import { z } from "npm:zod@4.6.5";
@@ -13,6 +14,7 @@ import {
   FrameName,
   LocalTime,
   MAX_IMAGE_BYTES,
+  ModelId,
   Sha256,
   Timezone,
   Uuid,
@@ -60,25 +62,57 @@ app.use("*", async (c, next) => {
 
 const param = (c: { req: { param: (k: string) => string } }, k: string) => check(Uuid, c.req.param(k));
 
-// ── Pairing ───────────────────────────────────────────────────────────────────
+// ── Frame (owner) ─────────────────────────────────────────────────────────────
+
+app.patch("/frame", async (c) => {
+  const b = await body(c, z.strictObject({
+    name: FrameName.optional(),
+    model_id: ModelId.optional(),
+    clear_photos: z.boolean().optional(),
+  }).refine((o) => o.name !== undefined || o.model_id !== undefined, "Send a name or a model_id."));
+  const r = await rpc<{ frame: Record<string, unknown>; storage_paths: string[] }>("svc_update_frame", {
+    p_user: c.get("user"),
+    p_patch: b,
+  });
+  await removeObjects(r.storage_paths);
+  return c.json(r.frame);
+});
+
+const SettingsPatch = z.strictObject({
+  image_interval_s: z.int().min(3600).max(172800),
+  display_order: DisplayOrder,
+  sync_interval_s: z.int().min(3600).max(172800),
+  quiet_start: LocalTime.nullable(),
+  quiet_end: LocalTime.nullable(),
+  timezone: Timezone,
+}).partial().refine((o) => Object.keys(o).length > 0, "Send at least one setting.");
+
+app.patch("/frame/settings", async (c) => {
+  const patch = await body(c, SettingsPatch);
+  if (patch.timezone !== undefined && !TZ_POSIX[patch.timezone]) {
+    fail("unknown_timezone", `Unknown timezone ${patch.timezone}.`);
+  }
+  return c.json(await rpc("svc_update_frame_settings", { p_user: c.get("user"), p_patch: patch }));
+});
 
 app.post("/pairing-tokens", async (c) => {
-  const b = await body(c, z.strictObject({ frame_name: FrameName, timezone: Timezone.optional() }));
   const token = randomCode(26);
   const expiresAt = await rpc<string>("svc_create_pairing_token", {
     p_user: c.get("user"),
     p_token_hash: await sha256Hex(token),
-    p_frame_name: b.frame_name,
-    p_timezone: b.timezone && TZ_POSIX[b.timezone] ? b.timezone : "UTC",
   });
   return c.json({ pairing_token: token, expires_at: expiresAt }, 201);
+});
+
+app.post("/frame/disconnect", async (c) => {
+  await rpc("svc_disconnect_frame", { p_user: c.get("user") });
+  return c.body(null, 204);
 });
 
 // ── Images ────────────────────────────────────────────────────────────────────
 
 app.post("/images/request-upload", async (c) => {
   const b = await body(c, z.strictObject({
-    frame_id: Uuid,
     sha256: Sha256,
     bytes: z.int().min(1),
     width: z.int().min(1).max(4096),
@@ -88,7 +122,6 @@ app.post("/images/request-upload", async (c) => {
 
   const r = await rpc<{ image_id: string; storage_path: string }>("svc_request_upload", {
     p_user: c.get("user"),
-    p_frame: b.frame_id,
     p_sha256: b.sha256,
     p_bytes: b.bytes,
     p_width: b.width,
@@ -168,49 +201,7 @@ app.post("/images/reorder", async (c) => {
   }));
 });
 
-// ── Frames ────────────────────────────────────────────────────────────────────
-
-app.patch("/frames/:frame_id", async (c) => {
-  const frame = param(c, "frame_id");
-  const b = await body(c, z.strictObject({ name: FrameName }));
-  return c.json(await rpc("svc_rename_frame", { p_user: c.get("user"), p_frame: frame, p_name: b.name }));
-});
-
-app.delete("/frames/:frame_id", async (c) => {
-  const frame = param(c, "frame_id");
-  const r = await rpc<{ storage_paths: string[] }>("svc_delete_frame", { p_user: c.get("user"), p_frame: frame });
-  await removeObjects(r.storage_paths);
-  return c.body(null, 204);
-});
-
-const SettingsPatch = z.strictObject({
-  image_interval_s: z.int().min(3600).max(172800),
-  display_order: DisplayOrder,
-  sync_interval_s: z.int().min(3600).max(172800),
-  quiet_start: LocalTime.nullable(),
-  quiet_end: LocalTime.nullable(),
-  timezone: Timezone,
-}).partial().refine((o) => Object.keys(o).length > 0, "Send at least one setting.");
-
-app.patch("/frames/:frame_id/settings", async (c) => {
-  const frame = param(c, "frame_id");
-  const patch = await body(c, SettingsPatch);
-  if (patch.timezone !== undefined && !TZ_POSIX[patch.timezone]) {
-    fail("unknown_timezone", `Unknown timezone ${patch.timezone}.`);
-  }
-  return c.json(await rpc("svc_update_frame_settings", { p_user: c.get("user"), p_frame: frame, p_patch: patch }));
-});
-
-app.delete("/frames/:frame_id/members/:user_id", async (c) => {
-  await rpc("svc_remove_frame_member", {
-    p_user: c.get("user"),
-    p_frame: param(c, "frame_id"),
-    p_target: param(c, "user_id"),
-  });
-  return c.body(null, 204);
-});
-
-// ── Invites ───────────────────────────────────────────────────────────────────
+// ── People ────────────────────────────────────────────────────────────────────
 
 app.post("/invites/accept", async (c) => {
   const b = await body(c, z.strictObject({
@@ -228,14 +219,12 @@ app.post("/invites/accept", async (c) => {
 
 app.post("/invites", async (c) => {
   const b = await body(c, z.strictObject({
-    frame_id: Uuid.nullable().default(null),
     max_uses: z.int().min(1).max(50).default(1),
     expires_in_s: z.int().min(3600).max(2592000).default(604800),
   }));
   const code = randomCode(10);
   const r = await rpc<Record<string, unknown>>("svc_create_invite", {
     p_user: c.get("user"),
-    p_frame: b.frame_id,
     p_max_uses: b.max_uses,
     p_expires_in_s: b.expires_in_s,
     p_code_hash: await sha256Hex(code),
@@ -248,12 +237,12 @@ app.delete("/invites/:invite_id", async (c) => {
   return c.body(null, 204);
 });
 
-// ── Members and account ───────────────────────────────────────────────────────
-
-app.delete("/project-members/:user_id", async (c) => {
-  await rpc("svc_remove_project_member", { p_user: c.get("user"), p_target: param(c, "user_id") });
+app.delete("/members/:user_id", async (c) => {
+  await rpc("svc_remove_member", { p_user: c.get("user"), p_target: param(c, "user_id") });
   return c.body(null, 204);
 });
+
+// ── Account and usage ─────────────────────────────────────────────────────────
 
 app.patch("/me", async (c) => {
   const b = await body(c, z.strictObject({ display_name: DisplayName }));
@@ -272,8 +261,8 @@ app.delete("/me", async (c) => {
 });
 
 app.get("/usage", async (c) => {
-  const u = await rpc<{ project: Record<string, unknown> }>("svc_usage", { p_user: c.get("user") });
-  return c.json({ ...u, project: { ...u.project, free_tier_bytes: FREE_TIER_BYTES } });
+  const u = await rpc<{ frame: Record<string, unknown> }>("svc_usage", { p_user: c.get("user") });
+  return c.json({ ...u, frame: { ...u.frame, free_tier_bytes: FREE_TIER_BYTES } });
 });
 
 Deno.serve(app.fetch);

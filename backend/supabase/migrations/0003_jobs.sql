@@ -1,6 +1,6 @@
 -- 0003: scheduled jobs (PLAN.md §7.5).
--- Pure-database clean-up runs in SQL. Purging stale pending images needs the Storage
--- API (Supabase blocks deleting storage.objects with SQL), so pg_net calls
+-- Pure-database clean-up runs in SQL. Deleting storage objects needs the Storage API
+-- (Supabase blocks deleting storage.objects with SQL), so pg_net calls
 -- app-api /internal/maintenance with a secret that only the database and the
 -- service role can read.
 
@@ -24,11 +24,14 @@ begin
 
   delete from public.invites where expires_at < now() or uses >= max_uses;
 
-  -- Auth users who never joined, or who left the space. Signing up is open at the
-  -- auth layer (PLAN.md §5.4); membership is what matters.
+  -- Their objects are removed by the maintenance sweep.
+  delete from public.images where status = 'pending' and created_at < now() - interval '24 hours';
+
+  -- Auth users who never joined, or who left. Signing up is open at the auth layer
+  -- (PLAN.md §5.4); membership is what matters.
   delete from auth.users u
   where u.created_at < now() - interval '24 hours'
-    and not exists (select 1 from public.project_members m where m.user_id = u.id);
+    and not exists (select 1 from public.members m where m.user_id = u.id);
 end;
 $$;
 
@@ -43,10 +46,7 @@ begin
   end if;
   perform net.http_post(
     url     := base || '/functions/v1/app-api/internal/maintenance',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'x-maintenance-secret', secret
-    ),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-maintenance-secret', secret),
     body    := '{}'::jsonb
   );
 end;

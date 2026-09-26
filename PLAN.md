@@ -33,9 +33,9 @@ Rules for any Claude session working here:
 The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab)) is a web tool that crops and dithers images for e-ink displays. It is paired with a standalone firmware for the **Seeed reTerminal E1002** (ESP32-S3, 7.3" Spectra 6, 800×480). Today that firmware reads `/images/1.png…N.png` from an SD card. Photos get there when the user holds the green button, joins the frame's own Wi-Fi hotspot, and uploads PNGs made in the web tool. That's clunky: two tools, switching Wi-Fi networks, and it has to be done in person at the frame.
 
 **Ink Frame** replaces that with:
-- A **native Flutter companion app** (iOS, Android, and fully functional on **desktop** for easy testing). It crops, dithers and compresses photos **on the device** and uploads them to the **family's own Supabase project** (free tier).
-- **Frames** sync daily (or when the green button is pressed). They mirror the family's cloud photos onto the SD card, which acts only as a cache, and show them offline as today.
-- An **in-app wizard** that sets up each family's Supabase project automatically. Families need only a Supabase account (one admin) and a Google/Apple login (everyone).
+- A **native Flutter companion app** (iOS, Android, and fully functional on **desktop** for easy testing). It crops, dithers and compresses photos **on the device** and uploads them to **the frame's own Supabase project** (free tier), in its owner's Supabase account.
+- **Frames** sync daily (or when the green button is pressed). They mirror their cloud photos onto the SD card, which acts only as a cache, and show them offline as today.
+- An **in-app wizard** that sets up each frame's Supabase project automatically. The person who sets up a frame (its **owner**) needs a free Supabase account; everyone needs only a Google/Apple login.
 
 ---
 
@@ -44,16 +44,18 @@ The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab))
 | Topic | Decision |
 |---|---|
 | Audience | Consumer product for other people |
-| Backend tenancy | **One Supabase project per family**, on the family's own free-tier account. The family's limits are not shared with other families |
+| Backend tenancy | **One Supabase project per frame**, in the owner's free Supabase account. Photos are processed for one panel's resolution and palette, so a project never mixes panel types. A free account runs up to **2 frames** (2 active free projects); a third frame is set up by someone else with their own account |
 | Project setup (production) | **In-app wizard** via Supabase OAuth + Management API. It creates the project, schema, buckets, functions and auth config |
 | Project setup (development) | Developer **Personal Access Token (PAT)** with the Supabase CLI and Management API. The wizard's API client accepts a PAT or an OAuth token through one interface |
 | Login | **Sign in with Google + Sign in with Apple** through native ID-token sign-in, using the developer's OAuth client IDs. Families never touch OAuth consoles (§5). Anonymous sign-in was considered and **rejected**: social login lets members recover access on a new device just by signing in again |
-| Display names | Typed by the user when joining a family space (not taken from the Google/Apple profile), and editable later |
-| Users within a project | Full multi-user: any project member can pair frames and invite others per frame |
-| Sharing | Frame owner invites members. Members delete their own photos; the owner can delete anything |
+| Display names | Typed by the user when joining a frame (not taken from the Google/Apple profile; reused as the default for the next frame), and editable later |
+| Users within a project | One **owner** (set up the frame; hosts the project) and any number of **members**. The app lists every frame a person belongs to, across projects |
+| Sharing | The owner invites people. Members delete their own photos; the owner can delete anything |
 | App | Native Flutter, **no webview**. Dithering ported to Dart; output PNG compressed (indexed palette) |
 | App platforms | **iOS + Android** (store targets) + **desktop** (Windows required as the developer's machine; macOS/Linux nice-to-have), with desktop fully functional for testing |
-| Frame onboarding | **BLE** from the app: Wi-Fi details + family API URL + pairing token |
+| Frame onboarding | **BLE** from the app: Wi-Fi details + the frame's API URL + pairing token. The panel model is chosen at setup; the hardware must match it |
+| Hardware replacement | New hardware of the **same model** takes over the frame and keeps its photos (the old device gets `410`). A **different model** is refused until the owner switches the frame's model, which clears its photos |
+| User-facing words | **frame**, **owner** ("set up by"), **people** / "shared with", **invite someone to add photos**, "**checks for new photos**", "**connect the frame**", "**asleep because it wasn't used for a while**". Never: space, project, admin, sync, manifest, pair/claim. "Supabase account" appears only in setup |
 | Sync | Fixed schedule (default 24 h) + **short green-button press = sync now** |
 | Deletes | Frame **mirrors the cloud exactly** |
 | Offline/hotspot mode | **Removed.** No soft-AP and no web server; the SD card is only a cache |
@@ -76,11 +78,11 @@ The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab))
                 │  • (only if required, see §14) Supabase-OAuth token-exchange endpoint      │
                 └────────────────────────────────────────────────────────────────────────────┘
 
- Admin's app ──Supabase OAuth (prod) / PAT (dev)──► Supabase Management API ──creates/configures──┐
+ Owner's app ──Supabase OAuth (prod) / PAT (dev)──► Supabase Management API ──creates/configures──┐
                                                                                                    ▼
- Flutter app ──Google/Apple ID token──►  FAMILY SUPABASE PROJECT (free tier)
+ Flutter app ──Google/Apple ID token──►  ONE SUPABASE PROJECT PER FRAME (free tier)
    pick → crop → dither → indexed PNG     • Auth: Google/Apple providers using our client IDs
-   ├──► app-api Edge Function ──────────► • Postgres: members, frames, images, settings, quotas
+   ├──► app-api Edge Function ──────────► • Postgres: the frame, members, images, quotas
    │       └ signed upload URL ─────────► • Storage bucket: frame-images (private)
    └──BLE: Wi-Fi + API URL + pairing token──► Frame
 
@@ -135,17 +137,17 @@ ink-frame/
 ## 5. Authentication and identity
 
 ### 5.1 Two kinds of tokens (keep them apart)
-1. **Supabase platform token.** This is the admin's supabase.com account token: an OAuth token in production, a PAT in development. It controls the whole Supabase account: it can create or delete projects, run any SQL, and read keys.
-   - Lives **only** on the admin's device, in secure storage.
+1. **Supabase platform token.** This is the owner's supabase.com account token: an OAuth token in production, a PAT in development. It controls the whole Supabase account: it can create or delete projects, run any SQL, and read keys.
+   - Lives **only** on the owner's device, in secure storage (one token covers both of the owner's frames).
    - Used only for provisioning, schema upgrades, restoring a paused project, and reading usage.
    - **Never** used as a member identity or sent to the frame.
-2. **Project user token (JWT).** Issued by the family project's Supabase Auth after Google/Apple sign-in. Every app user has one. RLS and `app-api` authorize with it.
+2. **Project user token (JWT).** Issued by the frame's project's Supabase Auth after Google/Apple sign-in. Every app user has one **per frame** they belong to. RLS and `app-api` authorize with it.
 
 ### 5.2 Native ID-token sign-in
 1. The platform sheet (`google_sign_in` / `sign_in_with_apple`) returns an **ID token**. Its `aud` is *our* Google client ID or iOS bundle ID.
-2. `supabase.auth.signInWithIdToken(provider, idToken, nonce)` runs against the **family** project.
+2. `supabase.auth.signInWithIdToken(provider, idToken, nonce)` runs against the **frame's** project. Joining a second frame reuses the same Google/Apple sign-in.
 3. Supabase checks the token's signature against Google's/Apple's public keys, and checks that `aud` is in the provider's allowed client IDs.
-4. The wizard writes those client IDs into each family project through the Management API. Client IDs are not secrets (they ship inside the app).
+4. The wizard writes those client IDs into each frame's project through the Management API. Client IDs are not secrets (they ship inside the app).
 
 ### 5.3 Platform matrix
 | Platform | Google | Apple |
@@ -156,18 +158,18 @@ ink-frame/
 | **Windows / Linux** | **loopback OAuth + PKCE** with a Google "Desktop app" client ID: open the system browser, catch the redirect on `http://127.0.0.1:<port>`, exchange the code, take the `id_token`, then `signInWithIdToken`. Add the Desktop client ID to the allowed client IDs | not available natively. **Decide in Phase 2** (options: none on Windows; Apple web flow; dev-only email/password on dev projects) |
 
 ### 5.4 Membership gate
-- Sign-in is open at the auth layer: anyone holding a project URL + anon key could create an auth user. **Everything** is therefore gated by a `project_members` row, which RLS and `app-api` both check.
-- Rows are created by the wizard (admin) or by accepting an invite.
-- A pg_cron job deletes auth users that have had no membership for more than 24 h.
+- Sign-in is open at the auth layer: anyone holding a project URL + anon key could create an auth user. **Everything** is therefore gated by a `members` row, which RLS and `app-api` both check.
+- The owner's row is created by the wizard; everyone else's by accepting an invite.
+- A pg_cron job deletes auth users that have no membership after 24 h.
 
-### 5.5 Joining a family space
-- **Invite payload:** `inkframe://join?u=<project_url>&k=<anon_key>&c=<invite_code>`, shared as a QR code or link. On desktop, pasting the link or code works too.
-- **Join flow:** the app saves the project → the user signs in with Google/Apple → types a **display name** → `POST /invites/accept {code, display_name}`.
-- The app keeps a **list of family spaces** (URL + anon key + session per space) and has a space switcher.
+### 5.5 Joining a frame
+- **Invite payload:** `inkframe://join?u=<project_url>&k=<anon_key>&c=<invite_code>`, shared as a QR code or link (an HTTPS wrapper is proposed in `docs/app-flow.md`). On desktop, pasting the link works too.
+- **Join flow:** the app saves the project → the user signs in with Google/Apple → types a **display name** (pre-filled from their other frames) → `POST /invites/accept {code, display_name}`.
+- The app keeps a **list of frames** (URL + anon key + session per frame) and shows them together.
 
 ---
 
-## 6. Family project provisioning
+## 6. Frame project provisioning
 
 ### 6.1 Developer one-time setup
 - **Supabase:** register an **OAuth App** in the developer's Supabase org (dashboard only; no API) → client id. Callback URLs must be **HTTPS or localhost**, so: `http://localhost:<port>/callback` for desktop, and for mobile an HTTPS bounce page on the project's GitHub Pages site (next to the firmware feed) that forwards `code`/`state` to `inkframe://supabase-oauth`. Safe with PKCE: the code is useless without the verifier, which never leaves the device.
@@ -175,29 +177,31 @@ ink-frame/
 - **Apple Developer:** App ID with Sign in with Apple.
 - These IDs go in the app's build config (`app/lib/config/`, plus per-platform files). Nothing secret is embedded unless §14 forces it.
 
-### 6.2 Wizard steps ("Set up a new family space")
+### 6.2 Wizard steps ("Set up a frame")
 1. **Connect Supabase:** authorization code + PKCE in the system browser. In dev, this is skipped by pasting a **PAT** (a dev-only setting).
 2. **Choose or create an org and region → create the project** (`POST /v1/projects`, generated DB password kept in secure storage). Poll `GET /v1/projects/{ref}` and `/health?services=db,auth,rest,storage` until healthy (measured ~4 s; keep a progress screen in case it's slower).
-   - The free plan allows **2 active projects per account**. If the limit is hit, show a clear message.
+   - The free plan allows **2 active projects per account**, so an owner can run 2 frames. If the limit is hit, show a clear message (another family member can set up the next frame with their own account).
 3. **Apply migrations:** run the bundled SQL from `backend/supabase/migrations/` through `POST /v1/projects/{ref}/database/query`, in order, recording `schema_version`. This creates tables, RLS, buckets and policies, cron jobs and seed data.
 4. **Deploy the Edge Functions** `device-api` and `app-api` through the Management API's multipart deploy (`POST /v1/projects/{ref}/functions/deploy`): the app uploads the function **source files** it bundles as assets, and Supabase bundles them server-side (`tools/dev/deploy-functions.ts` is the reference).
 5. **Configure auth** through `PATCH /v1/projects/{ref}/config/auth`:
    - enable Google (all our client IDs) and Apple (bundle ID)
    - turn off email signup
    - set the JWT expiry and site/redirect URLs if needed
-6. Fetch the project URL + anon key → the admin signs in with Google/Apple → types a display name → becomes `project_members.role = admin`.
-7. Keep the platform **refresh token** (prod) in secure storage on the admin's device only.
+6. **Describe the frame** with SQL (`private.setup_frame(name, model_id, timezone)`): name, **panel model** (picked in the wizard) and time zone.
+7. Fetch the project URL + anon key → the owner signs in with Google/Apple → types a display name → `private.set_owner(user_id, display_name)`.
+8. **Connect the frame** over BLE (§9.5). Photos can be added before the hardware arrives.
+9. Keep the platform **refresh token** (prod) in secure storage on the owner's device only.
 
 ### 6.3 Schema upgrades
 - Every app release bundles all migrations. On launch the app reads `schema_version`:
-  - **Admin's app:** runs any pending migrations and redeploys the functions, after asking the admin to confirm.
-  - **Member's app on an older schema:** runs in compatible mode or shows "Ask \<admin\> to open the app to update."
+  - **Owner's app:** runs any pending migrations and redeploys the functions, after asking the owner to confirm.
+  - **Member's app on an older schema:** runs in compatible mode or shows "Ask \<owner\> to open the app to update."
 - Rule: migrations must stay backward compatible with the previous app version.
 
 ### 6.4 Paused projects
-- **App:** detects a pause from **HTTP 540** ("Project paused") on any function call, plus Management API status on the admin's device. Restore takes ~3 min (measured), and the functions may return 500 for a few seconds after the project is healthy. The admin gets a **Restore** button (`POST /v1/projects/{ref}/restore`); members see "Ask \<admin\>".
+- **App:** detects a pause from **HTTP 540** ("Project paused") on any function call, plus Management API status on the owner's device. Restore takes ~3 min (measured), and the functions may return 500 for a few seconds after the project is healthy. The owner gets a **Wake up** button (`POST /v1/projects/{ref}/restore`); members see "Ask \<owner\>". Copy explains the reason: *"This frame's photo storage is asleep because it wasn't used for a while."*
 - **Frame:** keeps showing cached photos and retries on its backoff.
-- Daily frame syncs should prevent a pause (verify, §14).
+- Daily frame syncs should prevent a pause (verify, §14). With one project per frame, each frame keeps its own project awake.
 
 ---
 
@@ -206,41 +210,37 @@ ink-frame/
 The same package is deployed to the dev project (through the CLI) and to every family project (through the wizard).
 
 ### 7.1 Schema
-Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jobs). Tables in `public` are readable under RLS; secrets and server-only state live in the unexposed `private` schema.
+Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jobs, 0004 operations). One project holds **one frame**. Tables in `public` are readable by members under RLS; secrets and server-only state live in the unexposed `private` schema.
 
 | Table | Key columns / notes |
 |---|---|
 | `schema_version` | `version int pk`, `applied_at` |
-| `project_members` | `user_id pk → auth.users`, `role` (`admin`/`member`; **at most one admin**, enforced by a partial unique index), `display_name`, `invited_by`, `created_at` |
 | `palettes` | `id`, `name`, `colors jsonb` (`[{name, color, deviceColor}]`, same shape as `presets.json`) |
 | `device_models` | `id` (e.g. `reterminal-e1002`), `name`, `width`, `height`, `palette_id`. Upserted by `seed.sql`, generated from `shared/presets.json` |
-| `frames` | `id uuid`, `hw_id text unique`, `model_id`, `name`, `fw_version`, `manifest_version bigint`, `last_seen_at`, `battery_pct`, `rssi`, `sd_free_bytes`, `created_at`. No owner column: ownership is `frame_members.role = 'owner'` |
-| `frame_members` | `frame_id`, `user_id → project_members` (leaving the space removes frame memberships), `role` (`owner`/`member`; **one owner per frame**, partial unique index), pk(frame_id, user_id) |
-| `frame_settings` | `frame_id pk`, `image_interval_s` (14400), `display_order` (`random`/`sequential`), `sync_interval_s` (86400), `quiet_start`/`quiet_end` (nullable `time`, both or neither), `timezone` (IANA, default `UTC`), `updated_at` |
-| `images` | `id uuid`, `frame_id`, `uploaded_by` (nullable, `on delete set null`: photos outlive a deleted account), `storage_path`, `sha256`, `bytes`, `width`, `height`, `position double` (set when `ready`), `status` (`pending`/`ready`), `created_at`; unique(frame_id, sha256) |
-| `invites` | `id`, `frame_id` (null = project-only), `created_by`, `expires_at`, `max_uses`, `uses` |
-| `quota_config` | `scope` (`frame`/`user`/`project`), `max_images`, `max_bytes` (null = unlimited). **Values TBD.** Placeholder: project `max_bytes` = 90% of 1 GiB |
-| `private.frame_secrets` | `frame_id pk`, `secret_hash` (SHA-256 hex of the device secret) |
-| `private.removed_frames` | `secret_hash pk`, `removed_at`. Tombstone written when a frame is deleted, so `/sync` can answer `410` (removed) instead of `401` (unknown secret) |
+| `frame` | **One row** (enforced). `id uuid`, `name`, `model_id` (chosen at setup), `hw_id` (null until hardware connects), `fw_version`, `manifest_version bigint`, `last_seen_at`, `battery_pct`, `rssi`, `sd_free_bytes`; settings: `image_interval_s` (14400), `display_order` (`random`/`sequential`), `sync_interval_s` (86400), `quiet_start`/`quiet_end` (both or neither), `timezone` (IANA), `settings_updated_at`; `created_at` |
+| `members` | `user_id pk → auth.users`, `role` (`owner`/`member`; **exactly one owner**, partial unique index), `display_name`, `invited_by`, `created_at` |
+| `images` | `id uuid`, `uploaded_by` (nullable, `on delete set null`: photos outlive a deleted account), `storage_path`, `sha256` (unique), `bytes`, `width`, `height`, `position double` (set when `ready`), `status` (`pending`/`ready`), `created_at` |
+| `invites` | `id`, `created_by`, `expires_at`, `max_uses`, `uses` |
+| `quota_config` | `scope` (`frame`/`user`), `max_images`, `max_bytes` (null = unlimited). Placeholder: frame `max_bytes` = 90% of 1 GiB |
+| `private.frame_secret` | the connected device's `secret_hash` (SHA-256 hex) |
+| `private.removed_devices` | `secret_hash pk`, `removed_at`. Tombstone for a disconnected or replaced device, so `/sync` answers `410` instead of `401` |
 | `private.invite_codes` | `invite_id pk`, `code_hash` |
-| `private.pairing_tokens` | `token_hash`, `user_id`, `frame_name`, `timezone`, `expires_at` (10 min), `used_at` |
-| `private.config` | key/value: `maintenance_secret` (random, made by 0003), `project_url` (written by the migration runner) |
-| Usage | Computed by `app-api` for `GET /usage` (sum of `images.bytes`), shown in the app against the free-tier limit. Added with the functions |
+| `private.pairing_tokens` | `token_hash`, `user_id`, `expires_at` (10 min), `used_at` |
+| `private.config` | key/value: `maintenance_secret`, `project_url` (written by the migration runner) |
 
-- **RLS:** members can `select` the rows they belong to. **All writes go through `app-api`** (service role), so quota checks, `manifest_version` bumps and permission rules live in one place. Clients get `SELECT` grants only; Supabase's default grants on `public` are revoked (including default privileges for future objects), so every new table or function must be granted explicitly.
-- **Permissions:**
-  - Photos: a member deletes their own; the frame owner deletes any.
-  - Frame settings, reorder and frame invites: frame owner.
-  - Project members and project-only invites: admin.
+- The wizard (and the tests) describe the frame and add the owner with SQL: `private.setup_frame(name, model_id, timezone)`, `private.set_owner(user_id, display_name)`.
+- **RLS:** members can `select` the frame, members, ready images (and their own pending ones) and quotas; invites are visible to the owner. **All writes go through `app-api`** (service role). Clients get `SELECT` grants only; Supabase's default grants on `public` are revoked, so every new table or function must be granted explicitly.
+- **Permissions:** photos: a member deletes their own, the owner deletes any. Frame name, model, settings, reorder, connecting hardware, invites and removing people: owner.
 
 ### 7.2 Storage
-- Private bucket `frame-images`, path `{frame_id}/{image_id}.png`.
+- Private bucket `frame-images`, path `{image_id}.png`.
 - Max 512 KB per object; MIME type `image/png` only.
 
 ### 7.3 `device-api` (auth: `Authorization: Bearer <device_secret>`, compared by SHA-256 hash)
-- **`POST /claim`** `{pairing_token, hw_id, model_id, fw_version}` → `{frame_id, device_secret}`.
-  - Creates the frame (owner = the token's user), a default settings row, and an owner `frame_members` row. The secret is 32 random bytes, returned once.
-  - Returns `409` if `hw_id` is already paired in this project to a different owner.
+- **`POST /claim`** `{pairing_token, hw_id, model_id, fw_version}` → `{frame_id, device_secret}`. The secret is 32 random bytes, returned once.
+  - `model_id` must equal the frame's model, else **`409 model_mismatch`**.
+  - Same `hw_id` as connected (re-provisioning): new secret, old one stops working (`401`).
+  - Different `hw_id` (replacement, same model): the new hardware takes over and keeps the photos; the old device's secret is tombstoned, so it gets `410` and wipes itself.
 - **`POST /sync`** `{manifest_version, fw_version, battery_pct, rssi, sd_free_bytes, local_ids[]}` →
   ```json
   { "manifest_version": 42,
@@ -253,29 +253,28 @@ Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jo
   - Signed URLs are created only for ids **not** in `local_ids`; ids already on the device appear without `url`.
   - Updates the heartbeat fields.
   - `tz_posix` is derived from IANA using a table bundled in `functions/_shared`.
-  - Returns **`410 Gone`** if the frame was removed. The frame then wipes itself.
+  - Returns **`410 Gone`** if this device was disconnected or replaced. The frame then wipes itself.
 
-### 7.4 `app-api` (auth: Supabase JWT + `project_members`)
-**Pairing and images**
-- `POST /pairing-tokens` → one-time token (10 min).
-- `POST /images/request-upload` `{frame_id, sha256, bytes, width, height}`.
-  - Checks membership, that dimensions match the frame model, quotas, and dedupe.
-  - Inserts a `pending` row and returns a signed upload URL.
+### 7.4 `app-api` (auth: Supabase JWT + `members`)
+**Frame (owner)**
+- `PATCH /frame` `{name?, model_id?, clear_photos?}`. Changing the model deletes all photos (and needs `clear_photos: true` when there are any) and disconnects the current hardware.
+- `PATCH /frame/settings`.
+- `POST /pairing-tokens` → one-time token (10 min) for connecting hardware.
+- `POST /frame/disconnect` → the device gets `410` at its next sync.
+
+**Photos**
+- `POST /images/request-upload` `{sha256, bytes, width, height}`: checks membership, dimensions against the frame's model, quotas and dedupe; inserts a `pending` row and returns a signed upload URL.
 - `POST /images/finalize` `{image_id}` → checks the object exists, its size, PNG signature and IHDR dimensions → `ready`, bumps `manifest_version`.
-- `POST /images/delete`, `POST /images/reorder`.
+- `POST /images/delete` (own photos, or any for the owner), `POST /images/reorder` (owner).
 
-**Frames**
-- `PATCH /frames/{id}/settings`, `PATCH /frames/{id}` (rename).
-- `DELETE /frames/{id}` → removes the images, objects and members. The frame gets 410 on its next sync.
-
-**Invites and members**
-- `POST /invites`, `POST /invites/accept` `{code, display_name}`.
-- `DELETE /frames/{id}/members/{user}`, `DELETE /project-members/{user}`.
+**People**
+- `POST /invites` (owner), `DELETE /invites/{id}` (owner), `POST /invites/accept` `{code, display_name}`.
+- `DELETE /members/{user_id}`: the owner removes someone, or a member leaves. Their photos stay.
 
 **Account and usage**
 - `PATCH /me` `{display_name}`.
-- `GET /usage` → frame, user and project usage + limits.
-- `DELETE /me[?delete_photos=true]` → account deletion (required by the App Store). The deletion flow has an **"Also delete my photos" checkbox** (sets `delete_photos`); unchecked, the photos stay with `uploaded_by` → null. For the admin, the app also offers "delete the whole family space" through the Management API.
+- `GET /usage` → the frame's storage + limits, and per-person usage (everyone for the owner, yourself otherwise).
+- `DELETE /me[?delete_photos=true]` → a member leaves and deletes their account (App Store requirement). **"Also delete my photos" checkbox** sets `delete_photos`; unchecked, the photos stay with `uploaded_by` → null. The owner gets `409 owner_must_delete_frame`: the app instead offers to delete the whole frame (its project) through the Management API, after a warning.
 
 ### 7.5 Scheduled jobs (pg_cron)
 - **Hourly, SQL** (`private.hourly_cleanup`): expired or used pairing tokens, expired or used-up invites, and auth users older than 24 h with no membership (people who signed in but never joined, and people who left).
@@ -349,15 +348,15 @@ Dithering options follow ink-frame-lab (algorithm, kernel, serpentine, Bayer siz
 - **Encoder tests:** the output decodes back to identical indices (decode with `package:image` in tests only), is a valid PNG, and its size is logged.
 
 ### 8.5 Questions Phase 2 must answer (input for the planning session)
-- The first-run experience: set up a new space vs join by invite; how the wizard's progress and failure states look.
-- Navigation model: spaces → frames → photos; tabs vs drill-down; desktop layout (multi-pane?) vs mobile.
+- The first-run experience: set up a frame vs join one by invite; how the wizard's progress and failure states look.
+- Navigation model: frames → photos; tabs vs drill-down; desktop layout (multi-pane?) vs mobile.
 - The add-photos flow: batch picking, per-photo crop, dithering adjustments (how much control?), preview, upload queue and retry.
 - How the frame screens show status (last sync, battery, "changes arrive at next sync / press green").
 - Usage display (project storage vs free-tier limit, per-frame and per-user), warnings, and what happens at the limit.
 - Invite UX: QR, share sheet, desktop paste; member management; roles shown.
 - Settings UX: intervals, order, quiet hours, timezone.
 - Add-frame (BLE) flow and its error states: Bluetooth off, wrong passkey, wrong Wi-Fi password, claim failed.
-- Admin tools: schema upgrade prompt, paused-project restore, delete space.
+- Owner tools: schema upgrade prompt, wake up a paused project, delete the frame.
 - Apple sign-in on Windows (§5.3); visual design (theme, typography, light/dark); accessibility; localization (v1 English only?).
 
 ---
@@ -485,9 +484,9 @@ Notes:
 Milestones will be refined in Phase 2. Baseline:
 - **3a** Scaffold (all platforms incl. Windows), config, dev mode, data layer, Supabase connection to the dev project, sign-in (Google on mobile + desktop loopback; Apple on iOS/macOS).
 - **3b** `lib/imaging/` port + indexed PNG encoder + golden tests (§8.3–8.4).
-- **3c** Core screens per `docs/app-flow.md`: spaces, frames, photos (add/crop/preview/upload/delete/reorder), settings, usage.
+- **3c** Core screens per `docs/app-flow.md`: frames, photos (add/crop/preview/upload/delete/reorder), settings, usage.
 - **3d** Invites and members; display names.
-- **3e** Spike (c) first (user registers the Supabase OAuth App; run `tools/dev/oauth-connect.ts`). Then the provisioning wizard (PAT in dev → OAuth in prod), schema upgrade, restore, delete space.
+- **3e** Spike (c) first (user registers the Supabase OAuth App; run `tools/dev/oauth-connect.ts`). Then the provisioning wizard (PAT in dev → OAuth in prod), schema upgrade, wake up, delete frame.
 - **3f** BLE add-frame flow (app side). Before hardware exists, the dev-mode "pair with token" path and `frame_sim` stand in for the frame.
 - **Exit:** the §12.2 scenarios pass on Windows desktop and on at least one phone.
 
@@ -505,8 +504,7 @@ Milestones will be refined in Phase 2. Baseline:
 ## 12. Verification
 
 ### 12.1 Backend (Phase 1B)
-Implemented in `backend/supabase/tests/backend_test.ts` (23 steps, all passing 2026-09-25). The suite creates its own admin, so it **skips when the target project already has one**: once the developer is the dev project's admin (Phase 3), run it against the spare project.
-The scenario also runs with the real `frame_sim` binary: `tools/dev/sim-scenario.ts` (passing 2026-09-25; uses a temporary member, so it works whether or not the project has an admin).
+Implemented in `backend/supabase/tests/backend_test.ts`. The suite sets up the project's frame and owner itself, so it **skips when the target project already has an owner**: once the developer owns the dev frame (Phase 3), run it against a throwaway project (`tools/dev/provision.ts`). The scenario also runs with the real `frame_sim` binary: `tools/dev/sim-scenario.ts` (same requirement).
 - RLS tests:
   - a non-member can't read anything
   - an auth user without membership is blocked
@@ -520,18 +518,18 @@ The scenario also runs with the real `frame_sim` binary: `tools/dev/sim-scenario
   4. reorder → the positions change
   5. settings change → reflected
   6. unchanged `manifest_version` → `images` omitted
-  7. delete the frame → `410`
+  7. disconnect the frame (or connect replacement hardware) → the old device gets `410`
 
 ### 12.2 App (Phase 3)
 - Golden parity (§8.4) passes in CI.
 - **On Windows desktop:**
-  1. dev PAT → the wizard creates a fresh space in the spare project slot
+  1. dev PAT → the wizard sets up a fresh frame in the spare project slot
   2. sign in with Google (loopback)
   3. drag in 5 photos → crop/preview → upload
   4. `frame_sim sync` receives them
   5. delete one → `frame_sim` mirrors
 - **On a phone:** join through the invite QR → Apple (iOS) or Google sign-in → type a display name → upload → `frame_sim` receives it with the right uploader.
-- The usage view matches the `project_usage` numbers.
+- The usage view matches `GET /usage`.
 
 ### 12.3 Firmware (Phase 4) on a real E1002
 - **Pairing:** wrong Wi-Fi password; wrong passkey.
@@ -542,7 +540,7 @@ The scenario also runs with the real `frame_sim` binary: `tools/dev/sim-scenario
 - **Battery:** measure sync duration and current with a USB power meter and estimate battery life.
 
 ### 12.4 End to end
-Fresh admin → wizard → add frame over BLE → upload → press green → the photo appears. A second user joins through an invite → uploads → the frame shows it at its next sync. Leave the project with only daily frame syncs for more than 7 days and confirm it isn't paused.
+Fresh owner → wizard → connect the frame over BLE → upload → press green → the photo appears. A second user joins through an invite → uploads → the frame shows it at its next sync. Leave the frame's project with only daily frame syncs for more than 7 days and confirm it isn't paused.
 
 ---
 
@@ -571,22 +569,25 @@ Fresh admin → wizard → add frame over BLE → upload → press green → the
 - E1002: status-LED GPIO; whether there is an external RTC (use it for quiet hours if present).
 
 ## 15. Open decisions (defaults used until changed)
-- **Re-claiming a frame paired in another family's project:** default is that a **factory reset (hold 10 s)** frees the frame locally. The old project's frame row goes stale, and the old owner can delete it in the app.
-- **Who changes frame settings:** default is the frame owner only.
-- **Order of photos from several members in sequential mode:** default is upload time; the owner can reorder.
-- **Quota starting values:** `quota_config`, to be decided (placeholder: project ≈ 90% of the free storage limit; no per-frame/per-user limit).
+- **Moving hardware to a different frame (another owner's project):** a **factory reset (hold 10 s)** frees it locally; the old frame shows it as not seen, and its owner can disconnect it.
+- **Who changes frame settings:** the owner only.
+- **Order of photos from several people in sequential mode:** default is upload time; the owner can reorder.
+- **Quota starting values:** `quota_config`, to be decided (placeholder: frame ≈ 90% of the free storage limit; no per-person limit).
 - **Apple sign-in on Windows/Linux:** decided in Phase 2.
-- **Set by the API contract** (`shared/api/openapi.yaml`), confirmed by the user 2026-09-25:
-  - ✅ A member who leaves or is removed from a frame: **their photos stay** on it; the owner can delete them.
-  - ✅ **One admin per space**, at most. There is no role-change endpoint.
-  - ✅ Deleting an account (`DELETE /me`), or the admin removing someone from the space: **only the account and memberships are deleted; their photos stay** (`uploaded_by` → null), unless the user ticks **"Also delete my photos"** when deleting their own account. Frames a **member** owns **pass to the admin** and keep running (if the space has no admin, they are deleted). Only when the **admin** deletes their account are their frames (and every photo on them) deleted (`410`).
-  - ✅ The admin can delete their account **at any time**, even with other members in the space, after a clear warning of the consequences: their frames are removed, and the space is left with no admin, so nobody can create project invites, remove members, upgrade the schema or restore a pause.
-  - ✅ Reorder moves **one image at a time** ("place after X"), not a whole-list replace, so it can't conflict with uploads in progress.
+- **Confirmed by the user** (2026-09-25, restated for one project per frame on 2026-09-26):
+  - ✅ **One project per frame; one owner** (who set it up and hosts it). No handover of ownership.
+  - ✅ Someone who leaves or is removed: **their photos stay**; the owner can delete them.
+  - ✅ A member deleting their account deletes only the account and membership; photos stay (`uploaded_by` → null) unless they tick **"Also delete my photos"**.
+  - ✅ The owner deleting their account means **deleting the frame** (its whole project), after a clear warning.
+  - ✅ **Panel model chosen at setup.** Replacement hardware of the same model keeps the photos; a different model needs the owner to switch the frame's model, which clears the photos.
+  - ✅ Reorder moves **one image at a time** ("place after X").
   - ✅ Settings ranges: image interval **1 h–2 days**, default **4 h**; sync interval **1 h–2 days**, default **24 h**.
-  - ✅ Invites: single use and 7 days by default; at most 50 uses and 30 days. Codes are 10 Crockford base32 characters (`XXXXX-XXXXX`).
-  - ✅ Re-claiming by the **same** owner (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
+  - ✅ Invites (owner only): single use and 7 days by default; at most 50 uses and 30 days. Codes are 10 Crockford base32 characters (`XXXXX-XXXXX`).
+  - ✅ Re-connecting the same hardware (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
+  - ✅ Pause copy gives the reason: "asleep because it wasn't used for a while".
 
 ## 16. Decision log
+- 2026-09-26: **One Supabase project per frame** (was: one per family, holding many frames). Photos are processed for one panel's resolution and palette, so projects never mix panel types. The person who sets up a frame is its **owner** and hosts it in their free Supabase account (2 active free projects = 2 frames per account). Roles collapse to owner + members; one invite type; the app lists frames across projects. Panel model is chosen at setup; replacement hardware of the same model keeps the photos, a different model needs a model switch that clears them. User-facing words: frame, owner, people, "checks for new photos", "connect the frame", "asleep because it wasn't used for a while"; never space/project/admin/sync. The unreleased migrations 0001–0005 were replaced by a simpler schema (one `frame` row, `members`), and the dev project was reset. Supersedes the space/admin decisions below.
 - 2026-09-25: **Phase 1B done** (spike (c) deferred to the start of Phase 3e, as nothing earlier needs the Supabase OAuth App). `tools/frame_sim` (Dart CLI, 8 unit tests against a fake device-api) mirrors the firmware's cache layout and sync rules: downloads go to `cache/tmp` and are checked against sha256 before a rename, the manifest version only advances when every image arrived, `410` wipes the cache and secret, new arrivals are shown first. `tools/dev/sim-scenario.ts` passes the §12.1 scenario with it against the dev project.
 - 2026-09-25: Spikes (a) and (b). A throwaway project created entirely through the Management API (`tools/dev/provision.ts`: create → healthy in ~4 s → migrations → multipart function deploy → auth config, 17 s total) passed all 23 backend tests, then was paused (~67 s; functions answer HTTP 540), restored (~2 min 47 s; data, schema and cron intact) and deleted. Google/Apple providers accept client IDs with no secret. The wizard deploys function **source** through the multipart endpoint (server-side bundling), so no eszip bundling step is needed. The OAuth App form only allows HTTPS or localhost callbacks, so mobile uses an HTTPS bounce page to `inkframe://` (§6.1). Details in `docs/spikes/`.
 - 2026-09-25: Backend tests are Deno integration tests through the real APIs instead of pgTAP: they sign in as real users (email/password test users on the dev project, `@test.invalid`, created and deleted by the run), so grants, RLS, storage policies and both functions are covered together, which pgTAP inside the database can't do for Storage or the functions. 23 steps cover the §12.1 scenario, RLS, every permission rule and most error codes. They found one bug: owner-only actions answered `not_frame_member` instead of `not_frame_owner` to project members who aren't on the frame (fixed in migration 0005).

@@ -38,7 +38,7 @@ export const anon = createClient(PROJECT_URL, PUBLIC_KEY, noSession);
 export type User = { id: string; email: string; token: string; db: SupabaseClient };
 
 const RUN = crypto.randomUUID().slice(0, 8);
-export const created = { users: [] as string[], frames: [] as string[] };
+export const created = { users: [] as string[], frame: false };
 
 export async function newUser(label: string): Promise<User> {
   const email = `${label}-${RUN}@test.invalid`;
@@ -52,10 +52,21 @@ export async function newUser(label: string): Promise<User> {
   return { id: data.user.id, email, token: s.data.session.access_token, db };
 }
 
-// The setup wizard creates the admin's row with SQL; tests do the same.
-export async function addMember(u: User, role: "admin" | "member", name: string) {
-  await sql(env, `insert into public.project_members (user_id, role, display_name)
-    values ('${u.id}', '${role}', '${name.replaceAll("'", "''")}')`);
+const q = (s: string) => `'${s.replaceAll("'", "''")}'`;
+
+// The setup wizard describes the frame and adds its owner with SQL; tests do the same.
+export async function setupFrame(owner: User, ownerName: string, frameName = "Test frame",
+  modelId = "reterminal-e1002", timezone = "Europe/Berlin"): Promise<string> {
+  const [{ id }] = await sql<{ id: string }>(env,
+    `select private.setup_frame(${q(frameName)}, ${q(modelId)}, ${q(timezone)}) as id`);
+  created.frame = true;
+  await sql(env, `select private.set_owner('${owner.id}', ${q(ownerName)})`);
+  return id;
+}
+
+// A member without going through an invite (invites are tested separately).
+export async function addMember(u: User, name: string) {
+  await sql(env, `insert into public.members (user_id, role, display_name) values ('${u.id}', 'member', ${q(name)})`);
 }
 
 export type Res = { status: number; body: any }; // deliberately loose for assertions
@@ -144,10 +155,10 @@ export async function makePng(w: number, h: number, seed: number): Promise<Uint8
 }
 
 // request-upload → PUT → finalize. Returns the finalize response.
-export async function upload(u: User, frameId: string, png: Uint8Array<ArrayBuffer>, w = 800, h = 480): Promise<Res> {
+export async function upload(u: User, png: Uint8Array<ArrayBuffer>, w = 800, h = 480): Promise<Res> {
   const req = await call("POST", "/app-api/images/request-upload", {
     token: u.token,
-    body: { frame_id: frameId, sha256: await sha256Hex(png), bytes: png.length, width: w, height: h },
+    body: { sha256: await sha256Hex(png), bytes: png.length, width: w, height: h },
   });
   if (req.status !== 200) return req;
   const put = await timedFetch(req.body.upload_url, { method: "PUT", headers: { "Content-Type": "image/png" }, body: png });
@@ -158,29 +169,33 @@ export async function upload(u: User, frameId: string, png: Uint8Array<ArrayBuff
 
 export { timedFetch as fetch };
 
-async function removeFrames(frameIds: string[]) {
-  if (!frameIds.length) return;
-  const list = frameIds.map((f) => `'${f}'`).join(",");
-  const rows = await sql<{ storage_path: string }>(env,
-    `select storage_path from public.images where frame_id in (${list})`);
+// Deletes the frame, its images (objects first) and invites. Members go with their
+// auth users.
+async function removeFrame() {
+  const rows = await sql<{ storage_path: string }>(env, "select storage_path from public.images");
   if (rows.length) await admin.storage.from("frame-images").remove(rows.map((r) => r.storage_path));
-  await sql(env, `delete from public.frames where id in (${list})`);
+  await sql(env, "delete from public.images where true; delete from public.frame where true;");
 }
 
-// Removes everything the run created: storage objects, frames, auth users (which
+// Removes everything the run created: storage objects, the frame, auth users (which
 // cascades memberships, tokens and invites).
 export async function cleanup() {
-  await removeFrames(created.frames);
+  if (created.frame) await removeFrame();
   for (const id of created.users) await admin.auth.admin.deleteUser(id);
 }
 
-// Removes what an interrupted run left behind: frames with a test user as a member,
-// and every @test.invalid user. Returns how many users it found.
+// Whether the project already has a frame that isn't the tests' own (a real owner).
+export async function hasRealFrame(): Promise<boolean> {
+  const [{ n }] = await sql<{ n: number }>(env, `
+    select count(*)::int as n from public.members m join auth.users u on u.id = m.user_id
+    where m.role = 'owner' and u.email not like '%@test.invalid'`);
+  return n > 0;
+}
+
+// Removes what an interrupted run left behind: a frame owned by a test user (or by
+// nobody), and every @test.invalid user. Returns how many users it found.
 export async function purgeLeftovers(): Promise<number> {
-  const frames = await sql<{ id: string }>(env, `
-    select distinct fm.frame_id as id from public.frame_members fm
-    join auth.users u on u.id = fm.user_id where u.email like '%@test.invalid'`);
-  await removeFrames(frames.map((f) => f.id));
+  if (!(await hasRealFrame())) await removeFrame();
   const users = await sql<{ id: string }>(env, `select id from auth.users where email like '%@test.invalid'`);
   for (const u of users) await admin.auth.admin.deleteUser(u.id);
   return users.length;
