@@ -69,7 +69,9 @@ const split = (v?: string) => (v ?? "").split(",").map((s) => s.trim()).filter(B
 const google = split(Deno.env.get("GOOGLE_CLIENT_IDS"));
 const apple = split(Deno.env.get("APPLE_CLIENT_IDS"));
 const auth: Record<string, unknown> = {};
-if (!args["keep-email"]) auth.external_email_enabled = false;
+// Dev projects keep email/password sign-in (tests, and the app's dev mode) without confirmation mails.
+if (args["keep-email"]) auth.mailer_autoconfirm = true;
+else auth.external_email_enabled = false;
 if (google.length) {
   Object.assign(auth, {
     external_google_enabled: true,

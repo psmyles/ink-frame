@@ -1,0 +1,3 @@
+tags:
+  live:
+    # Needs the dev project; run through tools/dev/app-live-test.ts.

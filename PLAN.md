@@ -549,7 +549,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
 - [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim ✅ · dev tools ✅
 - [x] Phase 2 — `docs/app-flow.md` approved 2026-09-26 (D1–D5, D7–D11 as recommended)
-- [ ] Phase 3 — 3a · 3b · 3c · 3d · 3e · 3f
+- [ ] Phase 3 — 3a (built; phone + Google/Apple sign-in pending client IDs) · 3b · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
 - [ ] Phase 5 — release
 
@@ -567,6 +567,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - PNGdec: 4-bit indexed PNG through `getLineAsRGB565`.
 - Arduino-ESP32: bootloader app rollback support.
 - E1002: status-LED GPIO; whether there is an external RTC (use it for quiet hours if present).
+- Google sign-in on Windows/Linux: the Desktop client's token exchange with PKCE, and whether Google still requires the (public) client secret. Implemented with an optional `GOOGLE_DESKTOP_CLIENT_SECRET`; verify once the client IDs exist.
 
 ## 15. Open decisions (defaults used until changed)
 - **Moving hardware to a different frame (another owner's project):** a **factory reset (hold 10 s)** frees it locally; the old frame shows it as not seen, and its owner can disconnect it.
@@ -587,6 +588,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
   - ✅ Pause copy gives the reason: "asleep because it wasn't used for a while".
 
 ## 16. Decision log
+- 2026-09-26: **Phase 3a built.** Bundle/application ID `com.psmyles.inkframe` on every platform. Each frame gets its own `SupabaseClient` with the **implicit** auth flow (ID-token and password sign-in never redirect, so PKCE storage isn't needed); sessions are kept in secure storage per project ref and restored at start. On macOS, secure storage uses the legacy keychain so unsigned debug builds work. Dev projects turn on `mailer_autoconfirm` so developer-mode email sign-up works without mail (`provision.ts --keep-email` does it too). Sign-in buttons appear only for configured providers (`--dart-define`, `app/README.md`). `tools/dev/dev-frame.ts` makes a frame on the dev project to join until the wizard exists; `tools/dev/app-live-test.ts` runs the app's data layer against the dev project (6 tests: join, restore, another device, not a member, wrong code, wrong password).
 - 2026-09-26: **Phase 2 approved** (`docs/app-flow.md`, D1–D5 and D7–D11 as recommended; layout chosen by window width only, so a narrow desktop window is the phone layout). Its backend additions are done: `frame.synced_manifest_version` (set by `/sync`) and a generated `frame.up_to_date` column, also in the `Frame` schema; and `central/site/` with the `/join` and `/oauth` pages (link parsing tested in `central/tests/`), published to GitHub Pages by `.github/workflows/pages.yml`.
 - 2026-09-26: **One Supabase project per frame** (was: one per family, holding many frames). Photos are processed for one panel's resolution and palette, so projects never mix panel types. The person who sets up a frame is its **owner** and hosts it in their free Supabase account (2 active free projects = 2 frames per account). Roles collapse to owner + members; one invite type; the app lists frames across projects. Panel model is chosen at setup; replacement hardware of the same model keeps the photos, a different model needs a model switch that clears them. User-facing words: frame, owner, people, "checks for new photos", "connect the frame", "asleep because it wasn't used for a while"; never space/project/admin/sync. The unreleased migrations 0001–0005 were replaced by a simpler schema (one `frame` row, `members`), and the dev project was reset. Supersedes the space/admin decisions below.
 - 2026-09-25: **Phase 1B done** (spike (c) deferred to the start of Phase 3e, as nothing earlier needs the Supabase OAuth App). `tools/frame_sim` (Dart CLI, 8 unit tests against a fake device-api) mirrors the firmware's cache layout and sync rules: downloads go to `cache/tmp` and are checked against sha256 before a rename, the manifest version only advances when every image arrived, `410` wipes the cache and secret, new arrivals are shown first. `tools/dev/sim-scenario.ts` passes the §12.1 scenario with it against the dev project.

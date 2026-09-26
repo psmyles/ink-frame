@@ -26,6 +26,8 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `deno run --allow-all tools/dev/sim-scenario.ts`: the §12.1 scenario with the real `frame_sim` against the dev project (same owner requirement as the tests).
 - `deno run --allow-read --allow-net --allow-env tools/dev/reset-dev.ts --yes`: drop and re-apply all migrations on the dev project (unreleased migrations only).
 - `deno test central/tests/`: link parsing for the `central/site` pages (published to GitHub Pages by `.github/workflows/pages.yml`).
+- `cd app && flutter test test/unit test/widget`: app tests without network. `deno run --allow-all tools/dev/app-live-test.ts`: the app's data layer against the dev project. More in `app/README.md`.
+- `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists).
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.
 - `deno test --allow-net --allow-env --allow-read backend/supabase/tests/`: integration tests against the project in `backend/.env.local` (~100 s; sets up the project's frame itself, cleans up after itself; skips if the project already has a real owner).
