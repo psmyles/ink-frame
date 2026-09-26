@@ -28,6 +28,9 @@ abstract final class InkTheme {
           onPrimary: Colors.white,
           secondary: Color(0xFF233F8E),
           onSecondary: Colors.white,
+          // Selected chips and segments: a warm neutral, so red stays the only accent.
+          secondaryContainer: Color(0xFFE9DFD9),
+          onSecondaryContainer: Color(0xFF22211F),
           error: Color(0xFFB3261E),
           onError: Colors.white,
           surface: Color(0xFFF7F5F0),
@@ -51,6 +54,8 @@ abstract final class InkTheme {
           onPrimary: Color(0xFF141414),
           secondary: Color(0xFF9DB0E8),
           onSecondary: Color(0xFF141414),
+          secondaryContainer: Color(0xFF3A322E),
+          onSecondaryContainer: Color(0xFFEFECE6),
           error: Color(0xFFF2B8B5),
           onError: Color(0xFF601410),
           surface: Color(0xFF141414),

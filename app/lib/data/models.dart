@@ -17,6 +17,7 @@ class Frame {
     required this.imageIntervalS,
     required this.syncIntervalS,
     required this.timezone,
+    this.displayOrder = 'random',
   });
 
   final String id;
@@ -31,6 +32,11 @@ class Frame {
   final int syncIntervalS;
   final String timezone;
 
+  /// `random` (shuffle) or `sequential` (in order).
+  final String displayOrder;
+
+  bool get inOrder => displayOrder == 'sequential';
+
   /// From a `public.frame` row or an app-api `Frame` object.
   factory Frame.fromJson(Map<String, dynamic> j) => Frame(
         id: j['id'] as String,
@@ -44,6 +50,7 @@ class Frame {
         imageIntervalS: j['image_interval_s'] as int,
         syncIntervalS: j['sync_interval_s'] as int,
         timezone: j['timezone'] as String,
+        displayOrder: j['display_order'] as String? ?? 'random',
       );
 }
 
@@ -70,4 +77,60 @@ class FrameSummary {
   final Member owner;
 
   bool get isMine => me.role == Role.owner;
+}
+
+/// A ready photo on the frame (`public.images`).
+class FrameImage {
+  const FrameImage({
+    required this.id,
+    required this.uploadedBy,
+    required this.storagePath,
+    required this.bytes,
+    required this.position,
+    required this.createdAt,
+  });
+
+  final String id;
+
+  /// Null once the uploader deleted their account.
+  final String? uploadedBy;
+  final String storagePath;
+  final int bytes;
+  final double position;
+  final DateTime createdAt;
+
+  factory FrameImage.fromJson(Map<String, dynamic> j) => FrameImage(
+        id: j['id'] as String,
+        uploadedBy: j['uploaded_by'] as String?,
+        // app-api's Image leaves it out; objects are always `{id}.png`.
+        storagePath: j['storage_path'] as String? ?? '${j['id']}.png',
+        bytes: j['bytes'] as int,
+        position: (j['position'] as num).toDouble(),
+        createdAt: DateTime.parse(j['created_at'] as String),
+      );
+
+  @override
+  bool operator ==(Object other) => other is FrameImage && other.id == id;
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// A panel model with its palette (`public.device_models` + `public.palettes`).
+class DeviceModel {
+  const DeviceModel({required this.id, required this.name, required this.width, required this.height, required this.palette});
+
+  final String id;
+  final String name;
+  final int width, height;
+
+  /// `{id, colors: [{name, color, deviceColor}]}`, as `Palette.fromJson` reads it.
+  final Map<String, dynamic> palette;
+
+  factory DeviceModel.fromJson(Map<String, dynamic> j) => DeviceModel(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        width: j['width'] as int,
+        height: j['height'] as int,
+        palette: {'id': j['palette_id'], 'colors': (j['palettes'] as Map<String, dynamic>)['colors']},
+      );
 }

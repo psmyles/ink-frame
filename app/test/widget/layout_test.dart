@@ -9,7 +9,10 @@ import 'package:ink_frame/data/frame_link.dart';
 import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/models.dart';
 import 'package:ink_frame/data/secure_store.dart';
+import 'package:ink_frame/state/photos.dart';
 import 'package:ink_frame/state/providers.dart';
+
+import 'frame_screen_test.dart' as fs;
 
 const kitchen = FrameAddress('https://aaaaaaaaaaaaaaaaaaaa.supabase.co', 'sb_publishable_aaaaaaaaaaaa');
 const grandma = FrameAddress('https://bbbbbbbbbbbbbbbbbbbb.supabase.co', 'sb_publishable_bbbbbbbbbbbb');
@@ -54,6 +57,12 @@ Future<void> pumpApp(WidgetTester tester, Size size, {List<FrameAddress> frames 
             error: const ApiException(ApiException.asleep, ''),
             cached: const CachedFrame("Grandma's", 'Priya', false),
           )),
+      photosProvider.overrideWith2((a) => fs.FakePhotos(a, const [])),
+      frameModelProvider.overrideWith((ref, a) async => FrameModel(
+            const DeviceModel(id: 'm', name: 'm', width: 800, height: 480, palette: {}),
+            fs.palette,
+          )),
+      memberNamesProvider.overrideWith((ref, a) async => const {}),
     ],
     retry: (_, _) => null,
     child: const InkFrameApp(),

@@ -490,12 +490,6 @@ abstract class AppLocalizations {
   /// **'No photos yet'**
   String get noPhotosYet;
 
-  /// No description provided for @photosComing.
-  ///
-  /// In en, this message translates to:
-  /// **'Adding photos arrives in the next build.'**
-  String get photosComing;
-
   /// No description provided for @setUpComing.
   ///
   /// In en, this message translates to:
@@ -549,6 +543,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email and password sign-in on dev projects, and extra details.'**
   String get developerModeBody;
+
+  /// No description provided for @addPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photos'**
+  String get addPhotos;
+
+  /// No description provided for @noPhotosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add some and the frame will show them after it next checks.'**
+  String get noPhotosBody;
+
+  /// No description provided for @prepareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Prepare 1 photo} other{Prepare {count} photos}}'**
+  String prepareTitle(int count);
+
+  /// No description provided for @uploadCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Upload} other{Upload {count}}}'**
+  String uploadCount(int count);
+
+  /// No description provided for @original.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get original;
+
+  /// No description provided for @onTheFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'On the frame'**
+  String get onTheFrame;
+
+  /// No description provided for @rotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get rotate;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this photo'**
+  String get removePhoto;
+
+  /// No description provided for @adjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get adjust;
+
+  /// No description provided for @automatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get automatic;
+
+  /// No description provided for @automaticHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes the photo look as close to the original as the frame\'s colours allow.'**
+  String get automaticHint;
+
+  /// No description provided for @brightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get brightness;
+
+  /// No description provided for @contrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Contrast'**
+  String get contrast;
+
+  /// No description provided for @colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get colour;
+
+  /// No description provided for @darker.
+  ///
+  /// In en, this message translates to:
+  /// **'Darker'**
+  String get darker;
+
+  /// No description provided for @brighter.
+  ///
+  /// In en, this message translates to:
+  /// **'Brighter'**
+  String get brighter;
+
+  /// No description provided for @softer.
+  ///
+  /// In en, this message translates to:
+  /// **'Softer'**
+  String get softer;
+
+  /// No description provided for @stronger.
+  ///
+  /// In en, this message translates to:
+  /// **'Stronger'**
+  String get stronger;
+
+  /// No description provided for @muted.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get muted;
+
+  /// No description provided for @vivid.
+  ///
+  /// In en, this message translates to:
+  /// **'Vivid'**
+  String get vivid;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @dotPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot pattern'**
+  String get dotPattern;
+
+  /// No description provided for @patternFine.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine'**
+  String get patternFine;
+
+  /// No description provided for @patternSmooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Smooth'**
+  String get patternSmooth;
+
+  /// No description provided for @patternCrisp.
+  ///
+  /// In en, this message translates to:
+  /// **'Crisp'**
+  String get patternCrisp;
+
+  /// No description provided for @patternGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get patternGrid;
+
+  /// No description provided for @patternGrainy.
+  ///
+  /// In en, this message translates to:
+  /// **'Grainy'**
+  String get patternGrainy;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @useForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Use for all photos'**
+  String get useForAll;
+
+  /// No description provided for @appliedToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied to all photos'**
+  String get appliedToAll;
+
+  /// No description provided for @cantOpenPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open this photo.'**
+  String get cantOpenPhoto;
+
+  /// No description provided for @cantOpenPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Couldn\'t open 1 photo.} other{Couldn\'t open {count} photos.}}'**
+  String cantOpenPhotos(int count);
+
+  /// No description provided for @openingPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening photos…'**
+  String get openingPhotos;
+
+  /// No description provided for @dropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop photos to add them to {frame}'**
+  String dropHere(String frame);
+
+  /// No description provided for @preparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get preparing;
+
+  /// No description provided for @uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploading;
+
+  /// No description provided for @waiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting…'**
+  String get waiting;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @retryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry all'**
+  String get retryAll;
+
+  /// No description provided for @uploadsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo couldn\'t be added.} other{{count} photos couldn\'t be added.}}'**
+  String uploadsFailed(int count);
+
+  /// No description provided for @alreadyOnFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo was already on the frame.} other{{count} photos were already on the frame.}}'**
+  String alreadyOnFrame(int count);
+
+  /// No description provided for @storageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'{frame}\'s storage is full. Delete some photos to add more.'**
+  String storageFull(String frame);
+
+  /// No description provided for @addedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by {name} · {when}'**
+  String addedBy(String name, String when);
+
+  /// No description provided for @someoneWhoLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'someone who left'**
+  String get someoneWhoLeft;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get you;
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selected(int count);
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete this photo from the frame?} other{Delete {count} photos from the frame?}}'**
+  String deleteConfirm(int count);
+
+  /// No description provided for @cantDeleteOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only delete your own photos. The frame\'s owner can delete any.'**
+  String get cantDeleteOthers;
+
+  /// No description provided for @noReEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'To change the crop or look, delete the photo and add it again.'**
+  String get noReEdit;
+
+  /// No description provided for @reorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Change order'**
+  String get reorder;
+
+  /// No description provided for @reorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag photos to change the order the frame shows them in.'**
+  String get reorderHint;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @photoOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {n} of {total}'**
+  String photoOf(int n, int total);
+
+  /// No description provided for @photoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo added by {name} on {date}'**
+  String photoLabel(String name, String date);
+
+  /// No description provided for @couldntLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this photo.'**
+  String get couldntLoad;
 }
 
 class _AppLocalizationsDelegate

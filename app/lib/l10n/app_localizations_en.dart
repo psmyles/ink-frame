@@ -256,9 +256,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPhotosYet => 'No photos yet';
 
   @override
-  String get photosComing => 'Adding photos arrives in the next build.';
-
-  @override
   String get setUpComing =>
       'Setting up a frame arrives in a later build. For now, join a frame with an invite link.';
 
@@ -289,4 +286,237 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get developerModeBody =>
       'Email and password sign-in on dev projects, and extra details.';
+
+  @override
+  String get addPhotos => 'Add photos';
+
+  @override
+  String get noPhotosBody =>
+      'Add some and the frame will show them after it next checks.';
+
+  @override
+  String prepareTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Prepare $count photos',
+      one: 'Prepare 1 photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String uploadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Upload $count',
+      one: 'Upload',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get original => 'Original';
+
+  @override
+  String get onTheFrame => 'On the frame';
+
+  @override
+  String get rotate => 'Rotate';
+
+  @override
+  String get removePhoto => 'Remove this photo';
+
+  @override
+  String get adjust => 'Adjust';
+
+  @override
+  String get automatic => 'Automatic';
+
+  @override
+  String get automaticHint =>
+      'Makes the photo look as close to the original as the frame\'s colours allow.';
+
+  @override
+  String get brightness => 'Brightness';
+
+  @override
+  String get contrast => 'Contrast';
+
+  @override
+  String get colour => 'Colour';
+
+  @override
+  String get darker => 'Darker';
+
+  @override
+  String get brighter => 'Brighter';
+
+  @override
+  String get softer => 'Softer';
+
+  @override
+  String get stronger => 'Stronger';
+
+  @override
+  String get muted => 'Muted';
+
+  @override
+  String get vivid => 'Vivid';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get dotPattern => 'Dot pattern';
+
+  @override
+  String get patternFine => 'Fine';
+
+  @override
+  String get patternSmooth => 'Smooth';
+
+  @override
+  String get patternCrisp => 'Crisp';
+
+  @override
+  String get patternGrid => 'Grid';
+
+  @override
+  String get patternGrainy => 'Grainy';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get useForAll => 'Use for all photos';
+
+  @override
+  String get appliedToAll => 'Applied to all photos';
+
+  @override
+  String get cantOpenPhoto => 'Couldn\'t open this photo.';
+
+  @override
+  String cantOpenPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Couldn\'t open $count photos.',
+      one: 'Couldn\'t open 1 photo.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get openingPhotos => 'Opening photos…';
+
+  @override
+  String dropHere(String frame) {
+    return 'Drop photos to add them to $frame';
+  }
+
+  @override
+  String get preparing => 'Preparing…';
+
+  @override
+  String get uploading => 'Uploading…';
+
+  @override
+  String get waiting => 'Waiting…';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get retryAll => 'Retry all';
+
+  @override
+  String uploadsFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos couldn\'t be added.',
+      one: '1 photo couldn\'t be added.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String alreadyOnFrame(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos were already on the frame.',
+      one: '1 photo was already on the frame.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String storageFull(String frame) {
+    return '$frame\'s storage is full. Delete some photos to add more.';
+  }
+
+  @override
+  String addedBy(String name, String when) {
+    return 'Added by $name · $when';
+  }
+
+  @override
+  String get someoneWhoLeft => 'someone who left';
+
+  @override
+  String get you => 'you';
+
+  @override
+  String selected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String deleteConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count photos from the frame?',
+      one: 'Delete this photo from the frame?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cantDeleteOthers =>
+      'You can only delete your own photos. The frame\'s owner can delete any.';
+
+  @override
+  String get noReEdit =>
+      'To change the crop or look, delete the photo and add it again.';
+
+  @override
+  String get reorder => 'Change order';
+
+  @override
+  String get reorderHint =>
+      'Drag photos to change the order the frame shows them in.';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String photoOf(int n, int total) {
+    return 'Photo $n of $total';
+  }
+
+  @override
+  String photoLabel(String name, String date) {
+    return 'Photo added by $name on $date';
+  }
+
+  @override
+  String get couldntLoad => 'Couldn\'t load this photo.';
 }

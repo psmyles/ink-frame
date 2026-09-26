@@ -194,7 +194,7 @@ Per photo: crop → resize → dither → indexed PNG → sha256 → `request-up
 - Mobile: if the app goes to the background mid-queue, it keeps going while the OS allows; on return, unfinished items show Retry.
 
 ### 3.6 Order and viewer
-- **Reorder** (owner only, D8): when the frame is set to "In order", the grid gets drag handles. Each drop = one `POST /images/reorder`. In "Shuffle" the grid shows by date added and there's no reorder.
+- **Reorder** (owner only, D8): when the frame is set to "In order", the header has **Change order**, which opens the photos as a list with drag handles (Flutter has no reorderable grid; a list is also easier to drag on a phone). Each drop = one `POST /images/reorder`. In "Shuffle" there's no reorder.
 - **Viewer**: tap a tile → full-width preview, swipe between photos, info line, Delete. **No re-editing**: only the processed PNG is stored, so to change a crop you delete and add again (the viewer says so).
 
 ---

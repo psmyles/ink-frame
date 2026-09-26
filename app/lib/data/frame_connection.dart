@@ -91,7 +91,7 @@ class FrameConnection {
 
   /// Signs in to this frame's project. Throws [ApiException] (`sign_in_failed`,
   /// `asleep`, `offline`).
-  Future<void> signIn(Credential credential) => _guard(authCode: ApiException.signInFailed, () async {
+  Future<void> signIn(Credential credential) => guard(authCode: ApiException.signInFailed, () async {
         switch (credential) {
           case IdTokenCredential c:
             await client.auth.signInWithIdToken(
@@ -123,7 +123,7 @@ class FrameConnection {
   }
 
   /// The frame, you and its owner, read directly under RLS.
-  Future<FrameSummary> loadSummary() => _guard(() async {
+  Future<FrameSummary> loadSummary() => guard(() async {
         final me = userId;
         if (me == null) throw const ApiException(ApiException.signedOut, 'Not signed in.');
         final frameRow = await client.from('frame').select().maybeSingle();
@@ -147,7 +147,7 @@ class FrameConnection {
   }
 
   /// Calls app-api with your session. Throws [ApiException].
-  Future<Object?> callApi(String method, String path, {Object? body}) => _guard(() async {
+  Future<Object?> callApi(String method, String path, {Object? body}) => guard(() async {
         final token = client.auth.currentSession?.accessToken;
         if (token == null) throw const ApiException(ApiException.signedOut, 'Not signed in.');
         final req = http.Request(method, Uri.parse('${address.url}/functions/v1/app-api$path'))
@@ -171,8 +171,8 @@ class FrameConnection {
     }
   }
 
-  /// Maps transport and PostgREST failures to [ApiException].
-  Future<T> _guard<T>(Future<T> Function() body, {String authCode = ApiException.signedOut}) async {
+  /// Runs [body], mapping transport, PostgREST and auth failures to [ApiException].
+  Future<T> guard<T>(Future<T> Function() body, {String authCode = ApiException.signedOut}) async {
     try {
       return await body();
     } on ApiException {

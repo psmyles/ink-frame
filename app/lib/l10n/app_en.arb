@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "appTitle": "Ink Frame",
   "tagline": "Your family's photos on e-ink frames.",
   "invited": "I've been invited",
@@ -11,7 +10,6 @@
   "tryAgain": "Try again",
   "cancel": "Cancel",
   "back": "Back",
-
   "joinTitle": "Join a frame",
   "signInTitle": "Sign in",
   "pasteLinkLabel": "Invite link",
@@ -20,7 +18,6 @@
   "joinLinkHelp": "Paste the link you were sent. A code on its own isn't enough, because the app also needs the frame's address.",
   "signInLinkHelp": "Paste the link from \"Use on another device\" on your other phone or computer, or any invite link.",
   "invalidLink": "That doesn't look like an Ink Frame link. Copy the whole link and try again.",
-
   "signInExplain": "Your account is only used to recognise you on this frame.",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
@@ -30,7 +27,6 @@
   "password": "Password",
   "signIn": "Sign in",
   "noSignInMethods": "Sign-in isn't set up in this build. Turn on developer mode in Account to sign in with email and password.",
-
   "nameHeading": "What should the others see?",
   "nameLabel": "Your name",
   "join": "Join",
@@ -41,41 +37,106 @@
   "gotIt": "Got it",
   "noFramesOnLink": "You're not on any of the frames in that link any more.",
   "skippedFrames": "{count, plural, =1{You're no longer on one frame from that link, so it was skipped.} other{You're no longer on {count} frames from that link, so they were skipped.}}",
-  "@skippedFrames": { "placeholders": { "count": { "type": "int" } } },
-
+  "@skippedFrames": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noFramesYet": "No frames yet",
   "noFramesBody": "Set up your own frame, or join one with the invite link you were sent.",
   "setUpBy": "Set up by {name}",
-  "@setUpBy": { "placeholders": { "name": { "type": "String" } } },
+  "@setUpBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "frames": "Frames",
   "setUpOrJoin": "Set up or join",
   "chooseFrame": "Choose a frame",
-
   "statusUpToDate": "Up to date · last checked {ago}",
-  "@statusUpToDate": { "placeholders": { "ago": { "type": "String" } } },
+  "@statusUpToDate": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
   "statusChangesWaiting": "Changes waiting · next check around {time}",
-  "@statusChangesWaiting": { "placeholders": { "time": { "type": "String" } } },
+  "@statusChangesWaiting": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "statusChangesWaitingSoon": "Changes waiting · next check soon",
   "statusFirstCheck": "Connected · waiting for its first check",
   "statusNotConnected": "Not connected yet",
   "statusNotCheckedIn": "Hasn't checked in since {when}. Check the frame's Wi-Fi and battery.",
-  "@statusNotCheckedIn": { "placeholders": { "when": { "type": "String" } } },
+  "@statusNotCheckedIn": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "batteryLow": "Battery low ({pct} %)",
-  "@batteryLow": { "placeholders": { "pct": { "type": "int" } } },
+  "@batteryLow": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "checkHint": "To show changes now, press the green button on the frame.",
-
   "justNow": "just now",
   "minutesAgo": "{n} min ago",
-  "@minutesAgo": { "placeholders": { "n": { "type": "int" } } },
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "hoursAgo": "{n} h ago",
-  "@hoursAgo": { "placeholders": { "n": { "type": "int" } } },
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "daysAgo": "{n, plural, =1{1 day ago} other{{n} days ago}}",
-  "@daysAgo": { "placeholders": { "n": { "type": "int" } } },
-
+  "@daysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "asleepOwner": "{frame}'s photo storage is asleep because it wasn't used for a while. The frame keeps showing its photos.",
-  "@asleepOwner": { "placeholders": { "frame": { "type": "String" } } },
+  "@asleepOwner": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
   "asleepOther": "{frame} is asleep because it wasn't used for a while. Ask {owner} to open Ink Frame to wake it up. The frame keeps showing its photos.",
-  "@asleepOther": { "placeholders": { "frame": { "type": "String" }, "owner": { "type": "String" } } },
+  "@asleepOther": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      },
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
   "asleepShort": "Asleep",
   "asleepJoin": "This frame is asleep because it wasn't used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.",
   "theOwner": "the person who set it up",
@@ -84,18 +145,170 @@
   "signedOutOfFrame": "You were signed out of this frame.",
   "signInAgain": "Sign in again",
   "unknownFrame": "A frame",
-
   "noPhotosYet": "No photos yet",
-  "photosComing": "Adding photos arrives in the next build.",
   "setUpComing": "Setting up a frame arrives in a later build. For now, join a frame with an invite link.",
-
   "account": "Account",
   "onThisDevice": "Frames on this device",
   "signOut": "Sign out",
   "signOutConfirm": "Sign out of every frame on this device? You can sign in again with a link from another device or an invite.",
   "version": "Version {v}",
-  "@version": { "placeholders": { "v": { "type": "String" } } },
+  "@version": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
   "developerMode": "Developer mode",
   "developerModeOn": "Developer mode is on",
-  "developerModeBody": "Email and password sign-in on dev projects, and extra details."
+  "developerModeBody": "Email and password sign-in on dev projects, and extra details.",
+  "addPhotos": "Add photos",
+  "noPhotosBody": "Add some and the frame will show them after it next checks.",
+  "prepareTitle": "{count, plural, =1{Prepare 1 photo} other{Prepare {count} photos}}",
+  "@prepareTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadCount": "{count, plural, =1{Upload} other{Upload {count}}}",
+  "@uploadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "original": "Original",
+  "onTheFrame": "On the frame",
+  "rotate": "Rotate",
+  "removePhoto": "Remove this photo",
+  "adjust": "Adjust",
+  "automatic": "Automatic",
+  "automaticHint": "Makes the photo look as close to the original as the frame's colours allow.",
+  "brightness": "Brightness",
+  "contrast": "Contrast",
+  "colour": "Colour",
+  "darker": "Darker",
+  "brighter": "Brighter",
+  "softer": "Softer",
+  "stronger": "Stronger",
+  "muted": "Muted",
+  "vivid": "Vivid",
+  "moreOptions": "More options",
+  "dotPattern": "Dot pattern",
+  "patternFine": "Fine",
+  "patternSmooth": "Smooth",
+  "patternCrisp": "Crisp",
+  "patternGrid": "Grid",
+  "patternGrainy": "Grainy",
+  "reset": "Reset",
+  "useForAll": "Use for all photos",
+  "appliedToAll": "Applied to all photos",
+  "cantOpenPhoto": "Couldn't open this photo.",
+  "cantOpenPhotos": "{count, plural, =1{Couldn't open 1 photo.} other{Couldn't open {count} photos.}}",
+  "@cantOpenPhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openingPhotos": "Opening photos…",
+  "dropHere": "Drop photos to add them to {frame}",
+  "@dropHere": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
+  "preparing": "Preparing…",
+  "uploading": "Uploading…",
+  "waiting": "Waiting…",
+  "retry": "Retry",
+  "retryAll": "Retry all",
+  "uploadsFailed": "{count, plural, =1{1 photo couldn't be added.} other{{count} photos couldn't be added.}}",
+  "@uploadsFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "alreadyOnFrame": "{count, plural, =1{1 photo was already on the frame.} other{{count} photos were already on the frame.}}",
+  "@alreadyOnFrame": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageFull": "{frame}'s storage is full. Delete some photos to add more.",
+  "@storageFull": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
+  "addedBy": "Added by {name} · {when}",
+  "@addedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "someoneWhoLeft": "someone who left",
+  "you": "you",
+  "selected": "{count} selected",
+  "@selected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Delete",
+  "deleteConfirm": "{count, plural, =1{Delete this photo from the frame?} other{Delete {count} photos from the frame?}}",
+  "@deleteConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cantDeleteOthers": "You can only delete your own photos. The frame's owner can delete any.",
+  "noReEdit": "To change the crop or look, delete the photo and add it again.",
+  "reorder": "Change order",
+  "reorderHint": "Drag photos to change the order the frame shows them in.",
+  "done": "Done",
+  "photoOf": "Photo {n} of {total}",
+  "@photoOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "photoLabel": "Photo added by {name} on {date}",
+  "@photoLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "couldntLoad": "Couldn't load this photo."
 }
