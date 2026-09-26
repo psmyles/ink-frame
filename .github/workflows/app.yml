@@ -1,0 +1,31 @@
+# App tests on every push: unit, widget, imaging (golden parity with ink-frame-lab)
+# and a check that the golden vectors still come out of the reference unchanged.
+name: App
+
+on:
+  push:
+    paths: ["app/**", "shared/**", "tools/golden/**", "reference/**", ".github/workflows/app.yml"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Golden vectors are current
+        run: |
+          node tools/golden/gen-vectors.mjs
+          git diff --exit-code shared/test-vectors
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: 3.47.5, channel: stable, cache: true }
+      - working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test

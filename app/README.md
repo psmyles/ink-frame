@@ -45,7 +45,8 @@ Sign-in buttons only appear for providers that are configured.
 ## Tests
 
 ```sh
-flutter test test/unit test/widget                      # no network
+flutter test                                            # unit, widget, imaging (golden parity); no network
+PHOTOS=<dir> flutter test test/imaging/png_bench_test.dart   # PNG size benchmark on real photos
 deno run --allow-all ../tools/dev/app-live-test.ts      # against the dev project (needs no dev frame)
 PREVIEW=1 flutter test test/preview --update-goldens    # renders screens to test/preview/out/ for a look
 ```

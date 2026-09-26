@@ -329,14 +329,11 @@ Implemented in `backend/supabase/migrations/` (0001 tables, 0002 access, 0003 jo
    - plain quantization
    - **Output is a `Uint8List` of palette indices** (not RGBA). `replaceColors()` becomes the PNG palette, mapping index → `deviceColor`.
 4. **Preview:** indices → calibrated `color` values, so the user sees what the panel will display. The 3D viewer from ink-frame-lab is **not** ported.
-5. **Indexed PNG encoder** (custom, small):
-   - IHDR colour type 3; bit depth **4** (2 for ≤4 colours, 1 for 2 colours)
-   - `PLTE` = palette `deviceColor`s; no tRNS
-   - `IDAT` via `ZLibCodec(level: 9)` (`package:archive` on web if ever needed)
-   - try filter strategies (all-none, all-sub, all-up, per-row minimum) and keep the smallest
-   - `IEND`
-   
-   Expected ~40–120 KB per 800×480 image, versus ~200–400 KB for today's 24-bit PNGs.
+5. **Indexed PNG encoder** (`lib/imaging/png_encoder.dart`, `zopfli.dart`), tuned for the smallest files:
+   - IHDR colour type 3 with the fewest bits for the colours **actually used** (1 bit for 2, 2 for ≤4, 4 for ≤16); `PLTE` = those colours' `deviceColor`s; no tRNS or other chunks
+   - row filter **none** (every other filter and the per-row heuristic came out larger on dithered images), 4-bit packing (8-bit is ~4 % larger)
+   - a few zlib-9 candidates pick the palette order and strategy, then the winner is recompressed with a **Dart port of Zopfli** (optimal parsing, block splitting, length-limited Huffman): another 5–9 %
+   - measured on 12 real photos at 800×480, Spectra 6 (`test/imaging/png_bench_test.dart`): Floyd–Steinberg **57 KB** (ink-frame-lab's 24-bit PNG: 135 KB), Atkinson 52 KB (122), ordered 25 KB (59); about 1 s per image on a Mac, within 0.4 % of the reference Zopfli
 6. **sha256** of the PNG bytes → `request-upload` → PUT to the signed URL → `finalize`.
 
 Dithering options follow ink-frame-lab (algorithm, kernel, serpentine, Bayer size, random type), with a default preset per model.
@@ -549,7 +546,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google/Apple client IDs still pending (can wait until Phase 3)
 - [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim ✅ · dev tools ✅
 - [x] Phase 2 — `docs/app-flow.md` approved 2026-09-26 (D1–D5, D7–D11 as recommended)
-- [ ] Phase 3 — 3a (built; phone + Google/Apple sign-in pending client IDs) · 3b · 3c · 3d · 3e · 3f
+- [ ] Phase 3 — 3a (built; phone + Google/Apple sign-in pending client IDs) · 3b ✅ · 3c · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
 - [ ] Phase 5 — release
 
@@ -568,6 +565,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - Arduino-ESP32: bootloader app rollback support.
 - E1002: status-LED GPIO; whether there is an external RTC (use it for quiet hours if present).
 - Google sign-in on Windows/Linux: the Desktop client's token exchange with PKCE, and whether Google still requires the (public) client secret. Implemented with an optional `GOOGLE_DESKTOP_CLIENT_SECRET`; verify once the client IDs exist.
+- Whether a frame's daily `/sync` (Edge Function calls) counts as activity for Supabase's free-tier pausing. If it does, a frame with a flat battery lets its project fall asleep after a week, which the low-battery alert (§15) is meant to prevent.
 
 ## 15. Open decisions (defaults used until changed)
 - **Moving hardware to a different frame (another owner's project):** a **factory reset (hold 10 s)** frees it locally; the old frame shows it as not seen, and its owner can disconnect it.
@@ -586,8 +584,10 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
   - ✅ Invites (owner only): single use and 7 days by default; at most 50 uses and 30 days. Codes are 10 Crockford base32 characters (`XXXXX-XXXXX`).
   - ✅ Re-connecting the same hardware (green held 3 s) keeps the frame, its photos and settings, and issues a new secret.
   - ✅ Pause copy gives the reason: "asleep because it wasn't used for a while".
+- **Low-battery alert** (user request 2026-09-26). The frame already reports `battery_pct` on every `/sync`, and the app shows "Battery low" below 20 %. To add: a notification when a frame's battery falls below a level, so it's recharged before it stops checking in (and before its project could fall asleep, §14). Proposed: **local notifications** from a background refresh in the app (iOS background fetch, Android WorkManager) that reads each frame's `battery_pct`, with the level set per frame by the owner (default 20 %, stored on `frame`), rather than server push, which would need the developer's FCM/APNs credentials in every family's project. Schedule: Phase 3d (setting) and 3g (background refresh). To confirm with the user.
 
 ## 16. Decision log
+- 2026-09-26: **Phase 3b done.** `app/lib/imaging/` (pure Dart): the dithering port matches `dithering.js` exactly on 64 golden cases (`tools/golden/gen-vectors.mjs` → `shared/test-vectors/dither.json`; random mode checked statistically), crop/resize (tent filter scaled for downsampling), rotation, looks, pipeline with sha256. PNGs are ~2.4× smaller than ink-frame-lab's exports: minimum bit depth, no filter, and a Dart Zopfli (the user asked for the highest compression). Zopfli's match-chain limit is 1024 rather than 8192: within 0.2 % in size, 3× faster. CI (`.github/workflows/app.yml`) runs the app tests and checks the vectors regenerate unchanged.
 - 2026-09-26: **Phase 3a built.** Bundle/application ID `com.psmyles.inkframe` on every platform. Each frame gets its own `SupabaseClient` with the **implicit** auth flow (ID-token and password sign-in never redirect, so PKCE storage isn't needed); sessions are kept in secure storage per project ref and restored at start. On macOS, secure storage uses the legacy keychain so unsigned debug builds work. Dev projects turn on `mailer_autoconfirm` so developer-mode email sign-up works without mail (`provision.ts --keep-email` does it too). Sign-in buttons appear only for configured providers (`--dart-define`, `app/README.md`). `tools/dev/dev-frame.ts` makes a frame on the dev project to join until the wizard exists; `tools/dev/app-live-test.ts` runs the app's data layer against the dev project (6 tests: join, restore, another device, not a member, wrong code, wrong password).
 - 2026-09-26: **Phase 2 approved** (`docs/app-flow.md`, D1–D5 and D7–D11 as recommended; layout chosen by window width only, so a narrow desktop window is the phone layout). Its backend additions are done: `frame.synced_manifest_version` (set by `/sync`) and a generated `frame.up_to_date` column, also in the `Frame` schema; and `central/site/` with the `/join` and `/oauth` pages (link parsing tested in `central/tests/`), published to GitHub Pages by `.github/workflows/pages.yml`.
 - 2026-09-26: **One Supabase project per frame** (was: one per family, holding many frames). Photos are processed for one panel's resolution and palette, so projects never mix panel types. The person who sets up a frame is its **owner** and hosts it in their free Supabase account (2 active free projects = 2 frames per account). Roles collapse to owner + members; one invite type; the app lists frames across projects. Panel model is chosen at setup; replacement hardware of the same model keeps the photos, a different model needs a model switch that clears them. User-facing words: frame, owner, people, "checks for new photos", "connect the frame", "asleep because it wasn't used for a while"; never space/project/admin/sync. The unreleased migrations 0001–0005 were replaced by a simpler schema (one `frame` row, `members`), and the dev project was reset. Supersedes the space/admin decisions below.
