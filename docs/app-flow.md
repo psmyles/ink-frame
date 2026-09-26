@@ -1,7 +1,7 @@
 # Ink Frame app: flow and UI structure
 
-> **Status:** DRAFT for approval (Phase 2, PLAN.md §11). Nothing here is built yet.
-> Each section answers a question from PLAN.md §8.5 with a recommendation. The **D** items in §0 need your yes/no; everything else is a default you can change.
+> **Status:** APPROVED 2026-09-26 (Phase 2, PLAN.md §11). D1–D5 and D7–D11 accepted as recommended.
+> Each section answers a question from PLAN.md §8.5. Details below are defaults that can still change during Phase 3.
 > Revised 2026-09-26 for **one Supabase project per frame** (PLAN.md §2, §16).
 
 ---
@@ -137,6 +137,7 @@ Home (every frame you're on)
 └───────────────┴────────────────────────────────────────────────┘
 ```
 - **Two panes** from ~900 px wide: sidebar (frames, set up / join, Account) and detail. Below that width, the mobile layout.
+- **One app, one set of screens.** The layout is chosen by **window width only**, never by platform, so narrowing the desktop window shows exactly the phone layout (and widening a tablet shows two panes). Gestures work with both touch and mouse everywhere (long-press also works with a mouse; hover is an extra, never the only way). What width can't change is the platform plumbing: sign-in sheets, the photo library picker, the QR camera, the share sheet and Bluetooth, each of which has a desktop path (§6.3, §7.1).
 - **Drag and drop** files onto the window (or onto a frame in the sidebar) → Prepare.
 - Keyboard: Delete removes selected photos (with confirm), Ctrl/Cmd+A selects all, arrows move in the viewer, Ctrl/Cmd+V pastes an invite link anywhere on Welcome/Join.
 - Prepare (the editor) opens **full window**; settings, people and storage open as **side sheets**.
