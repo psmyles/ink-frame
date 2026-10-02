@@ -559,8 +559,8 @@ abstract class AppLocalizations {
   /// No description provided for @prepareTitle.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Prepare 1 photo} other{Prepare {count} photos}}'**
-  String prepareTitle(int count);
+  /// **'Prepare'**
+  String get prepareTitle;
 
   /// No description provided for @uploadCount.
   ///
@@ -574,11 +574,95 @@ abstract class AppLocalizations {
   /// **'Original'**
   String get original;
 
-  /// No description provided for @onTheFrame.
+  /// No description provided for @prepareHint.
   ///
   /// In en, this message translates to:
-  /// **'On the frame'**
-  String get onTheFrame;
+  /// **'How they\'ll look on the frame. Tap one to adjust.'**
+  String get prepareHint;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @addMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more photos'**
+  String get addMore;
+
+  /// No description provided for @photoOfCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {index} of {count}'**
+  String photoOfCount(int index, int count);
+
+  /// No description provided for @previousPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous photo'**
+  String get previousPhoto;
+
+  /// No description provided for @nextPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Next photo'**
+  String get nextPhoto;
+
+  /// No description provided for @moveHintTouch.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the photo to move it. Pinch to zoom.'**
+  String get moveHintTouch;
+
+  /// No description provided for @moveHintMouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the photo to move it. Scroll to zoom.'**
+  String get moveHintMouse;
+
+  /// No description provided for @viewOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'View original'**
+  String get viewOriginal;
+
+  /// No description provided for @viewOriginalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to see the original photo'**
+  String get viewOriginalHint;
+
+  /// No description provided for @startOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get startOver;
+
+  /// No description provided for @leaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without uploading?'**
+  String get leaveTitle;
+
+  /// No description provided for @leaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The photos you picked and your changes won\'t be kept.'**
+  String get leaveBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
 
   /// No description provided for @rotate.
   ///
@@ -591,12 +675,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove this photo'**
   String get removePhoto;
-
-  /// No description provided for @adjust.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust'**
-  String get adjust;
 
   /// No description provided for @automatic.
   ///
@@ -627,42 +705,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Colour'**
   String get colour;
-
-  /// No description provided for @darker.
-  ///
-  /// In en, this message translates to:
-  /// **'Darker'**
-  String get darker;
-
-  /// No description provided for @brighter.
-  ///
-  /// In en, this message translates to:
-  /// **'Brighter'**
-  String get brighter;
-
-  /// No description provided for @softer.
-  ///
-  /// In en, this message translates to:
-  /// **'Softer'**
-  String get softer;
-
-  /// No description provided for @stronger.
-  ///
-  /// In en, this message translates to:
-  /// **'Stronger'**
-  String get stronger;
-
-  /// No description provided for @muted.
-  ///
-  /// In en, this message translates to:
-  /// **'Muted'**
-  String get muted;
-
-  /// No description provided for @vivid.
-  ///
-  /// In en, this message translates to:
-  /// **'Vivid'**
-  String get vivid;
 
   /// No description provided for @moreOptions.
   ///
@@ -715,7 +757,7 @@ abstract class AppLocalizations {
   /// No description provided for @useForAll.
   ///
   /// In en, this message translates to:
-  /// **'Use for all photos'**
+  /// **'Use for all'**
   String get useForAll;
 
   /// No description provided for @appliedToAll.
@@ -753,6 +795,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preparing…'**
   String get preparing;
+
+  /// No description provided for @updating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating…'**
+  String get updating;
 
   /// No description provided for @uploading.
   ///

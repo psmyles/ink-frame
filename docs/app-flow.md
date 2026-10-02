@@ -156,29 +156,61 @@ Home (every frame you're on)
 - Mobile: `image_picker` multi-select. Desktop: file dialog or drag-drop. Formats: JPEG, PNG, WebP, HEIC (iOS/macOS only).
 - The target is the frame you're on. (Sending one photo to several frames, processed for each frame's model: later.)
 
-### 3.3 Prepare (crop, preview, adjust)
+### 3.3 Prepare (overview, then edit one photo)
+Reworked 2026-10-02 after trying it on desktop: the old single screen hid how to crop, and Adjust opened behind the photo strip.
+
+**Overview** (several photos picked):
 ```
 ┌──────────────────────────────────────────┐
-│ ✕  Prepare 5 photos                [Upload 5]│
-│ ┌──────────────────────────────────────┐ │
-│ │   crop box locked to 800×480 (5:3)   │ │  pinch/drag or mouse wheel/drag
-│ │                                      │ │
-│ └──────────────────────────────────────┘ │
-│  [ Original | On the frame ]   ⟳ Rotate  │  toggle: how the frame will show it
-│  Adjust ▸                                 │  collapsed; most people never open it
-│ ┌──┐┌──┐┌──┐┌──┐┌──┐                     │  strip of picked photos; ✕ removes one
-│ └──┘└──┘└──┘└──┘└──┘                     │
+│ ✕  Prepare                       [⇧ Upload 5]│
+│ one-line hint                            │  "How they'll look on the frame. Tap one to adjust."
+│ ┌──────────────┐ ┌──────────────┐        │  grid of frame looks (1 column on phones,
+│ │            ✕ │ │            ✕ │        │  more on wider windows); ✕ removes one
+│ │      [✎ Edit]│ │  Preparing…  │        │
+│ └──────────────┘ └──────────────┘        │
+│ [        + Add more photos             ] │  a plain button under the grid
 └──────────────────────────────────────────┘
 ```
-- **No choices by default** (user request 2026-09-26): every photo gets **Automatic**, which tunes each photo to look as close to the original as the frame's inks allow (§3.3.1). The main screen only has the crop, rotate, the preview toggle and the strip.
-- **Crop**: aspect locked to the frame's model; defaults to centre crop (as `getCroppedCanvas()`); rotation in 90° steps.
-- **Preview**: "On the frame" shows the processed result in the panel's calibrated colours. Rendering runs in an isolate and updates ~300 ms after the crop stops moving.
-- **Adjust** (collapsed, plain words only; changes apply to the current photo, with "Use for all photos"):
+- Every photo is shown **as it will look on the frame** (Automatic, centre crop) without opening anything. Most people check them and press **Upload N**.
+- Previews render in the background: the photo open in the editor first, then the rest in order. Each photo gets a quick frame look straight away, then Automatic's search tunes it and the tuned look replaces it (PLAN.md §8.3 has the timings). A photo shows its plain crop with "Preparing…" only until its first frame look is ready.
+- **Add more photos** (a button under the grid, not a tile that could pass for an empty photo) picks more photos into the same batch. The title is just "Prepare": the count is on Upload, and both fit in a narrow window.
+- Closing (✕ or back) asks **"Leave without uploading?"** when more than one photo was picked or anything was changed.
+
+**Editor** (tap a photo; a single picked photo opens here directly, with ✕ and Upload instead of Done):
+```
+┌──────────────────────────────────────────┐
+│ Photo 2 of 5                 ‹  ›  [Done]│
+│ ┌──────────────────────────────────────┐ │
+│ │  frame-shaped window = the crop      │ │  drag to move, pinch / scroll to zoom,
+│ │  (shows the frame look at rest)      │ │  double-tap to re-centre
+│ └──────────────────────────────────────┘ │
+│  Drag the photo to move it. Pinch to zoom.│
+│  [   ⟳ Rotate   ] [ ◐ View original ]    │  always one row
+│ ──────────────────────────────────────── │
+│ Automatic                         [on]    │  scrolls on its own; the photo stays put
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │  faint line after each section
+│ Brightness  ─────────●─────────           │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ Contrast    ─────────●─────────           │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ Colour      ─────────●─────────           │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ More options ▸   (Dot pattern)            │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│ [ ✓✓ Use for all ]  [ ⟲ Start over ]      │
+└──────────────────────────────────────────┘
+```
+- **The preview is the crop.** The frame-shaped window shows the frame look; dragging it moves the photo, and pinch (touch), scroll or trackpad pinch (computers) zooms. While moving, it shows the photo itself with the parts that will be cut off dimmed around the window; about a third of a second after it stops, the frame look comes back. Aspect locked to the frame's model; centre crop by default; rotate in 90° steps.
+- **View original** shows the photo instead of the frame look while held (its tooltip says so).
+- **No waiting on changes, no Apply button:** a slider change shows its frame look a moment later (the previous look stays up with "Updating…" meanwhile, never flashing back to the photo). After the crop moves, a quick look uses Automatic's previous settings, and the tuned look follows once the photo has been still for half a second.
+- **Layout:** the canvas never scrolls away. Narrow windows: canvas on top, controls scroll below it. Wide or landscape windows: canvas on the left, controls in a side panel (the hint and buttons stay under the canvas when there's height for them).
+- **Adjustments** are visible in the editor without a heading (you only get here by choosing to change a photo), plain words only, no end labels on the sliders, and apply to **this photo**: **Use for all** copies them to the rest.
   - **Automatic (recommended)**: on by default.
   - **Brightness**, **Contrast**, **Colour**: sliders centred on Automatic's choice (or on neutral when Automatic is off).
-  - **More options ▸** (collapsed again): **Dot pattern**: *Fine* (default), *Smooth*, *Crisp*, *Grid*, *Grainy*; and **Reset**.
+  - **More options ▸**: **Dot pattern**: *Fine* (default), *Smooth*, *Crisp*, *Grid*, *Grainy*.
+  - **Start over** undoes the crop, rotation and adjustments (next to Use for all, same button style).
   - Words avoided in the UI: dither, kernel, error diffusion, serpentine, Bayer, gamma, saturation.
-- The last-used adjustments are remembered per frame model.
+- ‹ › step through the photos; **Done** returns to the overview.
 - **Upload N** starts the queue and returns to the Frame screen.
 
 #### 3.3.1 Automatic

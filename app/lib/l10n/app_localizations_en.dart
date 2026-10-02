@@ -295,15 +295,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add some and the frame will show them after it next checks.';
 
   @override
-  String prepareTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Prepare $count photos',
-      one: 'Prepare 1 photo',
-    );
-    return '$_temp0';
-  }
+  String get prepareTitle => 'Prepare';
 
   @override
   String uploadCount(int count) {
@@ -320,16 +312,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get original => 'Original';
 
   @override
-  String get onTheFrame => 'On the frame';
+  String get prepareHint =>
+      'How they\'ll look on the frame. Tap one to adjust.';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get addMore => 'Add more photos';
+
+  @override
+  String photoOfCount(int index, int count) {
+    return 'Photo $index of $count';
+  }
+
+  @override
+  String get previousPhoto => 'Previous photo';
+
+  @override
+  String get nextPhoto => 'Next photo';
+
+  @override
+  String get moveHintTouch => 'Drag the photo to move it. Pinch to zoom.';
+
+  @override
+  String get moveHintMouse => 'Drag the photo to move it. Scroll to zoom.';
+
+  @override
+  String get viewOriginal => 'View original';
+
+  @override
+  String get viewOriginalHint => 'Hold to see the original photo';
+
+  @override
+  String get startOver => 'Start over';
+
+  @override
+  String get leaveTitle => 'Leave without uploading?';
+
+  @override
+  String get leaveBody =>
+      'The photos you picked and your changes won\'t be kept.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get leave => 'Leave';
 
   @override
   String get rotate => 'Rotate';
 
   @override
   String get removePhoto => 'Remove this photo';
-
-  @override
-  String get adjust => 'Adjust';
 
   @override
   String get automatic => 'Automatic';
@@ -346,24 +381,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get colour => 'Colour';
-
-  @override
-  String get darker => 'Darker';
-
-  @override
-  String get brighter => 'Brighter';
-
-  @override
-  String get softer => 'Softer';
-
-  @override
-  String get stronger => 'Stronger';
-
-  @override
-  String get muted => 'Muted';
-
-  @override
-  String get vivid => 'Vivid';
 
   @override
   String get moreOptions => 'More options';
@@ -390,7 +407,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reset => 'Reset';
 
   @override
-  String get useForAll => 'Use for all photos';
+  String get useForAll => 'Use for all';
 
   @override
   String get appliedToAll => 'Applied to all photos';
@@ -419,6 +436,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get preparing => 'Preparing…';
+
+  @override
+  String get updating => 'Updating…';
 
   @override
   String get uploading => 'Uploading…';

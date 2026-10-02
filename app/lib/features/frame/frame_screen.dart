@@ -61,20 +61,9 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
   }
 
   Future<void> _addPhotos([List<(String, Uint8List)>? given]) async {
-    final l = AppLocalizations.of(context);
     final picked = given ?? await pickPhotos();
     if (picked.isEmpty || !mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l.openingPhotos), duration: const Duration(seconds: 30)));
-    final decoded = <SourcePhoto>[];
-    for (final (name, bytes) in picked) {
-      final p = await SourcePhoto.decode(name, bytes);
-      if (p != null) decoded.add(p);
-    }
-    messenger.hideCurrentSnackBar();
-    if (decoded.length < picked.length) {
-      messenger.showSnackBar(SnackBar(content: Text(l.cantOpenPhotos(picked.length - decoded.length))));
-    }
+    final decoded = await openPhotos(context, picked);
     if (decoded.isEmpty || !mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,

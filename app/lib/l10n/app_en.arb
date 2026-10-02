@@ -164,14 +164,7 @@
   "developerModeBody": "Email and password sign-in on dev projects, and extra details.",
   "addPhotos": "Add photos",
   "noPhotosBody": "Add some and the frame will show them after it next checks.",
-  "prepareTitle": "{count, plural, =1{Prepare 1 photo} other{Prepare {count} photos}}",
-  "@prepareTitle": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "prepareTitle": "Prepare",
   "uploadCount": "{count, plural, =1{Upload} other{Upload {count}}}",
   "@uploadCount": {
     "placeholders": {
@@ -181,21 +174,38 @@
     }
   },
   "original": "Original",
-  "onTheFrame": "On the frame",
+  "prepareHint": "How they'll look on the frame. Tap one to adjust.",
+  "edit": "Edit",
+  "addMore": "Add more photos",
+  "photoOfCount": "Photo {index} of {count}",
+  "@photoOfCount": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "previousPhoto": "Previous photo",
+  "nextPhoto": "Next photo",
+  "moveHintTouch": "Drag the photo to move it. Pinch to zoom.",
+  "moveHintMouse": "Drag the photo to move it. Scroll to zoom.",
+  "viewOriginal": "View original",
+  "viewOriginalHint": "Hold to see the original photo",
+  "startOver": "Start over",
+  "leaveTitle": "Leave without uploading?",
+  "leaveBody": "The photos you picked and your changes won't be kept.",
+  "keepEditing": "Keep editing",
+  "leave": "Leave",
   "rotate": "Rotate",
   "removePhoto": "Remove this photo",
-  "adjust": "Adjust",
   "automatic": "Automatic",
   "automaticHint": "Makes the photo look as close to the original as the frame's colours allow.",
   "brightness": "Brightness",
   "contrast": "Contrast",
   "colour": "Colour",
-  "darker": "Darker",
-  "brighter": "Brighter",
-  "softer": "Softer",
-  "stronger": "Stronger",
-  "muted": "Muted",
-  "vivid": "Vivid",
   "moreOptions": "More options",
   "dotPattern": "Dot pattern",
   "patternFine": "Fine",
@@ -204,7 +214,7 @@
   "patternGrid": "Grid",
   "patternGrainy": "Grainy",
   "reset": "Reset",
-  "useForAll": "Use for all photos",
+  "useForAll": "Use for all",
   "appliedToAll": "Applied to all photos",
   "cantOpenPhoto": "Couldn't open this photo.",
   "cantOpenPhotos": "{count, plural, =1{Couldn't open 1 photo.} other{Couldn't open {count} photos.}}",
@@ -225,6 +235,7 @@
     }
   },
   "preparing": "Preparing…",
+  "updating": "Updating…",
   "uploading": "Uploading…",
   "waiting": "Waiting…",
   "retry": "Retry",

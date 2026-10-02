@@ -3,7 +3,9 @@
 @Tags(['preview'])
 library;
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,7 +16,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:ink_frame/data/models.dart';
 import 'package:ink_frame/features/frame/frame_screen.dart';
+import 'package:ink_frame/imaging/dither.dart' show preview;
+import 'package:ink_frame/imaging/auto.dart' show faithful;
 import 'package:ink_frame/imaging/palette.dart';
+import 'package:ink_frame/features/prepare/frame_canvas.dart';
+import 'package:ink_frame/features/prepare/prepare_session.dart';
+import 'package:ink_frame/features/prepare/source_photo.dart';
 import 'package:ink_frame/imaging/pipeline.dart';
 import 'package:ink_frame/imaging/png_encoder.dart';
 import 'package:ink_frame/imaging/png_palette.dart';
@@ -41,6 +48,16 @@ Future<void> loadFonts() async {
     ..addFont(Future.value(ByteData.sublistView(File('$fonts/MaterialIcons-Regular.otf').readAsBytesSync())));
   await icons.load();
 }
+
+// Spectra 6 (the presets' calibrated colours).
+final pal = Palette.fromJson({
+  'id': 'spectra6',
+  'colors': [
+    for (final (n, c, d) in [('black', '#1F2226', '#000000'), ('white', '#B9C7C9', '#ffffff'), ('blue', '#233F8E', '#0000ff'),
+      ('green', '#35563A', '#00ff00'), ('red', '#62201E', '#ff0000'), ('yellow', '#C1BB1E', '#ffff00')])
+      {'name': n, 'color': c, 'deviceColor': d},
+  ],
+});
 
 void main() {
   if (Platform.environment['PREVIEW'] == null) {
@@ -70,14 +87,6 @@ void main() {
   testWidgets('frame grid with real photos', (t) async {
     final dir = Platform.environment['PHOTOS'];
     if (dir == null) return;
-    final pal = Palette.fromJson({
-      'id': 'spectra6',
-      'colors': [
-        for (final (n, c, d) in [('black', '#1F2226', '#000000'), ('white', '#B9C7C9', '#ffffff'), ('blue', '#233F8E', '#0000ff'),
-          ('green', '#35563A', '#00ff00'), ('red', '#62201E', '#ff0000'), ('yellow', '#C1BB1E', '#ffff00')])
-          {'name': n, 'color': c, 'deviceColor': d},
-      ],
-    });
     final files = (Directory(dir).listSync().whereType<File>().toList()..sort((a, b) => a.path.compareTo(b.path))).take(5).toList();
     final shown = <String, Uint8List>{};
     final images = <FrameImage>[];
@@ -121,29 +130,71 @@ void main() {
     await shot(t, 'frame_grid');
   });
 
-  testWidgets('prepare with Adjust open', (t) async {
-    t.view.physicalSize = const Size(420, 1100);
+  // The Prepare flow at phone, phone-landscape and desktop sizes, in dark mode.
+  // Uses PHOTOS (real photos, frame looks rendered by the real pipeline) when set.
+  Future<void> pumpPrepare(WidgetTester t, Size size) async {
+    t.view.physicalSize = size;
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
-    final photos = [await ps.sourcePhoto(t, 1200, 900), await ps.sourcePhoto(t, 900, 1200)];
+    final dir = Platform.environment['PHOTOS'];
+    final photos = <SourcePhoto>[];
+    final looks = <Uint8List, ui.Image>{};
+    if (dir != null) {
+      final files = (Directory(dir).listSync().whereType<File>().toList()..sort((a, b) => a.path.compareTo(b.path))).take(5);
+      for (final f in files) {
+        final p = await t.runAsync(() => SourcePhoto.decode(f.path, f.readAsBytesSync()));
+        photos.add(p!);
+        final job = PhotoJob(rgba: p.rgba, width: p.width, height: p.height, outWidth: 800, outHeight: 480, palette: pal);
+        final (indices, _) = ditherPhoto(job);
+        looks[p.rgba] = await ps.decode(t, preview(indices, pal), 800, 480);
+      }
+    } else {
+      photos.addAll([await ps.sourcePhoto(t, 1200, 900), await ps.sourcePhoto(t, 900, 1200)]);
+    }
     await t.pumpWidget(ProviderScope(
       retry: (_, _) => null,
       overrides: [
         frameModelProvider.overrideWith((ref, a) async =>
-            FrameModel(const DeviceModel(id: 'm', name: 'm', width: 800, height: 480, palette: {}), fs.palette)),
+            FrameModel(const DeviceModel(id: 'm', name: 'm', width: 800, height: 480, palette: {}), pal)),
+        // Precomputed centre-crop looks (the photos aren't moved here).
+        previewEngineProvider.overrideWithValue(PreviewEngine(
+          render: (job, palette) => looks[job.rgba] == null ? Completer<ui.Image>().future : Future.value(looks[job.rgba]),
+          tune: (job) => Tuning(Future.value(faithful), () {}),
+        )),
       ],
       child: MaterialApp(
         theme: InkTheme.light(),
+        darkTheme: InkTheme.dark(),
+        themeMode: ThemeMode.dark,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: PrepareScreen(address: fs.kitchen, photos: photos),
       ),
     ));
-    await t.pumpAndSettle();
-    await t.tap(find.text('Adjust'));
-    await t.pumpAndSettle();
-    await t.tap(find.text('More options'));
-    await t.pumpAndSettle();
-    await shot(t, 'prepare');
-  });
+    await t.pump(const Duration(seconds: 1));
+    await t.pump(const Duration(seconds: 1));
+  }
+
+  for (final (name, size) in const [('phone', Size(380, 860)), ('landscape', Size(860, 400)), ('desktop', Size(1300, 820))]) {
+    testWidgets('prepare $name', (t) async {
+      await pumpPrepare(t, size);
+      await shot(t, 'prepare_${name}_overview');
+      await t.drag(find.byType(CustomScrollView), const Offset(0, -4000));
+      await t.pump(const Duration(seconds: 1));
+      await shot(t, 'prepare_${name}_overview_end');
+      await t.drag(find.byType(CustomScrollView), const Offset(0, 4000));
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text('Edit').first);
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
+      await shot(t, 'prepare_${name}_editor');
+      // Mid-drag: the photo itself, with the parts that will be cut off dimmed.
+      final g = await t.startGesture(t.getCenter(find.byType(FrameCanvas)));
+      await g.moveBy(const Offset(0, 30));
+      await t.pump();
+      await shot(t, 'prepare_${name}_dragging');
+      await g.up();
+      await t.pump(const Duration(seconds: 1));
+    });
+  }
 }
