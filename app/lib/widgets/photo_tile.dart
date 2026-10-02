@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../data/api_error.dart';
 import '../data/frame_link.dart';
 import '../data/models.dart';
 import '../imaging/dither.dart' show preview;
@@ -128,10 +129,23 @@ class _UploadTileState extends ConsumerState<UploadTile> {
         if (_preview != null) Opacity(opacity: 0.5, child: RawImage(image: _preview, fit: BoxFit.cover)),
         Center(
           child: failed
-              ? Wrap(spacing: 4, children: [
-                  FilledButton.tonal(onPressed: () => queue.retry(item.id), child: Text(l.retry)),
-                  IconButton(tooltip: l.removePhoto, onPressed: () => queue.remove(item.id), icon: const Icon(Icons.close)),
-                ])
+              ? Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(
+                      _reason(l, item.error),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(spacing: 4, children: [
+                      FilledButton.tonal(onPressed: () => queue.retry(item.id), child: Text(l.retry)),
+                      IconButton(tooltip: l.removePhoto, onPressed: () => queue.remove(item.id), icon: const Icon(Icons.close)),
+                    ]),
+                  ]),
+                )
               : Column(mainAxisSize: MainAxisSize.min, children: [
                   SizedBox(
                     width: 28,
@@ -156,3 +170,8 @@ class _UploadTileState extends ConsumerState<UploadTile> {
     );
   }
 }
+
+/// Why an upload failed, in words for people: the server's own message for known
+/// problems (e.g. storage full), a plain one for anything unexpected.
+String _reason(AppLocalizations l, ApiException? e) =>
+    e == null || e.code == 'unknown' || e.code.startsWith('http_') ? l.uploadFailed : e.message;

@@ -450,6 +450,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
+  String get uploadFailed => 'Couldn\'t upload this photo.';
+
+  @override
   String get retryAll => 'Retry all';
 
   @override

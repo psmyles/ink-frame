@@ -820,6 +820,12 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload this photo.'**
+  String get uploadFailed;
+
   /// No description provided for @retryAll.
   ///
   /// In en, this message translates to:

@@ -239,6 +239,7 @@
   "uploading": "Uploading…",
   "waiting": "Waiting…",
   "retry": "Retry",
+  "uploadFailed": "Couldn't upload this photo.",
   "retryAll": "Retry all",
   "uploadsFailed": "{count, plural, =1{1 photo couldn't be added.} other{{count} photos couldn't be added.}}",
   "@uploadsFailed": {

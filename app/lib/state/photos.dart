@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/api_error.dart';
@@ -178,8 +178,7 @@ class UploadQueue extends Notifier<List<UploadItem>> {
   Future<void> _process(UploadItem item) async {
     _update(item.id, (i) => i.copyWith(status: UploadStatus.processing));
     try {
-      final job = item.job;
-      final prepared = await Isolate.run(() => preparePhoto(job));
+      final prepared = await _prepareInIsolate(item.job);
       _update(item.id, (i) => i.copyWith(status: UploadStatus.uploading, preview: prepared.indices));
       final image = await ref.read(photosRepositoryProvider(address)).upload(
             prepared.png,
@@ -196,6 +195,7 @@ class UploadQueue extends Notifier<List<UploadItem>> {
         remove(item.id);
         return;
       }
+      debugPrint('upload failed: ${e.code} ${e.message}');
       _update(item.id, (i) => i.copyWith(status: UploadStatus.failed, error: e));
       // Storage full: stop the queue; everything left waits for the person.
       if (e.code == 'quota_exceeded') {
@@ -203,11 +203,16 @@ class UploadQueue extends Notifier<List<UploadItem>> {
           for (final i in state) i.status == UploadStatus.waiting ? i.copyWith(status: UploadStatus.failed, error: e) : i,
         ];
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('upload failed: $e\n$st');
       _update(item.id, (i) => i.copyWith(status: UploadStatus.failed, error: ApiException('unknown', '$e')));
     }
   }
 }
+
+/// Top level on purpose: a closure made inside the queue would capture the queue
+/// itself, which can't be sent to another isolate.
+Future<PreparedPhoto> _prepareInIsolate(PhotoJob job) => Isolate.run(() => preparePhoto(job));
 
 /// user_id → display name, for "Added by …".
 final memberNamesProvider = FutureProvider.family<Map<String, String>, FrameAddress>((ref, a) async {
