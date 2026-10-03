@@ -90,6 +90,8 @@ Set up a frame
   - *Browser consent cancelled* → back to step 1.
 - **Connect the frame** goes to §6; **Later** lands on the empty Frame screen, where photos can be added before the hardware arrives.
 
+**Built in 3e** (differences from the sketch above): the form has the three numbered sections (connect, model as a list of names and sizes without pictures yet, then name, time zone and **your name**, the name the others see) and **Set up Kitchen**; then the checklist has three rows (photo storage, sign-in, signing you in), with "Usually under a minute" on the first. "Signing you in" reuses a recent Google/Apple sign-in, else shows the buttons. A setup that stopped shows "Setting up Kitchen stopped before it finished." with **Continue**; **Cancel setup** deletes what was made in the Supabase account. The end is "Kitchen is ready" + **Add photos** (Connect the frame arrives with 3f). Region is never asked (no "More options").
+
 ### 1.4 Returning on a new device
 The app needs each frame's address to sign in. A new device has none, and it may be the only device the person has left, so signing in alone has to be enough. The **directory** (`central/directory/`, `shared/api/directory.yaml`) keeps, for each Google or Apple account, the addresses of the frames it's on. Addresses (project URL + publishable key) aren't secret; the directory stores a hash of the account ID, not names or emails.
 
@@ -278,6 +280,8 @@ Each change saves immediately (`PATCH`) with a small "Saved · the frame gets it
 - **Supabase account**: connected / **Reconnect** (after a reinstall or on a new device).
 - **Update**: shown when the app has a newer backend than this frame ("An update for Kitchen is ready · a few seconds").
 - **Delete this frame**: typed confirmation of the name; explains that all photos and everyone's access go, the frame's storage in your Supabase account is deleted, and the hardware keeps its last photos until reset. Uses the Management API (`DELETE /v1/projects/{ref}`).
+- **Wake up** (on the asleep banner of the Frame screen, owner only; others are told to ask the owner): restores the project with a progress dialog, "about 3 minutes" (§6.4 of PLAN.md).
+- Built in 3e, under an "Owner tools" heading; the Model row in "The frame" has **Change** (warns how many photos go). Every tool asks to connect Supabase first if this device isn't connected. Update also appears when only the functions changed (PLAN.md §6.2 step 10).
 
 ---
 
@@ -346,7 +350,7 @@ Consequence to accept: someone who joined with **Apple** on an iPhone can't sign
 - **Your name** (edit): applies to every frame you're on (the app updates each).
 - **Use on another device** (§1.4).
 - **Sign out**.
-- **Delete my account** (3d: frames set up by others only; while you own a frame it explains that the frame has to be deleted first, which arrives with frame deletion in 3e): lists your frames. For frames set up by others: you leave, with an "Also delete my photos" checkbox. For frames you own: they are **deleted** (shown by name, with the §4.4 warning). One typed confirmation for the lot.
+- **Delete my account** (frames you set up need your Supabase account connected; it asks if not): lists your frames. For frames set up by others: you leave, with an "Also delete my photos" checkbox. For frames you own: they are **deleted** (shown by name, with the §4.4 warning). One typed confirmation for the lot.
 - About/licences; **Developer** (dev mode toggle via 7 taps on the version).
 
 ---

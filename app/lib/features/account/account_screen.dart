@@ -10,6 +10,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../data/api_error.dart';
 import '../../data/frame_link.dart';
+import '../../data/platform_api.dart';
+import '../../state/setup.dart';
+import '../settings/owner_tools.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/frame_admin.dart';
 import '../../state/photos.dart';
@@ -94,8 +97,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     }
   }
 
-  /// Leaves every frame you joined (deleting your account on each). Frames you set
-  /// up can't be deleted from the app yet (Phase 3e), so they block this.
+  /// Leaves every frame you joined (deleting your account on each) and deletes the
+  /// frames you set up (app-flow §7.2; that needs your Supabase account connected).
   Future<void> _deleteAccount(List<FrameAddress> frames) async {
     final l = AppLocalizations.of(context);
     final views = {for (final f in frames) f: await ref.read(frameViewProvider(f).future)};
@@ -111,10 +114,20 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         owned: [for (final f in owned) nameOf(f)],
       ),
     );
-    if (deletePhotos == null) return;
+    if (deletePhotos == null || !mounted) return;
+    if (owned.isNotEmpty && !await ensureConnected(context, ref)) return;
 
     final failed = <String>[];
     final deleted = <FrameAddress>[];
+    for (final f in owned) {
+      try {
+        await (await ref.read(provisionerProvider.future)).deleteFrame(f.ref);
+        await ref.read(framesProvider.notifier).remove(f);
+        deleted.add(f);
+      } on PlatformApiException {
+        failed.add(nameOf(f));
+      }
+    }
     for (final f in joined) {
       try {
         await ref.read(frameApiProvider(f)).deleteMe(deletePhotos: deletePhotos);
@@ -124,9 +137,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         failed.add(nameOf(f));
       }
     }
-    // The directory forgets you once you're on no frames (owned ones block this).
+    // The directory forgets you once you're on no frames.
     final directory = ref.read(frameDirectoryProvider);
-    unawaited(failed.isEmpty && owned.isEmpty ? directory.forget() : directory.remove(deleted));
+    unawaited(failed.isEmpty ? directory.forget() : directory.remove(deleted));
     if (!mounted) return;
     if (failed.isNotEmpty) {
       _snack(l.deleteFailed(failed.join(', ')));
@@ -287,15 +300,18 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final blocked = widget.owned.isNotEmpty;
-    final ok = !blocked && _typed.trim().toUpperCase() == l.deleteWord;
+    final ok = _typed.trim().toUpperCase() == l.deleteWord;
     return AlertDialog(
       title: Text(l.deleteAccount),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (blocked)
-            Text(l.deleteOwnedBlock(widget.owned.join(', ')))
-          else ...[
+          if (widget.owned.isNotEmpty) ...[
+            Text(l.deleteOwnedBody),
+            const SizedBox(height: 8),
+            for (final n in widget.owned) Text('• $n', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 16),
+          ],
+          if (widget.joined.isNotEmpty) ...[
             Text(l.deleteAccountBody),
             const SizedBox(height: 8),
             for (final n in widget.joined) Text('• $n', style: theme.textTheme.titleSmall),
@@ -306,22 +322,21 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
               value: _photos,
               onChanged: (v) => setState(() => _photos = v ?? false),
             ),
-            TextField(
-              decoration: InputDecoration(labelText: l.typeDelete),
-              textCapitalization: TextCapitalization.characters,
-              onChanged: (v) => setState(() => _typed = v),
-            ),
           ],
+          TextField(
+            decoration: InputDecoration(labelText: l.typeDelete),
+            textCapitalization: TextCapitalization.characters,
+            onChanged: (v) => setState(() => _typed = v),
+          ),
         ]),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
-        if (!blocked)
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error, foregroundColor: theme.colorScheme.onError),
-            onPressed: ok ? () => Navigator.pop(context, _photos) : null,
-            child: Text(l.deleteAccountButton),
-          ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error, foregroundColor: theme.colorScheme.onError),
+          onPressed: ok ? () => Navigator.pop(context, _photos) : null,
+          child: Text(l.deleteAccountButton),
+        ),
       ],
     );
   }

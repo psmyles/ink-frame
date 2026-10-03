@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +12,7 @@ import '../../data/frame_connection.dart';
 import '../../data/frame_link.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
+import '../../widgets/sign_in_buttons.dart';
 import 'scan_screen.dart';
 
 enum _Step { find, link, signIn, name }
@@ -288,40 +288,13 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         ],
       );
 
-  /// Continue with Google / Apple, for the methods this build and platform offer.
-  List<Widget> _providerButtons(List<SignInMethod> methods, void Function(Future<IdTokenCredential> Function()) onPressed) {
-    final service = ref.read(signInServiceProvider);
-    final apple = !kIsWeb && (Platform.isIOS || Platform.isMacOS) && methods.contains(SignInMethod.apple);
-    return [
-      if (methods.contains(SignInMethod.google))
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : () => onPressed(service.google),
-            icon: const Icon(Icons.account_circle_outlined),
-            label: Text(l.continueWithGoogle),
-          ),
-        ),
-      if (apple)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : () => onPressed(service.apple),
-            icon: const Icon(Icons.apple),
-            label: Text(l.continueWithApple),
-          ),
-        ),
-      if (apple && Platform.isIOS) _help(l.appleHint),
-    ];
-  }
-
   Widget _findStep() {
     final methods = ref.read(signInServiceProvider).methods(devMode: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _help(l.findExplain),
-        ..._providerButtons(methods, _find),
+        SignInButtons(methods: methods, onPressed: _find, busy: _busy),
         if (_busy)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -354,7 +327,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       children: [
         _help(l.signInExplain),
         if (methods.isEmpty) _help(l.noSignInMethods),
-        ..._providerButtons(methods, _signIn),
+        SignInButtons(methods: methods, onPressed: _signIn, busy: _busy),
         if (methods.contains(SignInMethod.password)) ...[
           const SizedBox(height: 8),
           Text(l.devSignIn, style: Theme.of(context).textTheme.titleSmall),

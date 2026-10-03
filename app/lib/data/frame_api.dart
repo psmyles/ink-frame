@@ -17,6 +17,11 @@ class FrameApi {
   Future<Frame> rename(String name) async =>
       Frame.fromJson(await conn.callApi('PATCH', '/frame', body: {'name': name}) as Map<String, dynamic>);
 
+  /// `PATCH /frame` with another panel model (owner): deletes every photo, which was
+  /// made for the old panel (openapi.yaml).
+  Future<Frame> changeModel(String modelId) async =>
+      Frame.fromJson(await conn.callApi('PATCH', '/frame', body: {'model_id': modelId}) as Map<String, dynamic>);
+
   /// Everyone on the frame, owner first, then by when they joined.
   Future<List<Member>> members() => conn.guard(() async {
         final rows = await conn.client.from('members').select('user_id, role, display_name, created_at').order('created_at');

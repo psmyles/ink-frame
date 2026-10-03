@@ -56,6 +56,8 @@ dependencies:
   qr_flutter: ^4.1.0
   share_plus: ^13.3.1
   mobile_scanner: ^7.4.2
+  flutter_timezone: ^5.1.0
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +82,15 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # The frame backend, installed into each frame's project by the setup wizard
+  # (copied by tools/dev/bundle-backend.ts; don't edit here).
+  assets:
+    - assets/backend/
+    - assets/backend/migrations/
+    - assets/backend/functions/_shared/
+    - assets/backend/functions/app-api/
+    - assets/backend/functions/device-api/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

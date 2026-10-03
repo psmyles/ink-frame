@@ -1,5 +1,5 @@
 {
-  "about": "The developer's OAuth client IDs (public by design; PLAN.md \u00a75.3, \u00a76.1). Every frame's project allows these for Google/Apple ID-token sign-in. The app has the same IDs in app/lib/config/app_config.dart. Google Cloud project: ink-frame-510506.",
+  "about": "The developer's OAuth client IDs (public by design; PLAN.md §5.3, §6.1). Every frame's project allows the Google/Apple ones for ID-token sign-in; the Supabase OAuth App lets the setup wizard reach an owner's Supabase account (its secret lives only in the Cloudflare Worker). The app has the same IDs in app/lib/config/app_config.dart. Google Cloud project: ink-frame-510506.",
   "google": {
     "web": "754064113071-tv7te223egk52cpplv9glhkf5p09kopq.apps.googleusercontent.com",
     "ios": "754064113071-qhj80g401b1gbpsip8c3pharcsc0sk4b.apps.googleusercontent.com",
@@ -8,5 +8,12 @@
   },
   "apple": {
     "bundleId": "com.psmyles.inkframe"
+  },
+  "supabase": {
+    "clientId": "35affcb4-826f-4c9b-abdd-00187b5efc45",
+    "redirectUris": [
+      "http://localhost:53682/callback",
+      "https://psmyles.github.io/ink-frame/oauth/"
+    ]
   }
 }

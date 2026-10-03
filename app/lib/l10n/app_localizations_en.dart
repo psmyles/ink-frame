@@ -284,8 +284,213 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPhotosYet => 'No photos yet';
 
   @override
-  String get setUpComing =>
-      'Setting up a frame arrives in a later build. For now, join a frame with an invite link.';
+  String get setupExplain =>
+      'Your frame\'s photos are kept in your own free Supabase account, and you\'ll be the frame\'s owner. A free account can run 2 frames. Nobody else, including us, can see the photos.';
+
+  @override
+  String get setupConnectTitle => 'Connect your Supabase account';
+
+  @override
+  String get connectSupabase => 'Connect Supabase';
+
+  @override
+  String get connectSupabaseHint =>
+      'Opens Supabase in your browser. No account yet? You can make a free one there.';
+
+  @override
+  String get supabaseConnected => 'Connected';
+
+  @override
+  String get usePersonalToken => 'Use an access token instead';
+
+  @override
+  String get personalTokenTitle => 'Supabase access token';
+
+  @override
+  String get connectFailed => 'Couldn\'t connect to Supabase. Try again.';
+
+  @override
+  String get setupModelTitle => 'Which frame do you have?';
+
+  @override
+  String modelSize(int width, int height) {
+    return '$width × $height';
+  }
+
+  @override
+  String get setupNameTitle => 'Name it';
+
+  @override
+  String get frameNameHint => 'Kitchen, Grandma\'s…';
+
+  @override
+  String setUpNamed(String name) {
+    return 'Set up $name';
+  }
+
+  @override
+  String settingUp(String name) {
+    return 'Setting up $name';
+  }
+
+  @override
+  String get stageStorage => 'Getting its photo storage ready';
+
+  @override
+  String get stageStorageHint => 'Usually under a minute';
+
+  @override
+  String get stageSignIn => 'Turning on sign-in';
+
+  @override
+  String get stageOwner => 'Signing you in';
+
+  @override
+  String get ownerSignInHint =>
+      'Sign in with the account you use Ink Frame with. You\'ll be the frame\'s owner.';
+
+  @override
+  String setupStopped(String name) {
+    return 'Setting up $name stopped before it finished.';
+  }
+
+  @override
+  String get continueSetup => 'Continue';
+
+  @override
+  String get cancelSetup => 'Cancel setup';
+
+  @override
+  String cancelSetupConfirm(String name) {
+    return 'Cancel setting up $name? What was made in your Supabase account is deleted.';
+  }
+
+  @override
+  String get setupLimit =>
+      'Your free Supabase account already runs 2 projects. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need.';
+
+  @override
+  String get openSupabase => 'Open Supabase';
+
+  @override
+  String get setupReconnect => 'Your Supabase account needs connecting again.';
+
+  @override
+  String get setupOffline =>
+      'Can\'t reach Supabase. Check your internet connection.';
+
+  @override
+  String get setupSignInFailed =>
+      'Couldn\'t sign you in to the new frame. Try again.';
+
+  @override
+  String get sectionOwner => 'Owner tools';
+
+  @override
+  String get supabaseAccount => 'Supabase account';
+
+  @override
+  String get supabaseNotHere =>
+      'Not connected on this device. Connect it to update, wake up or delete the frame.';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String updateReady(String frame) {
+    return 'An update for $frame is ready';
+  }
+
+  @override
+  String get updateHint => 'Takes a few seconds';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String updatingFrame(String frame) {
+    return 'Updating $frame…';
+  }
+
+  @override
+  String updated(String frame) {
+    return '$frame is up to date';
+  }
+
+  @override
+  String updateFailed(String frame) {
+    return 'Couldn\'t update $frame. Try again.';
+  }
+
+  @override
+  String get deleteFrame => 'Delete this frame';
+
+  @override
+  String deleteFrameConfirm(String frame) {
+    return 'Delete $frame? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.';
+  }
+
+  @override
+  String typeToConfirm(String word) {
+    return 'Type $word to confirm';
+  }
+
+  @override
+  String deletingFrame(String frame) {
+    return 'Deleting $frame…';
+  }
+
+  @override
+  String deleteFrameFailed(String frame) {
+    return 'Couldn\'t delete $frame. Try again.';
+  }
+
+  @override
+  String wrongSupabaseAccount(String frame) {
+    return 'This Supabase account can\'t reach $frame. Connect the account it was set up with.';
+  }
+
+  @override
+  String get wakeUp => 'Wake up';
+
+  @override
+  String wakingUp(String frame) {
+    return 'Waking up $frame… This takes about 3 minutes.';
+  }
+
+  @override
+  String wakeUpFailed(String frame) {
+    return 'Couldn\'t wake up $frame. Try again.';
+  }
+
+  @override
+  String get changeModel => 'Change';
+
+  @override
+  String changeModelConfirm(int count, String frame, String model, String old) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Switch $frame to the $model? All $count photos will be removed, because they were made for the $old screen.',
+      one:
+          'Switch $frame to the $model? Its photo will be removed, because it was made for the $old screen.',
+      zero: 'Switch $frame to the $model?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get switchModel => 'Switch';
+
+  @override
+  String frameReady(String name) {
+    return '$name is ready';
+  }
+
+  @override
+  String get frameReadyBody =>
+      'Add photos now. Connecting the frame itself over Bluetooth comes in a later version of the app.';
 
   @override
   String get account => 'Account';
@@ -862,9 +1067,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deletePhotosToo => 'Also delete my photos';
 
   @override
-  String deleteOwnedBlock(String frames) {
-    return 'You set up $frames. To delete your account, those frames have to be deleted first, which isn\'t possible in the app yet.';
-  }
+  String get deleteOwnedBody =>
+      'These frames you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:';
 
   @override
   String get typeDelete => 'Type DELETE to confirm';

@@ -6,6 +6,8 @@ import { IdTokenVerifier, remoteKeys } from "./id_token.ts";
 
 interface Env {
   DB: Db;
+  /** `wrangler secret put SUPABASE_OAUTH_CLIENT_SECRET` */
+  SUPABASE_OAUTH_CLIENT_SECRET?: string;
 }
 
 // Module scope, so the providers' keys stay cached while the isolate lives.
@@ -15,6 +17,11 @@ const verifier = new IdTokenVerifier(
 );
 
 export default {
-  fetch: (req: Request, env: Env) => directory({ db: env.DB, verifier })(req),
+  fetch: (req: Request, env: Env) =>
+    directory({
+      db: env.DB,
+      verifier,
+      oauth: { ...clients.supabase, clientSecret: env.SUPABASE_OAUTH_CLIENT_SECRET },
+    })(req),
   scheduled: (_controller: unknown, env: Env) => purgeTokens(env.DB),
 };

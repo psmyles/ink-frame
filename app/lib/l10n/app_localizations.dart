@@ -538,11 +538,317 @@ abstract class AppLocalizations {
   /// **'No photos yet'**
   String get noPhotosYet;
 
-  /// No description provided for @setUpComing.
+  /// No description provided for @setupExplain.
   ///
   /// In en, this message translates to:
-  /// **'Setting up a frame arrives in a later build. For now, join a frame with an invite link.'**
-  String get setUpComing;
+  /// **'Your frame\'s photos are kept in your own free Supabase account, and you\'ll be the frame\'s owner. A free account can run 2 frames. Nobody else, including us, can see the photos.'**
+  String get setupExplain;
+
+  /// No description provided for @setupConnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your Supabase account'**
+  String get setupConnectTitle;
+
+  /// No description provided for @connectSupabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Supabase'**
+  String get connectSupabase;
+
+  /// No description provided for @connectSupabaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Supabase in your browser. No account yet? You can make a free one there.'**
+  String get connectSupabaseHint;
+
+  /// No description provided for @supabaseConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get supabaseConnected;
+
+  /// No description provided for @usePersonalToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an access token instead'**
+  String get usePersonalToken;
+
+  /// No description provided for @personalTokenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase access token'**
+  String get personalTokenTitle;
+
+  /// No description provided for @connectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to Supabase. Try again.'**
+  String get connectFailed;
+
+  /// No description provided for @setupModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which frame do you have?'**
+  String get setupModelTitle;
+
+  /// No description provided for @modelSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{width} × {height}'**
+  String modelSize(int width, int height);
+
+  /// No description provided for @setupNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name it'**
+  String get setupNameTitle;
+
+  /// No description provided for @frameNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen, Grandma\'s…'**
+  String get frameNameHint;
+
+  /// No description provided for @setUpNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up {name}'**
+  String setUpNamed(String name);
+
+  /// No description provided for @settingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up {name}'**
+  String settingUp(String name);
+
+  /// No description provided for @stageStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting its photo storage ready'**
+  String get stageStorage;
+
+  /// No description provided for @stageStorageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually under a minute'**
+  String get stageStorageHint;
+
+  /// No description provided for @stageSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on sign-in'**
+  String get stageSignIn;
+
+  /// No description provided for @stageOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in'**
+  String get stageOwner;
+
+  /// No description provided for @ownerSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the account you use Ink Frame with. You\'ll be the frame\'s owner.'**
+  String get ownerSignInHint;
+
+  /// No description provided for @setupStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up {name} stopped before it finished.'**
+  String setupStopped(String name);
+
+  /// No description provided for @continueSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueSetup;
+
+  /// No description provided for @cancelSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel setup'**
+  String get cancelSetup;
+
+  /// No description provided for @cancelSetupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel setting up {name}? What was made in your Supabase account is deleted.'**
+  String cancelSetupConfirm(String name);
+
+  /// No description provided for @setupLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Your free Supabase account already runs 2 projects. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need.'**
+  String get setupLimit;
+
+  /// No description provided for @openSupabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Supabase'**
+  String get openSupabase;
+
+  /// No description provided for @setupReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Supabase account needs connecting again.'**
+  String get setupReconnect;
+
+  /// No description provided for @setupOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach Supabase. Check your internet connection.'**
+  String get setupOffline;
+
+  /// No description provided for @setupSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign you in to the new frame. Try again.'**
+  String get setupSignInFailed;
+
+  /// No description provided for @sectionOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner tools'**
+  String get sectionOwner;
+
+  /// No description provided for @supabaseAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase account'**
+  String get supabaseAccount;
+
+  /// No description provided for @supabaseNotHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected on this device. Connect it to update, wake up or delete the frame.'**
+  String get supabaseNotHere;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'An update for {frame} is ready'**
+  String updateReady(String frame);
+
+  /// No description provided for @updateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes a few seconds'**
+  String get updateHint;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// No description provided for @updatingFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating {frame}…'**
+  String updatingFrame(String frame);
+
+  /// No description provided for @updated.
+  ///
+  /// In en, this message translates to:
+  /// **'{frame} is up to date'**
+  String updated(String frame);
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update {frame}. Try again.'**
+  String updateFailed(String frame);
+
+  /// No description provided for @deleteFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this frame'**
+  String get deleteFrame;
+
+  /// No description provided for @deleteFrameConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {frame}? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.'**
+  String deleteFrameConfirm(String frame);
+
+  /// No description provided for @typeToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm'**
+  String typeToConfirm(String word);
+
+  /// No description provided for @deletingFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting {frame}…'**
+  String deletingFrame(String frame);
+
+  /// No description provided for @deleteFrameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete {frame}. Try again.'**
+  String deleteFrameFailed(String frame);
+
+  /// No description provided for @wrongSupabaseAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This Supabase account can\'t reach {frame}. Connect the account it was set up with.'**
+  String wrongSupabaseAccount(String frame);
+
+  /// No description provided for @wakeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake up'**
+  String get wakeUp;
+
+  /// No description provided for @wakingUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Waking up {frame}… This takes about 3 minutes.'**
+  String wakingUp(String frame);
+
+  /// No description provided for @wakeUpFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t wake up {frame}. Try again.'**
+  String wakeUpFailed(String frame);
+
+  /// No description provided for @changeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeModel;
+
+  /// No description provided for @changeModelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Switch {frame} to the {model}?} =1{Switch {frame} to the {model}? Its photo will be removed, because it was made for the {old} screen.} other{Switch {frame} to the {model}? All {count} photos will be removed, because they were made for the {old} screen.}}'**
+  String changeModelConfirm(int count, String frame, String model, String old);
+
+  /// No description provided for @switchModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchModel;
+
+  /// No description provided for @frameReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready'**
+  String frameReady(String name);
+
+  /// No description provided for @frameReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photos now. Connecting the frame itself over Bluetooth comes in a later version of the app.'**
+  String get frameReadyBody;
 
   /// No description provided for @account.
   ///
@@ -1456,11 +1762,11 @@ abstract class AppLocalizations {
   /// **'Also delete my photos'**
   String get deletePhotosToo;
 
-  /// No description provided for @deleteOwnedBlock.
+  /// No description provided for @deleteOwnedBody.
   ///
   /// In en, this message translates to:
-  /// **'You set up {frames}. To delete your account, those frames have to be deleted first, which isn\'t possible in the app yet.'**
-  String deleteOwnedBlock(String frames);
+  /// **'These frames you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:'**
+  String get deleteOwnedBody;
 
   /// No description provided for @typeDelete.
   ///

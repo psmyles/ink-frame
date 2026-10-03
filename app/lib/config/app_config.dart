@@ -14,6 +14,13 @@ abstract final class AppConfig {
     defaultValue: 'https://ink-frame-directory.psmyles.workers.dev',
   );
 
+  /// The Supabase OAuth App "Ink Frame" (`shared/oauth-clients.json`), for "Connect
+  /// Supabase" in the setup wizard. Its secret stays in the directory Worker.
+  static const supabaseOAuthClientId = String.fromEnvironment(
+    'SUPABASE_OAUTH_CLIENT_ID',
+    defaultValue: '35affcb4-826f-4c9b-abdd-00187b5efc45',
+  );
+
   /// Google OAuth client IDs (PLAN.md §6.1), Google Cloud project `ink-frame-510506`,
   /// for the bundle/package ID `com.psmyles.inkframe`. Public by design; a fork with
   /// its own IDs overrides them with --dart-define. Empty = Google not offered.

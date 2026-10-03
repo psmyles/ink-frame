@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ink Frame directory API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     The one developer-run service with state (PLAN.md §3, `central/directory/`): for
     each Google or Apple account, the addresses of the frames it's on. Signing in on a
@@ -19,6 +19,11 @@ info:
 
     The frames never call it, and the app works without it (a link still signs in).
     Errors use the same `Error` schema as `openapi.yaml`.
+
+    The same Worker also finishes the setup wizard's **Supabase OAuth** connection
+    (`/supabase-oauth/token`): Supabase requires the OAuth App's client secret for the
+    token exchange (spike c), and the secret can't ship in the app. It stores and logs
+    nothing.
 servers:
   - url: https://ink-frame-directory.psmyles.workers.dev/v1
 
@@ -125,6 +130,55 @@ paths:
       responses:
         "204": { description: Done. }
         "401": { $ref: "#/components/responses/InvalidToken" }
+
+  /supabase-oauth/token:
+    post:
+      summary: Exchange a Supabase OAuth code, or refresh a token, with the client secret added
+      description: |
+        The app runs the consent in the browser itself (authorization code + PKCE, client
+        ID and redirect URIs from `shared/oauth-clients.json`) and sends the code and its
+        verifier here; later, the refresh token. Forwarded to
+        `https://api.supabase.com/v1/oauth/token` with the secret.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [grant_type, code, code_verifier, redirect_uri]
+                  properties:
+                    grant_type: { const: authorization_code }
+                    code: { type: string, maxLength: 512 }
+                    code_verifier: { type: string, minLength: 43, maxLength: 128 }
+                    redirect_uri:
+                      type: string
+                      description: One of `supabase.redirectUris` in `shared/oauth-clients.json`.
+                - type: object
+                  required: [grant_type, refresh_token]
+                  properties:
+                    grant_type: { const: refresh_token }
+                    refresh_token: { type: string, maxLength: 512 }
+      responses:
+        "200":
+          description: Supabase's tokens (the access token lasts 24 h).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, refresh_token, expires_in]
+                properties:
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+                  expires_in: { type: integer }
+                  token_type: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          description: "`oauth_failed`: Supabase refused the code or refresh token (used, expired, revoked, wrong verifier)."
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "502":
+          description: "`unavailable`: Supabase didn't answer."
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
 components:
   securitySchemes:

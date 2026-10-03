@@ -21,6 +21,15 @@ export interface Verifier {
 
 type Frame = { url: string; key: string };
 
+/** The Supabase OAuth App (shared/oauth-clients.json); the secret is a Worker secret. */
+export interface OAuthApp {
+  clientId: string;
+  clientSecret?: string;
+  redirectUris: string[];
+}
+
+const SUPABASE_TOKEN_URL = "https://api.supabase.com/v1/oauth/token";
+
 export const MAX_FRAMES = 20;
 export const MAX_TOKENS = 20;
 const MAX_BODY = 16 * 1024;
@@ -75,7 +84,9 @@ const isFrame = (v: unknown): v is Frame => {
 };
 const isUrl = (v: unknown): v is string => typeof v === "string" && URL_RE.test(v);
 
-export function directory(deps: { db: Db; verifier: Verifier; now?: () => number }) {
+export function directory(
+  deps: { db: Db; verifier: Verifier; now?: () => number; oauth?: OAuthApp; fetch?: typeof fetch },
+) {
   const { db, verifier } = deps;
   const nowS = () => Math.floor((deps.now ?? Date.now)() / 1000);
 
@@ -141,12 +152,59 @@ export function directory(deps: { db: Db; verifier: Verifier; now?: () => number
     return json(200, { frames: await framesOf(account) });
   }
 
+  /** Supabase OAuth: code exchange or refresh, with the client secret added. */
+  async function supabaseToken(req: Request) {
+    const app = deps.oauth;
+    if (!app?.clientSecret) throw new HttpError(503, "not_configured", "Supabase OAuth isn't set up.");
+    const body = await readJson(req);
+    const str = (k: string, min: number, max: number) => {
+      const v = body[k];
+      if (typeof v !== "string" || v.length < min || v.length > max) throw badRequest(`Invalid ${k}.`);
+      return v;
+    };
+    let params: Record<string, string>;
+    if (body.grant_type === "authorization_code") {
+      const redirect = str("redirect_uri", 1, 200);
+      if (!app.redirectUris.includes(redirect)) throw badRequest("Unknown redirect_uri.");
+      params = { grant_type: "authorization_code", code: str("code", 1, 512), code_verifier: str("code_verifier", 43, 128), redirect_uri: redirect };
+    } else if (body.grant_type === "refresh_token") {
+      params = { grant_type: "refresh_token", refresh_token: str("refresh_token", 1, 512) };
+    } else {
+      throw badRequest("grant_type must be authorization_code or refresh_token.");
+    }
+
+    let res: Response;
+    try {
+      res = await (deps.fetch ?? fetch)(SUPABASE_TOKEN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+          Authorization: `Basic ${btoa(`${app.clientId}:${app.clientSecret}`)}`,
+        },
+        body: new URLSearchParams({ client_id: app.clientId, ...params }),
+      });
+    } catch {
+      throw new HttpError(502, "unavailable", "Supabase didn't answer.");
+    }
+    const out = await res.json().catch(() => ({})) as Record<string, unknown>;
+    if (res.status >= 500) throw new HttpError(502, "unavailable", `Supabase answered ${res.status}.`);
+    if (!res.ok || typeof out.access_token !== "string") {
+      const message = typeof out.message === "string" ? out.message : typeof out.error === "string" ? out.error : `HTTP ${res.status}`;
+      throw new HttpError(401, "oauth_failed", message.slice(0, 200));
+    }
+    const { access_token, refresh_token, expires_in, token_type } = out;
+    return json(200, { access_token, refresh_token, expires_in, token_type });
+  }
+
   return async function handle(req: Request): Promise<Response> {
     const path = new URL(req.url).pathname.replace(/\/+$/, "");
     try {
       switch (`${req.method} ${path}`) {
         case "POST /v1/sign-in":
           return await signIn(req);
+        case "POST /v1/supabase-oauth/token":
+          return await supabaseToken(req);
         case "GET /v1/frames":
           return json(200, { frames: await framesOf((await auth(req)).account) });
         case "POST /v1/frames":

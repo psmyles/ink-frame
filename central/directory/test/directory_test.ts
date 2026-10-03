@@ -253,3 +253,65 @@ Deno.test("unknown routes", async () => {
     assertEquals((await t.call(m, p)).status, 404);
   }
 });
+
+// ── Supabase OAuth token exchange (the client secret stays in the Worker) ──
+
+function oauthSetup(answer: (body: URLSearchParams) => Response | Promise<Response>, secret: string | null = "sba_secret") {
+  const sent: { url: string; auth: string | null; body: URLSearchParams }[] = [];
+  const fakeFetch = (async (url: string | URL | Request, init?: RequestInit) => {
+    const body = new URLSearchParams(init?.body as URLSearchParams);
+    sent.push({ url: String(url), auth: new Headers(init?.headers).get("Authorization"), body });
+    return answer(body);
+  }) as typeof fetch;
+  const handle = directory({
+    db: testDb(),
+    verifier: { verify: () => Promise.reject(new Error("unused")) },
+    oauth: { ...clients.supabase, clientSecret: secret ?? undefined },
+    fetch: fakeFetch,
+  });
+  const call = async (body: unknown) => {
+    const res = await handle(new Request("https://dir.test/v1/supabase-oauth/token", { method: "POST", body: JSON.stringify(body) }));
+    return { status: res.status, body: await res.json() };
+  };
+  return { sent, call };
+}
+
+const TOKENS = { access_token: "sbp_oauth_access", refresh_token: "refresh", expires_in: 86400, token_type: "Bearer", extra: "dropped" };
+const CODE = { grant_type: "authorization_code", code: "c0de", code_verifier: "v".repeat(43), redirect_uri: clients.supabase.redirectUris[1] };
+
+Deno.test("Supabase OAuth: the code is exchanged with the secret added", async () => {
+  const t = oauthSetup(() => Response.json(TOKENS));
+  const r = await t.call(CODE);
+  assertEquals(r.status, 200);
+  assertEquals(r.body, { access_token: "sbp_oauth_access", refresh_token: "refresh", expires_in: 86400, token_type: "Bearer" });
+  assertEquals(t.sent[0].url, "https://api.supabase.com/v1/oauth/token");
+  assertEquals(t.sent[0].auth, `Basic ${btoa(`${clients.supabase.clientId}:sba_secret`)}`);
+  assertEquals(Object.fromEntries(t.sent[0].body), { client_id: clients.supabase.clientId, ...CODE });
+
+  const refresh = await t.call({ grant_type: "refresh_token", refresh_token: "refresh" });
+  assertEquals(refresh.status, 200);
+  assertEquals(Object.fromEntries(t.sent[1].body), { client_id: clients.supabase.clientId, grant_type: "refresh_token", refresh_token: "refresh" });
+});
+
+Deno.test("Supabase OAuth: refusals, bad requests and outages", async () => {
+  const refused = oauthSetup(() => Response.json({ message: "Invalid code" }, { status: 400 }));
+  assertEquals((await refused.call(CODE)).body.error, { code: "oauth_failed", message: "Invalid code" });
+
+  const down = oauthSetup(() => new Response("", { status: 503 }));
+  assertEquals((await down.call(CODE)).status, 502);
+
+  const t = oauthSetup(() => Response.json(TOKENS));
+  for (const body of [
+    { ...CODE, redirect_uri: "https://evil.example/callback" },
+    { ...CODE, code_verifier: "short" },
+    { ...CODE, grant_type: "client_credentials" },
+    { grant_type: "refresh_token" },
+  ]) {
+    const r = await t.call(body);
+    assertEquals([r.status, r.body.error.code], [400, "bad_request"]);
+  }
+  assertEquals(t.sent.length, 0);
+
+  const unset = oauthSetup(() => Response.json(TOKENS), null);
+  assertEquals((await unset.call(CODE)).status, 503);
+});

@@ -3,8 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ink_frame/data/api_error.dart';
+import 'package:ink_frame/data/frames_repository.dart';
+import 'package:ink_frame/data/secure_store.dart';
 import 'package:ink_frame/features/settings/settings_screen.dart';
+import 'package:ink_frame/state/setup.dart';
 
+import '../unit/fake_platform.dart';
 import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' show alice, kitchen, priya;
 
@@ -122,5 +126,81 @@ void main() {
     expect(find.text('Shuffle'), findsOneWidget);
     expect(find.text('Off'), findsOneWidget); // quiet hours
     expect(api.calls, isEmpty);
+  });
+
+  testWidgets('owner tools: update the frame, then delete it with its name typed', (tester) async {
+    final platform = FakePlatform();
+    platform.projects[kitchen.ref] = FakeProject(kitchen.ref, 'Ink Frame - Kitchen')
+      ..status = 'ACTIVE_HEALTHY'
+      ..schemaVersion = 1;
+    final store = MemoryStore();
+    await pumpFrameScreen(
+      tester,
+      () => const SettingsScreen(address: kitchen),
+      address: kitchen,
+      me: priya,
+      owner: priya,
+      store: store,
+      overrides: [
+        platformConnectedProvider.overrideWith((ref) async => true),
+        provisionerProvider.overrideWith((ref) async => platform.provisioner()),
+      ],
+    );
+    await tester.scrollUntilVisible(find.text('Delete this frame'), 200);
+    expect(find.text('Owner tools'), findsOneWidget);
+    expect(find.text('Connected'), findsOneWidget);
+    expect(find.text('An update for Kitchen is ready'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Update'));
+    await tester.pumpAndSettle();
+    expect(platform.projects[kitchen.ref]!.schemaVersion, 2);
+    expect(find.text('Kitchen is up to date'), findsOneWidget);
+    expect(find.text('An update for Kitchen is ready'), findsNothing);
+
+    await tester.tap(find.text('Delete this frame'));
+    await tester.pumpAndSettle();
+    final delete = find.widgetWithText(FilledButton, 'Delete');
+    expect(tester.widget<FilledButton>(delete).onPressed, isNull);
+    await tester.enterText(find.byType(TextField), 'kitchen');
+    await tester.pump();
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    expect(platform.projects, isEmpty);
+    expect(await FramesRepository(store).load(), isEmpty);
+    expect(find.text('Home'), findsOneWidget);
+  });
+
+  testWidgets('owner tools without Supabase connected on this device', (tester) async {
+    await open(tester);
+    await tester.scrollUntilVisible(find.text('Delete this frame'), 200);
+    expect(find.textContaining('Not connected on this device'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
+  });
+
+  testWidgets('changing the model warns that the photos go', (tester) async {
+    final api = await pumpFrameScreen(
+      tester,
+      () => const SettingsScreen(address: kitchen),
+      address: kitchen,
+      me: priya,
+      owner: priya,
+      overrides: [backendBundleProvider.overrideWith((ref) async => testBundle)],
+    );
+    await tester.tap(find.text('Change'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pimoroni Inky 7.3"'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Switch Kitchen to the Pimoroni Inky 7.3"?'), findsOneWidget);
+    expect(find.textContaining('photos will be removed'), findsOneWidget);
+    await tester.tap(find.text('Switch'));
+    await tester.pumpAndSettle();
+    expect(api.calls, ['model pimoroni-7-3']);
+  });
+
+  testWidgets('others see no owner tools and no Change', (tester) async {
+    await open(tester, owner: false);
+    await tester.scrollUntilVisible(find.text('Storage'), 200);
+    expect(find.text('Owner tools'), findsNothing);
+    expect(find.text('Change'), findsNothing);
   });
 }

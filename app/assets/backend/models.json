@@ -1,0 +1,32 @@
+[
+  {
+    "id": "reterminal-e1002",
+    "name": "reTerminal E1002 7.3\"",
+    "width": 800,
+    "height": 480
+  },
+  {
+    "id": "waveshare-5-83",
+    "name": "Waveshare 5.83\"",
+    "width": 648,
+    "height": 480
+  },
+  {
+    "id": "pimoroni-7-3",
+    "name": "Pimoroni Inky 7.3\"",
+    "width": 800,
+    "height": 480
+  },
+  {
+    "id": "pimoroni-5-7",
+    "name": "Pimoroni Inky 5.7\"",
+    "width": 600,
+    "height": 448
+  },
+  {
+    "id": "pimoroni-4",
+    "name": "Pimoroni Inky 4\"",
+    "width": 640,
+    "height": 400
+  }
+]

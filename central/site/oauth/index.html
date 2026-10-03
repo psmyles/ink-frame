@@ -23,9 +23,10 @@
   </main>
 
   <script type="module">
-    // Supabase OAuth callback on phones (PLAN.md §6.1): Supabase only accepts HTTPS or
-    // localhost callbacks, so this page forwards code/state to the app. The code is
-    // useless without the PKCE verifier, which never leaves the phone.
+    // Supabase OAuth callback on phones and Macs (PLAN.md §6.1): Supabase only accepts
+    // HTTPS or localhost callbacks, so this page forwards code/state to the app. The
+    // code is useless without the PKCE verifier, which stays in the app until it
+    // exchanges the code through the directory Worker (which adds the client secret).
     import { oauthTarget } from "../assets/links.js";
 
     const target = oauthTarget(location.search);

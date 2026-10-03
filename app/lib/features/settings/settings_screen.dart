@@ -9,10 +9,12 @@ import '../../l10n/app_localizations.dart';
 import '../../state/frame_admin.dart';
 import '../../state/photos.dart';
 import '../../state/providers.dart';
+import '../../state/setup.dart';
 import '../../widgets/formatting.dart';
 import '../../widgets/side_panel.dart';
 import '../../widgets/text_prompt.dart';
 import '../storage/storage_screen.dart';
+import 'owner_tools.dart';
 
 /// Frame settings (app-flow §4.3): the owner edits, everyone else reads. Each change
 /// saves straight away.
@@ -81,6 +83,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l = AppLocalizations.of(context);
     final name = await promptText(context, title: l.renameTitle, initial: current, label: l.frameName);
     if (name != null) await _save({'name': name}, reachesFrame: false);
+  }
+
+  /// Another panel model (owner): clears the photos, so it asks first (app-flow §4.3).
+  Future<void> _changeModel(FrameSummary s, String currentName) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final models = (await ref.read(backendBundleProvider.future)).models;
+    String nameOf(String id) => models.where((m) => m.id == id).firstOrNull?.name ?? id;
+    final picked = await _pick(l.setupModelTitle, [for (final m in models) m.id], s.frame.modelId, nameOf);
+    if (picked == null || picked.value == s.frame.modelId || !mounted) return;
+    final count = ref.read(usageProvider(_a)).value?.frame.images ?? 0;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(l.changeModelConfirm(count, s.frame.name, nameOf(picked.value), currentName)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.switchModel)),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(frameApiProvider(_a)).changeModel(picked.value);
+      ref.invalidate(frameViewProvider(_a));
+      ref.invalidate(photosProvider(_a));
+      messenger.showSnackBar(SnackBar(content: Text(l.savedNextCheck)));
+    } on ApiException {
+      messenger.showSnackBar(SnackBar(content: Text(l.couldntSave)));
+    }
   }
 
   Future<void> _pickTime(String key, String current) async {
@@ -233,7 +265,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               : null,
         ),
         _Section(l.sectionHardware),
-        ListTile(title: Text(l.frameModel), subtitle: Text(model)),
+        ListTile(
+          title: Text(l.frameModel),
+          subtitle: Text(model),
+          trailing: owner ? TextButton(onPressed: () => _changeModel(s, model), child: Text(l.changeModel)) : null,
+        ),
         ListTile(
           title: Text(f.connected
               ? (f.fwVersion == null ? l.hardwareConnectedNoVersion : l.hardwareConnected(f.fwVersion!))
@@ -251,6 +287,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => openPanel<void>(context, (_) => StorageScreen(address: _a)),
         ),
+        if (owner) ...[
+          _Section(l.sectionOwner),
+          OwnerTools(address: _a, frameName: name),
+        ],
       ],
     );
   }

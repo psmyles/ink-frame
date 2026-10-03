@@ -21,6 +21,7 @@ import '../../widgets/status_line.dart';
 import '../people/people_screen.dart';
 import '../prepare/prepare_screen.dart';
 import '../prepare/source_photo.dart';
+import '../settings/owner_tools.dart';
 import '../settings/settings_screen.dart';
 import '../storage/storage_screen.dart';
 import 'reorder_screen.dart';
@@ -397,10 +398,9 @@ class _Banner extends ConsumerWidget {
     final error = view.error!;
 
     final (String text, Widget? action) = switch (error.code) {
-      ApiException.asleep => (
-          (view.cached?.isMine ?? false) ? l.asleepOwner(name) : l.asleepOther(name, view.cached?.ownerName ?? l.theOwner),
-          null,
-        ),
+      ApiException.asleep => (view.cached?.isMine ?? false)
+          ? (l.asleepOwner(name), FilledButton(onPressed: () => wakeUpFrame(context, ref, address, name), child: Text(l.wakeUp)))
+          : (l.asleepOther(name, view.cached?.ownerName ?? l.theOwner), null),
       ApiException.notMember => (
           l.removedFromFrame,
           OutlinedButton(

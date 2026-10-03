@@ -33,6 +33,7 @@ password (a new dev user is created) → your name.
 | `GOOGLE_DESKTOP_CLIENT_ID`, `GOOGLE_DESKTOP_CLIENT_SECRET` | Google sign-in on Windows/Linux (browser + loopback). The ID defaults to ours; the secret comes from `.env.local` (Google treats it as public, but it stays out of git) |
 | `APPLE_SIGN_IN` | Sign in with Apple on iOS/macOS; default `true` (team `48QFANT8RD`) |
 | `PAGES_URL` | the `central/site` address (default `https://psmyles.github.io/ink-frame`) |
+| `SUPABASE_OAUTH_CLIENT_ID` | the Supabase OAuth App for "Connect Supabase" in Set up a frame (default ours; its secret is only in the directory Worker) |
 | `DIRECTORY_URL` | the directory (`central/directory/`) that finds your frames when you sign in on a new device; empty turns it off (then a link is needed) |
 
 Sign-in buttons only appear for providers that are configured.
@@ -41,6 +42,10 @@ Sign-in buttons only appear for providers that are configured.
 
 - `lib/data/`: frame links, one Supabase client per frame (`FrameConnection`), the
   list of frames on this device (`FramesRepository`), models, errors.
+- `lib/data/provisioner.dart`, `platform_api.dart`, `platform_auth.dart`,
+  `backend_bundle.dart`: the setup wizard and owner tools: the Management API, "Connect
+  Supabase" (OAuth through the directory Worker, or a token in dev mode) and the
+  backend in `assets/backend/` (from `tools/dev/bundle-backend.ts`).
 - `lib/auth/`: Google and Apple ID tokens.
 - `lib/state/`: Riverpod providers. `lib/routing/`: go_router.
 - `lib/features/<screen>/`, `lib/widgets/`, `lib/theme/`, `lib/l10n/` (all strings).
@@ -54,4 +59,5 @@ flutter test                                            # unit, widget, imaging 
 PHOTOS=<dir> flutter test test/imaging/png_bench_test.dart   # PNG size benchmark on real photos
 deno run --allow-all ../tools/dev/app-live-test.ts      # against the dev project (needs no dev frame)
 PREVIEW=1 flutter test test/preview --update-goldens    # renders screens to test/preview/out/ for a look
+deno run --allow-all ../tools/dev/provision-live-test.ts  # the setup wizard's steps against the real Management API
 ```

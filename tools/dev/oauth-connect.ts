@@ -1,11 +1,13 @@
 // Spike (c) and reference for the wizard's "Connect Supabase" step (PLAN.md §6.2
 // step 1): Supabase OAuth authorization code + PKCE with a loopback redirect.
-//   deno run --allow-read --allow-net --allow-env --allow-run tools/dev/oauth-connect.ts
+//   deno run --allow-read --allow-net --allow-env --allow-run tools/dev/oauth-connect.ts [--print-url]
+//   (--print-url: print the consent link instead of opening it, e.g. for a private
+//    window signed in as another Supabase account)
 //
-// Needs SUPABASE_OAUTH_CLIENT_ID in backend/.env.local (and SUPABASE_OAUTH_CLIENT_SECRET
-// only to compare). Opens the browser for consent, catches the redirect on
-// http://localhost:53682/callback, then tries the token exchange without the client
-// secret first. Tokens are never printed.
+// Opens the browser for consent, catches the redirect on http://localhost:53682/callback,
+// then exchanges the code and refreshes through the Cloudflare Worker, like the app
+// (--direct: with SUPABASE_OAUTH_CLIENT_SECRET from backend/.env.local instead). The
+// client ID comes from shared/oauth-clients.json. Tokens are never printed.
 
 import { mgmt } from "./lib.ts";
 
@@ -17,9 +19,9 @@ for (const line of (await Deno.readTextFile(new URL("../../backend/.env.local", 
   const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
   if (m) file[m[1]] = m[2];
 }
-const clientId = Deno.env.get("SUPABASE_OAUTH_CLIENT_ID") ?? file.SUPABASE_OAUTH_CLIENT_ID;
+const shared = JSON.parse(await Deno.readTextFile(new URL("../../shared/oauth-clients.json", import.meta.url)));
+const clientId: string = shared.supabase.clientId;
 const clientSecret = Deno.env.get("SUPABASE_OAUTH_CLIENT_SECRET") ?? file.SUPABASE_OAUTH_CLIENT_SECRET;
-if (!clientId) throw new Error("SUPABASE_OAUTH_CLIENT_ID is missing from backend/.env.local");
 
 const b64url = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -55,21 +57,39 @@ const code = await new Promise<string>((resolve, reject) => {
     resolve(u.searchParams.get("code") ?? "");
     return new Response("Ink Frame is connected. You can close this tab.");
   });
-  console.log("Opening the browser for consent…");
-  new Deno.Command("open", { args: [authorize.toString()] }).spawn();
+  if (Deno.args.includes("--print-url")) {
+    console.log(`Open this in a private window and approve:\n${authorize}`);
+  } else {
+    console.log("Opening the browser for consent…");
+    new Deno.Command("open", { args: [authorize.toString()] }).spawn();
+  }
 });
 console.log(`got an authorization code (${code.length} chars)`);
 
 type Token = { access_token: string; refresh_token: string; expires_in: number; token_type: string };
 
-async function token(params: Record<string, string>, withSecret: boolean) {
-  const headers: Record<string, string> = { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" };
-  if (withSecret) headers.Authorization = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
-  const res = await fetch("https://api.supabase.com/v1/oauth/token", {
-    method: "POST",
-    headers,
-    body: new URLSearchParams({ client_id: clientId!, ...params }),
-  });
+// Like the app: the code exchange and refresh go through the Cloudflare Worker, which
+// adds the client secret (shared/api/directory.yaml). --direct uses the secret from
+// backend/.env.local instead (spike c's original check).
+const DIRECTORY = Deno.env.get("DIRECTORY_URL") ?? "https://ink-frame-directory.psmyles.workers.dev";
+const direct = Deno.args.includes("--direct");
+
+async function token(params: Record<string, string>) {
+  const res = direct
+    ? await fetch("https://api.supabase.com/v1/oauth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+      },
+      body: new URLSearchParams({ client_id: clientId!, ...params }),
+    })
+    : await fetch(`${DIRECTORY}/v1/supabase-oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
   const text = await res.text();
   return { ok: res.ok, status: res.status, json: (() => { try { return JSON.parse(text); } catch { return { raw: text.slice(0, 200) }; } })() };
 }
@@ -77,15 +97,8 @@ async function token(params: Record<string, string>, withSecret: boolean) {
 const redact = (j: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(j).map(([k, v]) => [k, /token/.test(k) && typeof v === "string" ? `<${v.length} chars>` : v]));
 
-const codeParams = { grant_type: "authorization_code", code, redirect_uri: REDIRECT, code_verifier: verifier };
-let t = await token(codeParams, false);
-console.log(`exchange WITHOUT secret → ${t.status}`, JSON.stringify(redact(t.json)));
-let secretNeeded = false;
-if (!t.ok && clientSecret) {
-  secretNeeded = true;
-  t = await token(codeParams, true);
-  console.log(`exchange WITH secret → ${t.status}`, JSON.stringify(redact(t.json)));
-}
+const t = await token({ grant_type: "authorization_code", code, redirect_uri: REDIRECT, code_verifier: verifier });
+console.log(`exchange ${direct ? "with the secret" : "through the Worker"} → ${t.status}`, JSON.stringify(redact(t.json)));
 if (!t.ok) Deno.exit(1);
 const tok = t.json as Token;
 
@@ -94,10 +107,5 @@ console.log(`GET /v1/organizations with the OAuth token → ${orgs.map((o) => o.
 const projects = await mgmt<{ ref: string; name: string }[]>({ token: tok.access_token }, "GET", "/v1/projects");
 console.log(`GET /v1/projects → ${projects.map((p) => p.name).join(", ")}`);
 
-const refreshParams = { grant_type: "refresh_token", refresh_token: tok.refresh_token };
-let r = await token(refreshParams, secretNeeded);
-console.log(`refresh ${secretNeeded ? "WITH" : "WITHOUT"} secret → ${r.status}`, JSON.stringify(redact(r.json)));
-if (!r.ok && !secretNeeded && clientSecret) {
-  r = await token(refreshParams, true);
-  console.log(`refresh WITH secret → ${r.status}`, JSON.stringify(redact(r.json)));
-}
+const r = await token({ grant_type: "refresh_token", refresh_token: tok.refresh_token });
+console.log(`refresh ${direct ? "with the secret" : "through the Worker"} → ${r.status}`, JSON.stringify(redact(r.json)));
