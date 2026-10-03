@@ -2,18 +2,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ink_frame/data/frame_directory.dart';
 import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/models.dart';
 import 'package:ink_frame/data/secure_store.dart';
 import 'package:ink_frame/features/people/people_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../unit/fake_directory.dart';
+import '../unit/frame_directory_test.dart' show google;
 import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' show alice, kitchen, priya;
 
 const bob = Member(userId: 'bob', role: Role.member, displayName: 'Bob');
 
-Future<FakeFrameApi> open(WidgetTester tester, {required Member me, List<Member>? members, List<Invite>? invites, MemoryStore? store}) =>
+Future<FakeFrameApi> open(WidgetTester tester,
+        {required Member me, List<Member>? members, List<Invite>? invites, MemoryStore? store, FrameDirectory? directory}) =>
     pumpFrameScreen(
       tester,
       () => const PeopleScreen(address: kitchen),
@@ -22,6 +26,7 @@ Future<FakeFrameApi> open(WidgetTester tester, {required Member me, List<Member>
       owner: priya,
       api: FakeFrameApi(members: members ?? [priya, alice, bob], invites: invites),
       store: store,
+      directory: directory,
     );
 
 void main() {
@@ -91,9 +96,12 @@ void main() {
     expect(find.text('ABCDE-FGHJ2'), findsOneWidget);
   });
 
-  testWidgets('anyone else can leave; the frame goes from this device', (tester) async {
+  testWidgets('anyone else can leave; the frame goes from this device and your list', (tester) async {
     final store = MemoryStore();
-    final api = await open(tester, me: alice, store: store);
+    final server = FakeDirectoryServer()..accounts['alice'] = [kitchen];
+    final directory = server.directory(store);
+    await directory.signIn(google('alice'));
+    final api = await open(tester, me: alice, store: store, directory: directory);
     expect(find.text('Invite someone'), findsNothing);
     expect(find.text('Remove'), findsNothing);
     await tester.tap(find.text('Leave this frame'));
@@ -104,5 +112,6 @@ void main() {
     expect(api.calls, ['remove alice']);
     expect(await FramesRepository(store).load(), isEmpty);
     expect(find.text('Home'), findsOneWidget);
+    expect(server.accounts['alice'], isEmpty);
   });
 }

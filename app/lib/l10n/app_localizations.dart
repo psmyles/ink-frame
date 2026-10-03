@@ -205,8 +205,44 @@ abstract class AppLocalizations {
   /// No description provided for @signInExplain.
   ///
   /// In en, this message translates to:
-  /// **'Your account is only used to recognise you on this frame.'**
+  /// **'Your account is only used to recognise you, and to find your frames when you sign in on a new device.'**
   String get signInExplain;
+
+  /// No description provided for @findExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the account you used before, and your frames will appear.'**
+  String get findExplain;
+
+  /// No description provided for @findingFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for your frames…'**
+  String get findingFrames;
+
+  /// No description provided for @noFramesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.'**
+  String get noFramesFound;
+
+  /// No description provided for @findOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t look for your frames right now. Check your internet connection and try again.'**
+  String get findOffline;
+
+  /// No description provided for @findFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t look for your frames. Try again, or use a link or QR code.'**
+  String get findFailed;
+
+  /// No description provided for @useLinkInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a link or QR code instead'**
+  String get useLinkInstead;
 
   /// No description provided for @continueWithGoogle.
   ///
@@ -321,6 +357,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No frames yet'**
   String get noFramesYet;
+
+  /// No description provided for @loadingFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your frames…'**
+  String get loadingFrames;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loading;
 
   /// No description provided for @noFramesBody.
   ///
@@ -1387,7 +1435,7 @@ abstract class AppLocalizations {
   /// No description provided for @anotherDeviceExplain.
   ///
   /// In en, this message translates to:
-  /// **'On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.'**
+  /// **'On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don\'t, choose “Use a link or QR code instead” there and scan this.'**
   String get anotherDeviceExplain;
 
   /// No description provided for @deleteAccount.

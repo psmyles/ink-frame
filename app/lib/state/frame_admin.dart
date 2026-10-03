@@ -7,7 +7,7 @@ import 'providers.dart';
 
 /// Overridable for tests.
 final frameApiProvider = Provider.family<FrameApi, FrameAddress>(
-  (ref, a) => FrameApi(ref.watch(framesRepositoryProvider).connection(a)),
+  (ref, a) => FrameApi(ref.watch(connectionProvider(a))),
 );
 
 /// Everyone on the frame (People).

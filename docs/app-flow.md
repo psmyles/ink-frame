@@ -59,7 +59,7 @@
    - opened from an invite link (skips this screen),
    - **Scan QR** (mobile),
    - **Paste link** (all platforms; desktop's main path). A bare code isn't enough because the app also needs the frame's address, so the paste box asks for the whole link.
-2. **Sign in**: "Continue with Google" / "Continue with Apple" (per platform, §7.1). Copy: *"Your account is only used to recognise you on this frame."* Joining a second frame reuses the same sign-in without asking again.
+2. **Sign in**: "Continue with Google" / "Continue with Apple" (per platform, §7.1). Copy: *"Your account is only used to recognise you, and to find your frames when you sign in on a new device."* Joining a second frame reuses the same sign-in without asking again. After joining, the frame goes on your list in the directory (§1.4).
 3. **Your name**: "What should the others see?" For the first frame it's empty (with the Google/Apple first name as a suggestion chip); for later frames it's pre-filled with the name you used before.
 4. `POST /invites/accept` → the **Frame** screen, with a one-time tip: *"Add photos with the + button. The frame checks for new photos once a day, or press its green button to check now."*
 
@@ -91,9 +91,25 @@ Set up a frame
 - **Connect the frame** goes to §6; **Later** lands on the empty Frame screen, where photos can be added before the hardware arrives.
 
 ### 1.4 Returning on a new device
-The app needs each frame's address to sign in, and only owners can invite. The addresses (project URL + publishable key) aren't secret, so:
-- **Account → "Use on another device"** shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`.
-- On the new device, "Already use Ink Frame? Sign in" = scan or paste that (or any invite link) → sign in once → every frame where you're still a member appears. A frame you've since been removed from is skipped with a note.
+The app needs each frame's address to sign in. A new device has none, and it may be the only device the person has left, so signing in alone has to be enough. The **directory** (`central/directory/`, `shared/api/directory.yaml`) keeps, for each Google or Apple account, the addresses of the frames it's on. Addresses (project URL + publishable key) aren't secret; the directory stores a hash of the account ID, not names or emails.
+
+```
+┌─────────────────────────────┐
+│ Sign in                      │
+│ Sign in with the account you │
+│ used before, and your frames │
+│ will appear.                 │
+│ [ Continue with Google ]     │
+│ [ Continue with Apple ]      │  (iOS/macOS)
+│                              │
+│ Use a link or QR code instead│
+└─────────────────────────────┘
+```
+
+- "Already use Ink Frame? Sign in" → **Continue with Google/Apple** → "Looking for your frames…" → signed in to each → Home. Frames you've since been removed from are skipped and taken off your list, without a note.
+- **Nothing found**: "No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite." Offline: "Can't look for your frames right now…"
+- **Use a link or QR code instead** (also the only way for dev-mode email accounts): **Account → "Use on another device"** on a device you still have shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`. Any invite link works too.
+- **Keeping the list**: joining (or signing in with a link) adds frames; leaving takes the frame off; Delete my account removes the account from the directory; sign out only forgets this device's directory token. Changes that can't be sent (offline) go out when the app next starts. The app never waits for the directory, and works without it.
 - An owner on a new device also reconnects Supabase from the frame's settings (§4.4) to regain owner tools.
 
 ---

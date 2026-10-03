@@ -19,6 +19,10 @@ supabase/.temp/
 # Node (tools/golden)
 node_modules/
 
+# Wrangler (central/directory): local D1 state and dev secrets
+.wrangler/
+.dev.vars*
+
 # Dart / Flutter
 .dart_tool/
 build/

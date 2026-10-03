@@ -10,7 +10,7 @@ Ink Frame: a Flutter companion app, a per-family Supabase backend, and ESP32-S3 
 - If an assumption in PLAN.md §14 (Verify list) turns out differently, update the plan in the same change and add an entry to §16 (Decision log).
 - **Never commit secrets.** The Supabase access token, keys and passwords go in `.env.local` files (gitignored) or in session environment variables (`SUPABASE_ACCESS_TOKEN`).
 - `reference/` is read-only. It is the spec the new code is ported from (see `reference/README.md`).
-- `shared/api/openapi.yaml` is the contract for `device-api` and `app-api`. Change the contract first, then the code on both sides.
+- `shared/api/openapi.yaml` is the contract for `device-api` and `app-api`, `shared/api/directory.yaml` for the directory. Change the contract first, then the code on both sides.
 - **One Supabase project = one frame.** User-facing words: frame, owner, people, "checks for new photos", "connect the frame"; never space, project, admin or sync (PLAN.md §2).
 
 ## Layout
@@ -26,6 +26,7 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `deno run --allow-all tools/dev/sim-scenario.ts`: the §12.1 scenario with the real `frame_sim` against the dev project (same owner requirement as the tests).
 - `deno run --allow-read --allow-net --allow-env tools/dev/reset-dev.ts --yes`: drop and re-apply all migrations on the dev project (unreleased migrations only).
 - `deno test central/tests/`: link parsing for the `central/site` pages (published to GitHub Pages by `.github/workflows/pages.yml`).
+- `deno test --allow-read central/directory/`: the directory Worker against SQLite. Deploy from `central/directory/` with `npx wrangler@4.146.0 d1 migrations apply ink-frame-directory --remote` then `npx wrangler@4.146.0 deploy` (the user's `wrangler login`; contract `shared/api/directory.yaml`).
 - `cd app && flutter test`: app tests without network (incl. golden parity for `lib/imaging`). `node tools/golden/gen-vectors.mjs`: regenerate `shared/test-vectors/dither.json` from the reference. `deno run --allow-all tools/dev/app-live-test.ts`: the app's data layer against the dev project. More in `app/README.md`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/auth-providers.ts [--check]`: turn on Google/Apple sign-in on the dev project with the client IDs in `shared/oauth-clients.json` (provision.ts uses the same file).
 - `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists). `--owner-login` (needs `--allow-write`) lets you sign in as its owner in developer mode; the password goes into `backend/.env.local` as `DEV_OWNER_PASSWORD`, never to the terminal.

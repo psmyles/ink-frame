@@ -1,0 +1,21 @@
+// The directory Worker (central/directory/README.md). Deploy with
+//   npx wrangler@4.146.0 d1 migrations apply ink-frame-directory --remote
+//   npx wrangler@4.146.0 deploy
+{
+  "name": "ink-frame-directory",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ink-frame-directory",
+      "database_id": "920a61d4-33d0-46a9-be9f-9b3f75699409",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Drops device tokens unused for 400 days.
+  "triggers": { "crons": ["17 3 * * *"] },
+  "observability": { "enabled": true }
+}

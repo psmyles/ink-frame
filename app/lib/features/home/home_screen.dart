@@ -7,6 +7,7 @@ import '../../state/providers.dart';
 import '../../widgets/adaptive_shell.dart';
 import '../../widgets/frame_card.dart';
 import '../../widgets/frame_mark.dart';
+import '../../widgets/loading.dart';
 
 /// Every frame you're on, whoever set it up (app-flow D1, §2.2). On a wide window
 /// the sidebar lists them, so this is only the "choose a frame" pane.
@@ -16,9 +17,12 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    if (AdaptiveShell.isWide(context)) return _ChooseFrame(text: l.chooseFrame);
+    final list = ref.watch(framesProvider);
+    // Still reading this device's frames (a moment at start): not "no frames yet".
+    final loading = Center(child: AfterDelay(child: LoadingLine(l.loadingFrames)));
+    if (AdaptiveShell.isWide(context)) return list.hasValue ? _ChooseFrame(text: l.chooseFrame) : Scaffold(body: loading);
 
-    final frames = ref.watch(framesProvider).value ?? [];
+    final frames = list.value ?? [];
     return Scaffold(
       appBar: AppBar(
         title: Text(l.appTitle),
@@ -32,7 +36,9 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body: frames.isEmpty
+      body: !list.hasValue
+          ? loading
+          : frames.isEmpty
           ? const NoFrames()
           : RefreshIndicator(
               onRefresh: () async => ref.invalidate(frameViewProvider),

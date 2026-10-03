@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -14,11 +15,13 @@ import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
 import 'scan_screen.dart';
 
-enum _Step { link, signIn, name }
+enum _Step { find, link, signIn, name }
 
-/// Join with an invite, or sign in on a new device with a "Use on another device"
-/// link (app-flow §1.2, §1.4). An invite link (with a code) joins one frame; a
-/// link without a code signs in to every frame in it that you're still on.
+/// Join with an invite, or sign in on a new device (app-flow §1.2, §1.4).
+///
+/// On a new device, signing in with Google/Apple asks the directory for your frames.
+/// A link works too: an invite link (with a code) joins one frame; a "Use on another
+/// device" link signs in to every frame in it that you're still on.
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key, this.initialLink, this.returning = false});
 
@@ -39,6 +42,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
   var _step = _Step.link;
   FrameLink? _link;
+  Credential? _credential;
   String? _error;
   var _busy = false;
   String? _nameSuggestion;
@@ -47,6 +51,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   void initState() {
     super.initState();
     final initial = widget.initialLink;
+    if (widget.returning && initial == null && _canFind) _step = _Step.find;
     if (initial != null) {
       _linkField.text = initial;
       WidgetsBinding.instance.addPostFrameCallback((_) => _submitLink());
@@ -62,6 +67,48 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   }
 
   AppLocalizations get l => AppLocalizations.of(context);
+
+  /// The directory needs a Google or Apple sign-in (not dev-mode email).
+  bool get _canFind =>
+      ref.read(frameDirectoryProvider).available &&
+      ref.read(signInServiceProvider).methods(devMode: false).isNotEmpty;
+
+  /// New device: sign in, ask the directory for your frames, sign in to each.
+  Future<void> _find(Future<IdTokenCredential> Function() get) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final credential = await get();
+      final directory = ref.read(frameDirectoryProvider);
+      final List<FrameAddress> frames;
+      try {
+        frames = await directory.signIn(credential);
+      } on ApiException catch (e) {
+        setState(() => _error = e.code == ApiException.offline ? l.findOffline : _devDetail(l.findFailed, e));
+        return;
+      }
+      ref.read(lastCredentialProvider.notifier).set(credential);
+      final skipped = await ref.read(framesRepositoryProvider).signInAll(frames, credential);
+      unawaited(directory.remove(skipped));
+      await ref.read(framesProvider.notifier).signedIn(frames);
+      if (!mounted) return;
+      if (skipped.length == frames.length) {
+        setState(() => _error = l.noFramesFound);
+        return;
+      }
+      context.go('/home');
+    } on SignInCancelled {
+      // Stay put, no error.
+    } on ApiException catch (e) {
+      setState(() => _error = _message(e));
+    } catch (e) {
+      setState(() => _error = _devDetail(l.somethingWrong, e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   void _submitLink() {
     final link = FrameLink.parse(_linkField.text);
@@ -100,6 +147,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     });
     try {
       final credential = await get();
+      _credential = credential;
       final repo = ref.read(framesRepositoryProvider);
       if (link.isInvite) {
         await repo.signIn(link.frames.single, credential);
@@ -111,14 +159,18 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       } else {
         final skipped = await repo.signInAll(link.frames, credential);
         ref.read(lastCredentialProvider.notifier).set(credential);
-        await ref.read(framesProvider.notifier).reload();
+        final directory = ref.read(frameDirectoryProvider);
+        unawaited(directory
+            .add([for (final f in link.frames) if (!skipped.contains(f)) f], signedInWith: credential)
+            .then((_) => directory.remove(skipped)));
+        await ref.read(framesProvider.notifier).signedIn(link.frames);
         if (!mounted) return;
-        if (skipped == link.frames.length) {
+        if (skipped.length == link.frames.length) {
           setState(() => _error = l.noFramesOnLink);
           return;
         }
-        if (skipped > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.skippedFrames(skipped))));
+        if (skipped.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.skippedFrames(skipped.length))));
         }
         context.go('/home');
       }
@@ -143,7 +195,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     });
     try {
       await ref.read(framesRepositoryProvider).join(link.frames.single, link.code!, name);
-      await ref.read(framesProvider.notifier).reload();
+      unawaited(ref.read(frameDirectoryProvider).add(link.frames, signedInWith: _credential));
+      await ref.read(framesProvider.notifier).signedIn(link.frames);
       if (mounted) context.go('/frame/${link.frames.single.ref}?tip=1');
     } on ApiException catch (e) {
       setState(() => _error = _message(e));
@@ -181,6 +234,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                 child: KeyedSubtree(
                   key: ValueKey(_step),
                   child: switch (_step) {
+                    _Step.find => _findStep(),
                     _Step.link => _linkStep(),
                     _Step.signIn => _signInStep(),
                     _Step.name => _nameStep(),
@@ -234,35 +288,73 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         ],
       );
 
-  Widget _signInStep() {
+  /// Continue with Google / Apple, for the methods this build and platform offer.
+  List<Widget> _providerButtons(List<SignInMethod> methods, void Function(Future<IdTokenCredential> Function()) onPressed) {
     final service = ref.read(signInServiceProvider);
-    final devMode = ref.watch(devModeProvider).value ?? false;
-    final methods = service.methods(devMode: devMode);
     final apple = !kIsWeb && (Platform.isIOS || Platform.isMacOS) && methods.contains(SignInMethod.apple);
+    return [
+      if (methods.contains(SignInMethod.google))
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : () => onPressed(service.google),
+            icon: const Icon(Icons.account_circle_outlined),
+            label: Text(l.continueWithGoogle),
+          ),
+        ),
+      if (apple)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: OutlinedButton.icon(
+            onPressed: _busy ? null : () => onPressed(service.apple),
+            icon: const Icon(Icons.apple),
+            label: Text(l.continueWithApple),
+          ),
+        ),
+      if (apple && Platform.isIOS) _help(l.appleHint),
+    ];
+  }
+
+  Widget _findStep() {
+    final methods = ref.read(signInServiceProvider).methods(devMode: false);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _help(l.findExplain),
+        ..._providerButtons(methods, _find),
+        if (_busy)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5)),
+              const SizedBox(width: 12),
+              Text(l.findingFrames),
+            ]),
+          ),
+        _errorText(),
+        const SizedBox(height: 24),
+        TextButton(
+          onPressed: _busy
+              ? null
+              : () => setState(() {
+                    _step = _Step.link;
+                    _error = null;
+                  }),
+          child: Text(l.useLinkInstead),
+        ),
+      ],
+    );
+  }
+
+  Widget _signInStep() {
+    final devMode = ref.watch(devModeProvider).value ?? false;
+    final methods = ref.read(signInServiceProvider).methods(devMode: devMode);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _help(l.signInExplain),
         if (methods.isEmpty) _help(l.noSignInMethods),
-        if (methods.contains(SignInMethod.google))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: OutlinedButton.icon(
-              onPressed: _busy ? null : () => _signIn(service.google),
-              icon: const Icon(Icons.account_circle_outlined),
-              label: Text(l.continueWithGoogle),
-            ),
-          ),
-        if (apple)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: OutlinedButton.icon(
-              onPressed: _busy ? null : () => _signIn(service.apple),
-              icon: const Icon(Icons.apple),
-              label: Text(l.continueWithApple),
-            ),
-          ),
-        if (apple && Platform.isIOS) _help(l.appleHint),
+        ..._providerButtons(methods, _signIn),
         if (methods.contains(SignInMethod.password)) ...[
           const SizedBox(height: 8),
           Text(l.devSignIn, style: Theme.of(context).textTheme.titleSmall),

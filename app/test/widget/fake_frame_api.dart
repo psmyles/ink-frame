@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ink_frame/data/api_error.dart';
 import 'package:ink_frame/data/frame_api.dart';
 import 'package:ink_frame/data/frame_connection.dart';
+import 'package:ink_frame/data/frame_directory.dart';
 import 'package:ink_frame/data/frame_link.dart';
 import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/models.dart';
@@ -150,6 +151,7 @@ Future<FakeFrameApi> pumpFrameScreen(
   Size size = const Size(420, 900),
   KeyValueStore? store,
   bool dark = false,
+  FrameDirectory? directory,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -167,6 +169,7 @@ Future<FakeFrameApi> pumpFrameScreen(
     overrides: [
       storeProvider.overrideWithValue(s),
       frameApiProvider.overrideWith((ref, a) => fake),
+      if (directory != null) frameDirectoryProvider.overrideWithValue(directory),
       frameViewProvider(address).overrideWith((ref) async => fake.view(me, owner)),
       memberNamesProvider.overrideWith((ref, a) async => {for (final m in fake.memberList) m.userId: m.displayName}),
       frameModelProvider.overrideWith((ref, a) async => FrameModel(

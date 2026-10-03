@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import '../auth/sign_in_service.dart';
 import '../config/app_config.dart';
 import '../data/api_error.dart';
 import '../data/frame_connection.dart';
+import '../data/frame_directory.dart';
 import '../data/frame_link.dart';
 import '../data/frames_repository.dart';
 import '../data/models.dart';
@@ -17,6 +19,15 @@ final framesRepositoryProvider = Provider<FramesRepository>((ref) => FramesRepos
 
 final signInServiceProvider = Provider<SignInService>((ref) => SignInService());
 
+final frameDirectoryProvider = Provider<FrameDirectory>((ref) => FrameDirectory(ref.watch(storeProvider)));
+
+/// A frame's connection. Invalidated when the frame is removed or signed in to
+/// again, so everything read through it (the frame, photos, people, …) is read
+/// afresh instead of from the session before.
+final connectionProvider = Provider.family<FrameConnection, FrameAddress>(
+  (ref, a) => ref.watch(framesRepositoryProvider).connection(a),
+);
+
 /// The frames on this device, in the order they were added.
 final framesProvider = AsyncNotifierProvider<FramesNotifier, List<FrameAddress>>(FramesNotifier.new);
 
@@ -24,19 +35,32 @@ class FramesNotifier extends AsyncNotifier<List<FrameAddress>> {
   FramesRepository get _repo => ref.read(framesRepositoryProvider);
 
   @override
-  Future<List<FrameAddress>> build() => _repo.load();
+  Future<List<FrameAddress>> build() {
+    // Directory changes that couldn't be sent last time (offline).
+    unawaited(ref.read(frameDirectoryProvider).flush());
+    return _repo.load();
+  }
 
   Future<void> reload() async => state = AsyncData(await _repo.load());
 
   Future<void> remove(FrameAddress a) async {
     await _repo.remove(a);
-    ref.invalidate(frameViewProvider(a));
+    ref.invalidate(connectionProvider(a));
     await reload();
   }
 
   Future<void> signOutAll() async {
     await _repo.signOutAll();
-    ref.invalidate(frameViewProvider);
+    ref.invalidate(connectionProvider);
+    await reload();
+  }
+
+  /// After signing in to or joining [frames]: drop what was read for them before
+  /// (e.g. "signed out" from the last sign-out) and reload the list.
+  Future<void> signedIn(List<FrameAddress> frames) async {
+    for (final f in frames) {
+      ref.invalidate(connectionProvider(f));
+    }
     await reload();
   }
 }
@@ -54,6 +78,7 @@ class FrameView {
 }
 
 final frameViewProvider = FutureProvider.family<FrameView, FrameAddress>((ref, address) async {
+  ref.watch(connectionProvider(address));
   final repo = ref.read(framesRepositoryProvider);
   try {
     final conn = await repo.ready(address);
@@ -69,6 +94,12 @@ final frameViewProvider = FutureProvider.family<FrameView, FrameAddress>((ref, a
   } on ApiException catch (e) {
     return FrameView(error: e, cached: await repo.cached(address));
   }
+});
+
+/// The frame's name and owner as last seen, for its card while it loads.
+final cachedFrameProvider = FutureProvider.family<CachedFrame?, FrameAddress>((ref, address) {
+  ref.watch(framesProvider); // read again after signing out or in
+  return ref.read(framesRepositoryProvider).cached(address);
 });
 
 /// Developer mode (app-flow §7.2): email sign-in on dev projects, extra details.

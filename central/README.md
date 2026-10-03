@@ -1,8 +1,10 @@
 # central/
 
-The only developer-run piece of Ink Frame: a static GitHub Pages site, published from
-`site/` by `.github/workflows/pages.yml` to `https://psmyles.github.io/ink-frame/`.
-It holds no data and no secrets.
+The developer-run pieces of Ink Frame:
+- a static GitHub Pages site, published from `site/` by `.github/workflows/pages.yml`
+  to `https://psmyles.github.io/ink-frame/`. It holds no data and no secrets;
+- the **directory** (`directory/`, a Cloudflare Worker): which frames each account is
+  on, so signing in on a new device finds them. See [directory/README.md](directory/README.md).
 
 | Path | Purpose |
 |---|---|

@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Ink Frame directory API
+  version: 1.0.0
+  description: |
+    The one developer-run service with state (PLAN.md §3, `central/directory/`): for
+    each Google or Apple account, the addresses of the frames it's on. Signing in on a
+    new device asks it for that list, so nobody needs a link or another device to get
+    back to their frames (app-flow §1.4). Change this file first, then the Worker and
+    the app's `FrameDirectory`.
+
+    What it keeps:
+    - `account`: SHA-256 (hex) of `google:<sub>` or `apple:<sub>` from a verified ID
+      token. No names, emails or photos.
+    - Frame addresses: the project URL and publishable key, the same pair invite links
+      carry. Not secret; they lead only to the frame's sign-in.
+    - Device tokens (SHA-256 only), so the app can change the list later without a
+      fresh ID token. Unused for 400 days → deleted.
+
+    The frames never call it, and the app works without it (a link still signs in).
+    Errors use the same `Error` schema as `openapi.yaml`.
+servers:
+  - url: https://ink-frame-directory.psmyles.workers.dev/v1
+
+paths:
+  /sign-in:
+    post:
+      summary: Sign in with a Google or Apple ID token; get a device token and your frames
+      description: |
+        Accepts ID tokens whose `aud` is one of the client IDs in
+        `shared/oauth-clients.json` (Google: any of ours; Apple: the bundle ID).
+        Each call makes a new device token; an account keeps its 20 newest.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_token]
+              properties:
+                id_token: { type: string, maxLength: 8192 }
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, frames]
+                properties:
+                  token:
+                    type: string
+                    description: Device token for the other calls (`Authorization: Bearer <token>`).
+                  frames: { $ref: "#/components/schemas/FrameList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          description: "`invalid_id_token`: bad signature, expired, wrong issuer or audience."
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+  /frames:
+    get:
+      summary: Your frames
+      security: [{ device: [] }]
+      responses:
+        "200":
+          description: The list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [frames]
+                properties:
+                  frames: { $ref: "#/components/schemas/FrameList" }
+        "401": { $ref: "#/components/responses/InvalidToken" }
+    post:
+      summary: Add and remove frames
+      description: |
+        Removes first, then adds. Adding a frame already on the list updates its key.
+        At most 20 frames per account.
+      security: [{ device: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  type: array
+                  maxItems: 20
+                  items: { $ref: "#/components/schemas/Frame" }
+                remove:
+                  type: array
+                  maxItems: 20
+                  items: { type: string, description: A frame's project URL. }
+      responses:
+        "200":
+          description: The list after the change.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [frames]
+                properties:
+                  frames: { $ref: "#/components/schemas/FrameList" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/InvalidToken" }
+        "409":
+          description: "`too_many_frames`: the list would have more than 20."
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+  /sign-out:
+    post:
+      summary: Forget this device's token
+      security: [{ device: [] }]
+      responses:
+        "204": { description: Done. }
+        "401": { $ref: "#/components/responses/InvalidToken" }
+
+  /me:
+    delete:
+      summary: Forget the account (Delete my account)
+      description: Deletes its frame list and every device token.
+      security: [{ device: [] }]
+      responses:
+        "204": { description: Done. }
+        "401": { $ref: "#/components/responses/InvalidToken" }
+
+components:
+  securitySchemes:
+    device:
+      type: http
+      scheme: bearer
+      description: The device token from `POST /sign-in`.
+  responses:
+    BadRequest:
+      description: "`bad_request`: malformed JSON or an invalid frame address."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    InvalidToken:
+      description: "`invalid_token`: missing, unknown or signed-out device token."
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  schemas:
+    Frame:
+      type: object
+      required: [url, key]
+      properties:
+        url:
+          type: string
+          pattern: '^https://[a-z0-9]{20}\.supabase\.co$'
+        key:
+          type: string
+          pattern: '^(sb_publishable_[A-Za-z0-9_-]{10,100}|eyJ[A-Za-z0-9_.-]{20,2000})$'
+    FrameList:
+      type: array
+      description: Oldest first.
+      items: { $ref: "#/components/schemas/Frame" }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }

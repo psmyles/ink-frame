@@ -16,6 +16,8 @@ import 'package:ink_frame/state/providers.dart';
 import 'package:ink_frame/theme/theme.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../unit/fake_directory.dart';
+import '../unit/frame_directory_test.dart' show google;
 import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' show alice, kitchen, priya;
 
@@ -23,7 +25,7 @@ const grandma = FrameAddress('https://bbbbbbbbbbbbbbbbbbbb.supabase.co', 'sb_pub
 const aliceOwner = Member(userId: 'alice', role: Role.owner, displayName: 'Alice');
 
 /// Alice on Kitchen (Priya's) and on Grandma's (hers if [ownsGrandma], else Priya's).
-Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {bool ownsGrandma = false}) async {
+Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {bool ownsGrandma = false, FakeDirectoryServer? server}) async {
   tester.view.physicalSize = const Size(420, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -31,6 +33,8 @@ Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {boo
   final repo = FramesRepository(store);
   await repo.add(kitchen);
   await repo.add(grandma);
+  final directory = (server ?? FakeDirectoryServer()).directory(store);
+  if (server != null) await directory.signIn(google('alice'));
   final k = FakeFrameApi(members: [priya, alice]);
   final g = FakeFrameApi(frame: frameJson(name: "Grandma's"), members: [if (ownsGrandma) aliceOwner else priya, if (!ownsGrandma) alice]);
   final router = GoRouter(routes: [
@@ -46,6 +50,7 @@ Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {boo
       frameViewProvider(kitchen).overrideWith((ref) async => k.view(alice, priya)),
       frameViewProvider(grandma).overrideWith((ref) async => ownsGrandma ? g.view(aliceOwner, aliceOwner) : g.view(alice, priya)),
       memberNamesProvider.overrideWith((ref, a) async => const {}),
+      frameDirectoryProvider.overrideWithValue(directory),
     ],
     child: MaterialApp.router(
       theme: InkTheme.light(),
@@ -92,7 +97,8 @@ void main() {
   });
 
   testWidgets('deleting your account leaves every frame after typing DELETE', (tester) async {
-    final (k, g, store) = await open(tester);
+    final server = FakeDirectoryServer()..accounts['alice'] = [kitchen, grandma];
+    final (k, g, store) = await open(tester, server: server);
     await tester.scrollUntilVisible(find.text('Delete my account'), 100);
     await tester.tap(find.text('Delete my account'));
     await tester.pumpAndSettle();
@@ -109,6 +115,23 @@ void main() {
     expect(g.calls, ['deleteMe photos=true']);
     expect(await FramesRepository(store).load(), isEmpty);
     expect(find.text('Welcome'), findsOneWidget);
+    // The directory forgets you too.
+    expect(server.calls.last, 'DELETE /me');
+    expect(server.accounts['alice'], isNull);
+  });
+
+  testWidgets('signing out forgets the frames on this device, not on your list', (tester) async {
+    final server = FakeDirectoryServer()..accounts['alice'] = [kitchen, grandma];
+    final (_, _, store) = await open(tester, server: server);
+    await tester.scrollUntilVisible(find.text('Sign out'), 100);
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign out'));
+    await tester.pumpAndSettle();
+    expect(await FramesRepository(store).load(), isEmpty);
+    expect(server.calls.last, 'POST /sign-out');
+    expect(server.tokens, isEmpty);
+    expect(server.accounts['alice'], [kitchen, grandma]);
   });
 
   testWidgets("a frame you set up blocks deleting your account (for now)", (tester) async {

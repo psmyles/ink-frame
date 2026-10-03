@@ -18,7 +18,13 @@
   "joinLinkHelp": "Paste the link you were sent. A code on its own isn't enough, because the app also needs the frame's address.",
   "signInLinkHelp": "Paste the link from \"Use on another device\" on your other phone or computer, or any invite link.",
   "invalidLink": "That doesn't look like an Ink Frame link. Copy the whole link and try again.",
-  "signInExplain": "Your account is only used to recognise you on this frame.",
+  "signInExplain": "Your account is only used to recognise you, and to find your frames when you sign in on a new device.",
+  "findExplain": "Sign in with the account you used before, and your frames will appear.",
+  "findingFrames": "Looking for your frames…",
+  "noFramesFound": "No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.",
+  "findOffline": "Can't look for your frames right now. Check your internet connection and try again.",
+  "findFailed": "Couldn't look for your frames. Try again, or use a link or QR code.",
+  "useLinkInstead": "Use a link or QR code instead",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
   "appleHint": "Use Google if you also want to use Ink Frame on Android or a computer.",
@@ -45,6 +51,8 @@
     }
   },
   "noFramesYet": "No frames yet",
+  "loadingFrames": "Loading your frames…",
+  "loading": "Loading…",
   "noFramesBody": "Set up your own frame, or join one with the invite link you were sent.",
   "setUpBy": "Set up by {name}",
   "@setUpBy": {
@@ -521,7 +529,7 @@
     }
   },
   "anotherDevice": "Use on another device",
-  "anotherDeviceExplain": "On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.",
+  "anotherDeviceExplain": "On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don't, choose “Use a link or QR code instead” there and scan this.",
   "deleteAccount": "Delete my account",
   "deleteAccountBody": "You'll leave these frames and your account on them is deleted:",
   "deletePhotosToo": "Also delete my photos",

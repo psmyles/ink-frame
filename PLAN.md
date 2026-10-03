@@ -48,6 +48,7 @@ The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab))
 | Project setup (production) | **In-app wizard** via Supabase OAuth + Management API. It creates the project, schema, buckets, functions and auth config |
 | Project setup (development) | Developer **Personal Access Token (PAT)** with the Supabase CLI and Management API. The wizard's API client accepts a PAT or an OAuth token through one interface |
 | Login | **Sign in with Google + Sign in with Apple** through native ID-token sign-in, using the developer's OAuth client IDs. Families never touch OAuth consoles (§5). Anonymous sign-in was considered and **rejected**: social login lets members recover access on a new device just by signing in again |
+| Finding your frames on a new device | A small developer-run **directory** (Cloudflare Worker + D1, free plan): for each Google/Apple account (hashed), the addresses of its frames. Signing in is enough; no link or other device needed. Photos and everything else stay in the families' projects (§3) |
 | Display names | Typed by the user when joining a frame (not taken from the Google/Apple profile; reused as the default for the next frame), and editable later |
 | Users within a project | One **owner** (set up the frame; hosts the project) and any number of **members**. The app lists every frame a person belongs to, across projects |
 | Sharing | The owner invites people. Members delete their own photos; the owner can delete anything |
@@ -73,8 +74,10 @@ The existing product ([ink-frame-lab](https://github.com/psmyles/ink-frame-lab))
 ## 3. Architecture overview
 
 ```
-                ┌──────────────── developer-run (central, tiny, stateless) ─────────────────┐
+                ┌──────────────── developer-run (central, tiny) ────────────────────────────┐
                 │  • Firmware feed: GitHub Releases assets + signed manifest.json (Pages)    │
+                │  • /join and /oauth pages (Pages, static)                                  │
+                │  • Directory (Cloudflare Worker + D1): hashed account → frame addresses    │
                 │  • (only if required, see §14) Supabase-OAuth token-exchange endpoint      │
                 └────────────────────────────────────────────────────────────────────────────┘
 
@@ -108,6 +111,7 @@ ink-frame/
   shared/
     presets.json              devices + palettes (seed source; copied from reference)
     api/openapi.yaml          device-api + app-api contract
+    api/directory.yaml        the directory's contract
     test-vectors/             golden dithering inputs/outputs generated from the JS reference
   backend/supabase/
     config.toml
@@ -123,7 +127,7 @@ ink-frame/
     golden/                   Node script: runs reference dithering.js → shared/test-vectors
     frame_sim/                Dart CLI frame simulator (claim/sync/mirror/render)
     dev/                      dev scripts (upload test PNGs, reset dev project, bundle backend)
-  central/                    GitHub Pages site: /join and /oauth pages; firmware feed (Phase 4); (+ OAuth token-exchange fn if needed)
+  central/                    GitHub Pages site: /join and /oauth pages; firmware feed (Phase 4); directory/ (Cloudflare Worker); (+ OAuth token-exchange fn if needed)
   docs/
     app-flow.md               ← produced by Phase 2
     spikes/                   findings from Phase 1B spikes
@@ -166,6 +170,7 @@ ink-frame/
 - **Invite link:** `https://psmyles.github.io/ink-frame/join#u=<project_url>&k=<publishable_key>&c=<invite_code>`, shared as a QR code or link. The page (`central/site/join/`) opens `inkframe://join?…` on phones; on desktop the link is pasted into the app. "Use on another device" links repeat `u`/`k` once per frame and have no `c`. The fragment never reaches the server.
 - **Join flow:** the app saves the project → the user signs in with Google/Apple → types a **display name** (pre-filled from their other frames) → `POST /invites/accept {code, display_name}`.
 - The app keeps a **list of frames** (URL + anon key + session per frame) and shows them together.
+- **New device:** the same Google/Apple ID token also signs in to the **directory** (`shared/api/directory.yaml`), which returns the account's frame addresses and a device token for later changes (app-flow §1.4). The directory verifies the token against Google's/Apple's keys and our client IDs, like Supabase does.
 
 ---
 
@@ -553,7 +558,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google client IDs (web, iOS, desktop; Cloud project `ink-frame-510506`) and Apple team `48QFANT8RD` with Sign in with Apple added 2026-10-03 (`shared/oauth-clients.json`); Android client (debug key SHA-1) added the same day
 - [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim ✅ · dev tools ✅
 - [x] Phase 2 — `docs/app-flow.md` approved 2026-09-26 (D1–D5, D7–D11 as recommended)
-- [ ] Phase 3 — 3a (built; Google sign-in works on Android; Mac/iPhone/Windows sign-in to try) · 3b ✅ · 3c (built; tried on desktop and Android) · 3d (built 2026-10-03; to try on the phone: join by QR) · 3e · 3f
+- [ ] Phase 3 — 3a (built; Google sign-in works on Android; Mac/iPhone/Windows sign-in to try) · 3b ✅ · 3c (built; tried on desktop and Android) · 3d (built 2026-10-03; to try on the phone: join by QR) · directory (deployed 2026-10-03 at `ink-frame-directory.psmyles.workers.dev`; to try: sign in with Google alone) · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
 - [ ] Phase 5 — release
 
@@ -594,6 +599,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - **Low-battery alert** (user request 2026-09-26). The frame already reports `battery_pct` on every `/sync`, and the app shows "Battery low" below 20 %. To add: a notification when a frame's battery falls below a level, so it's recharged before it stops checking in (and before its project could fall asleep, §14). Proposed: **local notifications** from a background refresh in the app (iOS background fetch, Android WorkManager) that reads each frame's `battery_pct`, with the level set per frame by the owner (default 20 %, stored on `frame`), rather than server push, which would need the developer's FCM/APNs credentials in every family's project. Schedule: Phase 3d (setting) and 3g (background refresh). **Confirmed by the user 2026-10-03; the setting is built** (`frame.low_battery_pct`, migration 0005; app-only, so it doesn't make the frame "Changes waiting"; Off turns the status warning off too). Who gets the notification is decided in 3g (default: the owner).
 
 ## 16. Decision log
+- 2026-10-03: **Directory for signing in on a new device.** The user found the link-first sign-in unworkable: someone with no invite and no other device couldn't get back to their frames. Options: the frame list in the user's own Google Drive/iCloud (no central state, but an extra consent and two mechanisms), or a small central directory. The user chose the **directory**, on a free host that doesn't sleep: **Cloudflare Workers + D1** (Supabase free projects pause and take one of the owner's 2 slots; Firebase isn't supported for production on Windows). It stores SHA-256 of `<provider>:<sub>`, frame addresses (not secret) and hashed device tokens, nothing else; `central/` is no longer stateless. The user also asked whether Cloudflare would suit the frame backend better: no. Per family its free storage without a card is about the same as Supabase's, its 10 GB needs a card with uncapped billing, and auth, row security and storage rules would have to be written by hand; it only wins if the developer hosts every family, which reverses the one-project-per-frame decision. Contract `shared/api/directory.yaml`; Worker `central/directory/`.
 - 2026-10-03: **Phase 3d built.** Settings (owner edits, others see plain values; side sheet on wide windows), People (invite sheet with QR, share and copy; remove; leave; active invites with revoke), Storage (bar, by person, "getting full" at 80 % and "full" notices on the Frame screen), Account (your name on every frame, "use on another device" QR/link, delete my account), and **Scan QR code** on Join for phones (`mobile_scanner`; `qr_flutter`, `share_plus` added). **Low battery warning** added to the contract and migration 0005 (`low_battery_pct`, 5–50 or null, default 20; changing only it leaves `settings_updated_at` alone). Deleting your account is blocked while you own a frame until frame deletion exists (3e). The time zone list comes from `gen-tz.ts` (zone.tab, 419 zones). Verified: 23 backend test steps and 11 app live tests on a throwaway project; 174 app tests; macOS, Android and iOS builds.
 - 2026-10-03: **Sign-in IDs.** Google Cloud project `ink-frame-510506` with Web (main), iOS (also used on macOS), Desktop and Android (debug key; the Play release key's SHA-1 gets added before release) clients; Apple team `48QFANT8RD` with Sign in with Apple on iOS and macOS, and Keychain Sharing on macOS (the Google SDK needs it). The public IDs live in `shared/oauth-clients.json` (tools, wizard) and as defaults in `app_config.dart`; the Desktop secret only in `app/.env.local`. Projects get Google with every ID in one comma-separated `client_id` and **skip nonce check on** (the iOS/macOS Google SDK adds its own nonce, which the app can't pass on), Apple with the bundle ID. The dev project is configured (`tools/dev/auth-providers.ts`). Real sign-ins still to verify per platform (§14).
 - 2026-10-02: **Prepare reworked** after the user tried it on desktop (crop wasn't discoverable; Adjust opened behind the photo strip). Now an overview of every photo's frame look (tap one to edit; one photo opens straight in the editor); in the editor the frame-shaped preview is the crop (drag/pinch/scroll, the cut-off parts shown dimmed while moving), "Hold to see original", and Adjust beside or below a canvas that never scrolls away. Adjustments stay per photo with "Use these settings for all photos". Chosen by the user from three options each (app-flow §3.3).

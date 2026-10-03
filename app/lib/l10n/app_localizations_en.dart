@@ -68,7 +68,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInExplain =>
-      'Your account is only used to recognise you on this frame.';
+      'Your account is only used to recognise you, and to find your frames when you sign in on a new device.';
+
+  @override
+  String get findExplain =>
+      'Sign in with the account you used before, and your frames will appear.';
+
+  @override
+  String get findingFrames => 'Looking for your frames…';
+
+  @override
+  String get noFramesFound =>
+      'No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.';
+
+  @override
+  String get findOffline =>
+      'Can\'t look for your frames right now. Check your internet connection and try again.';
+
+  @override
+  String get findFailed =>
+      'Couldn\'t look for your frames. Try again, or use a link or QR code.';
+
+  @override
+  String get useLinkInstead => 'Use a link or QR code instead';
 
   @override
   String get continueWithGoogle => 'Continue with Google';
@@ -141,6 +163,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noFramesYet => 'No frames yet';
+
+  @override
+  String get loadingFrames => 'Loading your frames…';
+
+  @override
+  String get loading => 'Loading…';
 
   @override
   String get noFramesBody =>
@@ -821,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anotherDeviceExplain =>
-      'On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.';
+      'On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don\'t, choose “Use a link or QR code instead” there and scan this.';
 
   @override
   String get deleteAccount => 'Delete my account';

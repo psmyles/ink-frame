@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,6 +67,7 @@ class PeopleScreen extends ConsumerWidget {
     if (!context.mounted) return;
     final router = GoRouter.of(context);
     final navigator = Navigator.of(context);
+    unawaited(ref.read(frameDirectoryProvider).remove([address]));
     await ref.read(framesProvider.notifier).remove(address);
     // Close the side sheet (or page) first: going Home doesn't remove a sheet.
     if (navigator.canPop()) navigator.pop();

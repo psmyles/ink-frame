@@ -18,7 +18,7 @@ final cacheRootProvider = Provider<Directory?>((ref) => null);
 /// Overridable for tests.
 final photosRepositoryProvider = Provider.family<PhotosRepository, FrameAddress>((ref, a) {
   final root = ref.watch(cacheRootProvider);
-  final conn = ref.watch(framesRepositoryProvider).connection(a);
+  final conn = ref.watch(connectionProvider(a));
   return PhotosRepository(conn, cacheDir: root == null ? null : Directory('${root.path}/images/${a.ref}'));
 });
 
@@ -51,7 +51,7 @@ class PhotosNotifier extends AsyncNotifier<List<FrameImage>> {
   PhotosRepository get _repo => ref.read(photosRepositoryProvider(address));
 
   @override
-  Future<List<FrameImage>> build() => _repo.list();
+  Future<List<FrameImage>> build() => ref.watch(photosRepositoryProvider(address)).list();
 
   Future<void> refresh() async {
     state = AsyncData(await _repo.list());
@@ -216,7 +216,7 @@ Future<PreparedPhoto> _prepareInIsolate(PhotoJob job) => Isolate.run(() => prepa
 
 /// user_id → display name, for "Added by …".
 final memberNamesProvider = FutureProvider.family<Map<String, String>, FrameAddress>((ref, a) async {
-  final conn = ref.read(framesRepositoryProvider).connection(a);
+  final conn = ref.watch(connectionProvider(a));
   return conn.guard(() async {
     final rows = await conn.client.from('members').select('user_id, display_name');
     return {for (final r in rows) r['user_id'] as String: r['display_name'] as String};

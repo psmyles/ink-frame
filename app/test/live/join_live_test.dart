@@ -65,14 +65,14 @@ void main() {
     final repo = FramesRepository(MemoryStore());
     final link = FrameLink.parse(FrameLink([address]).toHttps())!;
     expect(link.isInvite, isFalse);
-    expect(await repo.signInAll(link.frames, member), 0);
+    expect(await repo.signInAll(link.frames, member), isEmpty);
     expect(await repo.load(), [address]);
     expect((await repo.cached(address))!.ownerName, 'Priya');
   });
 
   test('frames you are not on are skipped', () async {
     final repo = FramesRepository(MemoryStore());
-    expect(await repo.signInAll([address], outsider), 1);
+    expect(await repo.signInAll([address], outsider), [address]);
     expect(await repo.load(), isEmpty);
   });
 

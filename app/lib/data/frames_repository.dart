@@ -53,11 +53,21 @@ class FramesRepository {
     return c;
   }
 
-  /// Signs in to a frame's project, without adding it to this device yet.
+  /// Signs in to a frame's project, without adding it to this device yet. Each
+  /// sign-in gets a new connection (the previous one is closed), so nothing keeps
+  /// using the session from before (FramesNotifier.signedIn refreshes the screens).
   Future<FrameConnection> signIn(FrameAddress address, Credential credential) async {
-    final c = connection(address);
-    await c.signIn(credential);
+    final c = _connect(address, _store);
+    try {
+      await c.signIn(credential);
+    } catch (_) {
+      await c.dispose();
+      rethrow;
+    }
+    final previous = _connections[address];
+    _connections[address] = c;
     _restored[address] = Future.value(true);
+    await previous?.dispose();
     return c;
   }
 
@@ -69,10 +79,10 @@ class FramesRepository {
     return role;
   }
 
-  /// Returning on a new device: sign in to each frame in a link and keep the ones
-  /// you're still on. Returns how many were skipped because you're not on them.
-  Future<int> signInAll(List<FrameAddress> frames, Credential credential) async {
-    var skipped = 0;
+  /// Returning on a new device: sign in to each frame (from a link or the directory)
+  /// and keep the ones you're still on. Returns the ones skipped because you're not.
+  Future<List<FrameAddress>> signInAll(List<FrameAddress> frames, Credential credential) async {
+    final skipped = <FrameAddress>[];
     for (final f in frames) {
       final c = await signIn(f, credential);
       try {
@@ -80,7 +90,7 @@ class FramesRepository {
         await add(f);
       } on ApiException catch (e) {
         if (e.code != ApiException.notMember) rethrow;
-        skipped++;
+        skipped.add(f);
         await c.signOut();
       }
     }

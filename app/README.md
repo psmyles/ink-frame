@@ -33,6 +33,7 @@ password (a new dev user is created) → your name.
 | `GOOGLE_DESKTOP_CLIENT_ID`, `GOOGLE_DESKTOP_CLIENT_SECRET` | Google sign-in on Windows/Linux (browser + loopback). The ID defaults to ours; the secret comes from `.env.local` (Google treats it as public, but it stays out of git) |
 | `APPLE_SIGN_IN` | Sign in with Apple on iOS/macOS; default `true` (team `48QFANT8RD`) |
 | `PAGES_URL` | the `central/site` address (default `https://psmyles.github.io/ink-frame`) |
+| `DIRECTORY_URL` | the directory (`central/directory/`) that finds your frames when you sign in on a new device; empty turns it off (then a link is needed) |
 
 Sign-in buttons only appear for providers that are configured.
 

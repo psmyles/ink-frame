@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +55,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       ),
     );
     if (ok != true) return;
+    unawaited(ref.read(frameDirectoryProvider).signOut());
     await ref.read(framesProvider.notifier).signOutAll();
     if (mounted) context.go('/welcome');
   }
@@ -111,14 +114,19 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     if (deletePhotos == null) return;
 
     final failed = <String>[];
+    final deleted = <FrameAddress>[];
     for (final f in joined) {
       try {
         await ref.read(frameApiProvider(f)).deleteMe(deletePhotos: deletePhotos);
         await ref.read(framesProvider.notifier).remove(f);
+        deleted.add(f);
       } on ApiException {
         failed.add(nameOf(f));
       }
     }
+    // The directory forgets you once you're on no frames (owned ones block this).
+    final directory = ref.read(frameDirectoryProvider);
+    unawaited(failed.isEmpty && owned.isEmpty ? directory.forget() : directory.remove(deleted));
     if (!mounted) return;
     if (failed.isNotEmpty) {
       _snack(l.deleteFailed(failed.join(', ')));

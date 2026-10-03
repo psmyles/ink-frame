@@ -7,6 +7,13 @@ abstract final class AppConfig {
     defaultValue: 'https://psmyles.github.io/ink-frame',
   );
 
+  /// The directory (`central/directory/`): finds your frames when you sign in on a
+  /// new device. Empty = off (signing in on a new device then needs a link).
+  static const directoryUrl = String.fromEnvironment(
+    'DIRECTORY_URL',
+    defaultValue: 'https://ink-frame-directory.psmyles.workers.dev',
+  );
+
   /// Google OAuth client IDs (PLAN.md §6.1), Google Cloud project `ink-frame-510506`,
   /// for the bundle/package ID `com.psmyles.inkframe`. Public by design; a fork with
   /// its own IDs overrides them with --dart-define. Empty = Google not offered.
