@@ -85,6 +85,7 @@ const SettingsPatch = z.strictObject({
   quiet_start: LocalTime.nullable(),
   quiet_end: LocalTime.nullable(),
   timezone: Timezone,
+  low_battery_pct: z.int().min(5).max(50).nullable(),
 }).partial().refine((o) => Object.keys(o).length > 0, "Send at least one setting.");
 
 app.patch("/frame/settings", async (c) => {

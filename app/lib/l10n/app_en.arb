@@ -322,5 +322,229 @@
       }
     }
   },
-  "couldntLoad": "Couldn't load this photo."
+  "couldntLoad": "Couldn't load this photo.",
+  "settings": "Settings",
+  "people": "People",
+  "storage": "Storage",
+  "frameName": "Name",
+  "renameTitle": "Rename the frame",
+  "save": "Save",
+  "sectionPhotos": "Photos",
+  "sectionChecking": "Checking for new photos",
+  "sectionBattery": "Battery",
+  "sectionHardware": "The frame",
+  "changePhotoEvery": "Change photo every",
+  "order": "Order",
+  "orderShuffle": "Shuffle",
+  "orderInOrder": "In order",
+  "quietHours": "Quiet hours",
+  "quietHoursHint": "The frame won't change photos during these hours.",
+  "quietFrom": "From",
+  "quietTo": "To",
+  "timeZone": "Time zone",
+  "searchTimeZones": "Search for a city",
+  "checkForNewPhotos": "Check for new photos",
+  "checkMoreOftenHint": "More often uses more battery.",
+  "lowBatteryWarning": "Low battery warning",
+  "lowBatteryHint": "Shows a warning when the battery drops below this.",
+  "off": "Off",
+  "percent": "{value} %",
+  "@percent": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "frameModel": "Model",
+  "hardwareConnected": "Connected · software {version}",
+  "@hardwareConnected": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "hardwareConnectedNoVersion": "Connected",
+  "hardwareNotConnected": "Not connected yet",
+  "batteryNow": "Battery now: {value} %",
+  "@batteryNow": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "onlyOwnerChanges": "Only {name} can change these settings.",
+  "@onlyOwnerChanges": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saved": "Saved",
+  "savedNextCheck": "Saved · the frame gets it at its next check",
+  "couldntSave": "Couldn't save. Try again.",
+  "hoursCount": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@hoursCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysCount": "{count, plural, =1{1 day} other{{count} days}}",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteSomeone": "Invite someone",
+  "inviteTitle": "Invite someone to add photos",
+  "inviteExplain": "They scan this with their phone's camera, or open the link.",
+  "shareLink": "Share link",
+  "copyLink": "Copy link",
+  "copyCode": "Copy code",
+  "copied": "Copied",
+  "inviteCode": "Invite code",
+  "inviteOptions": "Options",
+  "worksFor": "Works for",
+  "onePerson": "1 person",
+  "upToTen": "Up to 10 people",
+  "expiresIn": "Expires in",
+  "inviteShareText": "Join {frame} on Ink Frame to add photos: {link}",
+  "@inviteShareText": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "makingInvite": "Making an invite…",
+  "activeInvites": "Invites",
+  "inviteForOne": "For 1 person · expires {date}",
+  "@inviteForOne": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteForMany": "{used} of {max} joined · expires {date}",
+  "@inviteForMany": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "revoke": "Revoke",
+  "justYou": "Just you so far",
+  "ownerBadge": "Owner",
+  "youBadge": "You",
+  "removePerson": "Remove",
+  "removePersonConfirm": "Remove {name} from {frame}? Their photos stay; you can delete them.",
+  "@removePersonConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveFrame": "Leave this frame",
+  "leaveFrameConfirm": "Leave {frame}? You'll stop seeing its photos. Photos you added stay.",
+  "@leaveFrameConfirm": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
+  "storageUsed": "{used} of {limit}",
+  "@storageUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "freePlan": "Free Supabase plan",
+  "photoCount": "{count, plural, =1{1 photo} other{{count} photos}}",
+  "@photoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageNote": "The frame's own downloads aren't counted here.",
+  "storageByPerson": "By person",
+  "storageGettingFull": "{frame}'s storage is getting full ({value} %).",
+  "@storageGettingFull": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "seeStorage": "See storage",
+  "yourName": "Your name",
+  "yourNameHint": "What the others see, on every frame you're on.",
+  "nameUpdated": "Name updated",
+  "nameUpdateFailed": "Couldn't update your name on {frames}.",
+  "@nameUpdateFailed": {
+    "placeholders": {
+      "frames": {
+        "type": "String"
+      }
+    }
+  },
+  "anotherDevice": "Use on another device",
+  "anotherDeviceExplain": "On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.",
+  "deleteAccount": "Delete my account",
+  "deleteAccountBody": "You'll leave these frames and your account on them is deleted:",
+  "deletePhotosToo": "Also delete my photos",
+  "deleteOwnedBlock": "You set up {frames}. To delete your account, those frames have to be deleted first, which isn't possible in the app yet.",
+  "@deleteOwnedBlock": {
+    "placeholders": {
+      "frames": {
+        "type": "String"
+      }
+    }
+  },
+  "typeDelete": "Type DELETE to confirm",
+  "deleteWord": "DELETE",
+  "deleteAccountButton": "Delete account",
+  "deleteFailed": "Couldn't delete your account on {frames}. Try again.",
+  "@deleteFailed": {
+    "placeholders": {
+      "frames": {
+        "type": "String"
+      }
+    }
+  },
+  "scanQr": "Scan QR code",
+  "scanHint": "Point the camera at the invite's QR code.",
+  "notAnInvite": "That QR code isn't an Ink Frame link."
 }

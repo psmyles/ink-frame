@@ -19,7 +19,11 @@ import 'package:ink_frame/features/frame/frame_screen.dart';
 import 'package:ink_frame/imaging/dither.dart' show preview;
 import 'package:ink_frame/imaging/auto.dart' show faithful;
 import 'package:ink_frame/imaging/palette.dart';
+import 'package:ink_frame/features/people/people_screen.dart';
 import 'package:ink_frame/features/prepare/frame_canvas.dart';
+import 'package:ink_frame/features/settings/settings_screen.dart';
+import 'package:ink_frame/features/storage/storage_screen.dart';
+import 'package:ink_frame/widgets/side_panel.dart';
 import 'package:ink_frame/features/prepare/prepare_session.dart';
 import 'package:ink_frame/features/prepare/source_photo.dart';
 import 'package:ink_frame/imaging/pipeline.dart';
@@ -30,6 +34,7 @@ import 'package:ink_frame/state/photos.dart';
 import 'package:ink_frame/state/providers.dart';
 import 'package:ink_frame/theme/theme.dart';
 
+import '../widget/fake_frame_api.dart';
 import '../widget/frame_screen_test.dart' as fs;
 import '../widget/prepare_screen_test.dart' as ps;
 import 'package:ink_frame/features/prepare/prepare_screen.dart';
@@ -197,4 +202,63 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     });
   }
+
+  // Phase 3d screens with the fake API, dark mode.
+  const me = Member(userId: 'priya', role: Role.owner, displayName: 'Priya');
+  const alice = Member(userId: 'alice', role: Role.member, displayName: 'Alice');
+  const bob = Member(userId: 'bob', role: Role.member, displayName: 'Bob');
+  FakeFrameApi api() => FakeFrameApi(
+        members: [me, alice, bob],
+        invites: [Invite(id: 'i1', expiresAt: DateTime(2026, 10, 10), maxUses: 10, uses: 2)],
+        usage: sampleUsage(users: [
+          const UsageEntry(images: 30, bytes: 200 * 1024 * 1024, userId: 'priya'),
+          const UsageEntry(images: 12, bytes: 80 * 1024 * 1024, userId: 'alice'),
+          const UsageEntry(images: 6, bytes: 32 * 1024 * 1024, userId: 'bob'),
+        ]),
+      );
+  const phone = Size(400, 860);
+
+  testWidgets('3d settings owner', (t) async {
+    await pumpFrameScreen(t, () => const SettingsScreen(address: fs.kitchen),
+        address: fs.kitchen, me: me, owner: me, api: api(), size: const Size(400, 1250), dark: true);
+    await shot(t, '3d_settings_owner');
+  });
+  testWidgets('3d settings member', (t) async {
+    await pumpFrameScreen(t, () => const SettingsScreen(address: fs.kitchen),
+        address: fs.kitchen, me: alice, owner: me, api: api(), size: phone, dark: true);
+    await shot(t, '3d_settings_member');
+  });
+  testWidgets('3d people', (t) async {
+    await pumpFrameScreen(t, () => const PeopleScreen(address: fs.kitchen),
+        address: fs.kitchen, me: me, owner: me, api: api(), size: phone, dark: true);
+    await shot(t, '3d_people');
+    await t.tap(find.text('Invite someone'));
+    await t.pumpAndSettle();
+    await shot(t, '3d_invite_sheet');
+  });
+  testWidgets('3d storage', (t) async {
+    await pumpFrameScreen(t, () => const StorageScreen(address: fs.kitchen),
+        address: fs.kitchen, me: me, owner: me, api: api(), size: phone, dark: true);
+    await shot(t, '3d_storage');
+  });
+  testWidgets('3d desktop side panel', (t) async {
+    await pumpFrameScreen(
+      t,
+      () => Builder(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Kitchen')),
+          body: Center(
+            child: FilledButton(
+              onPressed: () => openPanel<void>(context, (_) => const SettingsScreen(address: fs.kitchen)),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+      address: fs.kitchen, me: me, owner: me, api: api(), size: const Size(1300, 820), dark: true,
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await shot(t, '3d_desktop_panel');
+  });
 }

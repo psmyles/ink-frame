@@ -273,7 +273,8 @@ paths:
         Owner only. Send only the fields to change. `quiet_start` and `quiet_end` must
         end up both set or both `null`; they may span midnight. Changes reach the frame
         at its next sync (`settings` is returned on every sync, so `manifest_version`
-        is not bumped).
+        is not bumped). `low_battery_pct` is for the app only: changing just that leaves
+        `up_to_date` as it was.
       security:
         - userJwt: []
       parameters:
@@ -998,7 +999,7 @@ components:
     Frame:
       type: object
       required: [id, name, model_id, connected, up_to_date, image_interval_s, display_order, sync_interval_s,
-                 quiet_start, quiet_end, timezone]
+                 quiet_start, quiet_end, timezone, low_battery_pct]
       properties:
         id: { $ref: '#/components/schemas/Uuid' }
         name: { $ref: '#/components/schemas/FrameName' }
@@ -1023,6 +1024,12 @@ components:
         timezone:
           type: string
           description: IANA name, e.g. `Europe/Berlin`.
+        low_battery_pct:
+          type: [integer, 'null']
+          description: >-
+            The app warns when `battery_pct` drops below this; `null` = no warning.
+            App-only: not sent to the hardware, so changing it doesn't make the frame
+            "Changes waiting". Default 20.
 
     FrameSettingsPatch:
       type: object
@@ -1046,6 +1053,11 @@ components:
           type: string
           maxLength: 64
           description: IANA name; must be in the bundled timezone table.
+        low_battery_pct:
+          type: [integer, 'null']
+          minimum: 5
+          maximum: 50
+          description: Battery warning level in percent; `null` turns the warning off.
 
     UsageEntry:
       type: object

@@ -12,15 +12,14 @@ class FrameStatus {
   /// When the frame should check next; null if it's already overdue.
   final DateTime? nextCheck;
 
-  /// Battery percentage when below [lowBatteryPct].
+  /// Battery percentage when below the frame's warning level.
   final int? lowBattery;
-
-  static const lowBatteryPct = 20;
 
   bool get isWarning => kind == StatusKind.notCheckedIn || lowBattery != null;
 
   factory FrameStatus.of(Frame f, DateTime now) {
-    final battery = (f.batteryPct != null && f.batteryPct! < lowBatteryPct) ? f.batteryPct : null;
+    final level = f.lowBatteryPct; // null: the owner turned the warning off
+    final battery = (level != null && f.batteryPct != null && f.batteryPct! < level) ? f.batteryPct : null;
     if (!f.connected) return const FrameStatus(StatusKind.notConnected);
     final seen = f.lastSeenAt;
     if (seen == null) return FrameStatus(StatusKind.firstCheck, lowBattery: battery);

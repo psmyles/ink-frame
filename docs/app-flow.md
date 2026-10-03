@@ -240,7 +240,7 @@ Card = latest photo as the cover, name, "Set up by …" when it isn't yours, and
 - **Up to date** when the frame has received the latest changes; otherwise **"Changes waiting"**.
 - **Next check**: `last_seen_at + sync_interval_s` shown as a time.
 - **Always-visible hint** under the status: *"To show changes now, press the green button on the frame."*
-- **Warnings**: not seen for more than 2× the check interval → "Hasn't checked in since Tuesday. Check the frame's Wi-Fi and battery." Battery < 20 % → "Battery low (15 %)". No hardware → "Not connected yet" + **Connect the frame** (owner).
+- **Warnings**: not seen for more than 2× the check interval → "Hasn't checked in since Tuesday. Check the frame's Wi-Fi and battery." Battery below the frame's **low battery warning** level (owner setting, §4.3; default 20 %, Off = no warning) → "Battery low (15 %)". No hardware → "Not connected yet" + **Connect the frame** (owner).
 - The Frame screen header shows the same plus battery and signal.
 
 ### 4.3 Settings (owner edits; others see them read-only)
@@ -252,10 +252,11 @@ Card = latest photo as the cover, name, "Set up by …" when it isn't yours, and
 | Quiet hours | toggle + two time pickers | e.g. 22:00–07:00; "The frame won't change photos during these hours" |
 | Time zone | searchable list | defaults to the owner's phone; shown as "Europe/Berlin (CET)" |
 | Check for new photos | picker | 1 h … 2 days, **1 day**; hint: "More often uses more battery" |
+| Low battery warning | picker | Off, 10 %, **20 %**, 30 %; "Shows a warning when the battery drops below this." App-only (the hardware never gets it), so it only says "Saved" and doesn't make the frame "Changes waiting". Notifications for it come in 3g (who gets them: decided then; default the owner) |
 | Frame model | read-only row + "Change" | changing warns "All N photos will be removed, because they were made for the <old> screen", then clears them |
 | Hardware | status + actions | "Connected · reTerminal E1002 · firmware 1.0.2" · **Connect new hardware** (same model keeps the photos) · **Disconnect** (the frame wipes itself at its next check) |
 
-Each change saves immediately (`PATCH`) with a small "Saved · the frame gets it at its next check".
+Each change saves immediately (`PATCH`) with a small "Saved · the frame gets it at its next check" (name and battery warning: just "Saved"); a failed save says "Couldn't save. Try again." and shows the old value. Everyone else sees **plain values** with "Only Priya can change these settings." (greyed-out controls would hide which option is set). Settings ends with a **Storage** row ("312 MB of 1 GB" → §5.3). Built in 3d: everything except Frame model "Change" (3e) and the hardware actions (3f). On a wide window Settings, People and Storage open as a side sheet from the right; on narrow ones, full screen.
 
 ### 4.4 Owner tools (bottom of Settings, owner only)
 - **Supabase account**: connected / **Reconnect** (after a reinstall or on a new device).
@@ -267,7 +268,8 @@ Each change saves immediately (`PATCH`) with a small "Saved · the frame gets it
 ## 5. People
 
 ### 5.1 Invites (D4)
-- **Frame → People → Invite someone to add photos** (owner): a sheet with a **QR code**, **Share link** (system share sheet), **Copy link**, and **Copy code**. Options (collapsed): "Link works for 1 person / up to 10 people", "Expires in 1 day / **7 days** / 30 days".
+- **Frame → People → Invite someone** (owner): a sheet (dialog on wide windows) with a **QR code**, the **invite code**, **Share link** (system share sheet), **Copy link**, and **Copy code**. Options (collapsed): "Works for 1 person / up to 10 people", "Expires in 1 day / **7 days** / 30 days". An invite with the defaults is made as soon as the sheet opens; changing an option makes a new one and revokes the one shown before.
+- **Joining by QR** (phones): Join and "Already use Ink Frame? Sign in" have **Scan QR code** above the paste field; computers paste.
 - **Link format**: `https://<pages-domain>/join#u=<project_url>&k=<publishable_key>&c=<code>`. The page shows "Open in Ink Frame", store badges, and the code as text. Everything after `#` never reaches the server. The app registers `inkframe://join?...` too; the page redirects to it.
 - **Active invites** list under the people, with **Revoke** (owner).
 
@@ -328,7 +330,7 @@ Consequence to accept: someone who joined with **Apple** on an iPhone can't sign
 - **Your name** (edit): applies to every frame you're on (the app updates each).
 - **Use on another device** (§1.4).
 - **Sign out**.
-- **Delete my account**: lists your frames. For frames set up by others: you leave, with an "Also delete my photos" checkbox. For frames you own: they are **deleted** (shown by name, with the §4.4 warning). One typed confirmation for the lot.
+- **Delete my account** (3d: frames set up by others only; while you own a frame it explains that the frame has to be deleted first, which arrives with frame deletion in 3e): lists your frames. For frames set up by others: you leave, with an "Also delete my photos" checkbox. For frames you own: they are **deleted** (shown by name, with the §4.4 warning). One typed confirmation for the lot.
 - About/licences; **Developer** (dev mode toggle via 7 taps on the version).
 
 ---

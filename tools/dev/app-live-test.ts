@@ -34,12 +34,15 @@ try {
     url: PROJECT_URL,
     key: PUBLIC_KEY,
     code: inv.body.code,
+    owner_email: owner.email,
+    owner_password: owner.password,
     member_email: `app-member-${run}@test.invalid`,
     outsider_email: `app-outsider-${run}@test.invalid`,
     password: crypto.randomUUID(),
   };
   const p = new Deno.Command("flutter", {
-    args: ["test", "test/live", ...Deno.args],
+    // One file at a time: they share the frame (one renames it briefly).
+    args: ["test", "test/live", "--concurrency=1", ...Deno.args],
     cwd: appDir,
     env: { INKFRAME_LIVE: JSON.stringify(fixture) },
     stdout: "inherit",

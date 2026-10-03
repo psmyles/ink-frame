@@ -9,9 +9,11 @@ import 'package:ink_frame/data/frame_link.dart';
 import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/models.dart';
 import 'package:ink_frame/data/secure_store.dart';
+import 'package:ink_frame/state/frame_admin.dart';
 import 'package:ink_frame/state/photos.dart';
 import 'package:ink_frame/state/providers.dart';
 
+import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' as fs;
 
 const kitchen = FrameAddress('https://aaaaaaaaaaaaaaaaaaaa.supabase.co', 'sb_publishable_aaaaaaaaaaaa');
@@ -63,6 +65,7 @@ Future<void> pumpApp(WidgetTester tester, Size size, {List<FrameAddress> frames 
             fs.palette,
           )),
       memberNamesProvider.overrideWith((ref, a) async => const {}),
+      frameApiProvider.overrideWith((ref, a) => FakeFrameApi()),
     ],
     retry: (_, _) => null,
     child: const InkFrameApp(),

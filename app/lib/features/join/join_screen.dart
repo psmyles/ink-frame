@@ -12,6 +12,7 @@ import '../../data/frame_connection.dart';
 import '../../data/frame_link.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
+import 'scan_screen.dart';
 
 enum _Step { link, signIn, name }
 
@@ -71,6 +72,16 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     });
     final fresh = ref.read(lastCredentialProvider.notifier).fresh;
     if (link != null && fresh != null) _signIn(() async => fresh);
+  }
+
+  /// Phones scan the QR code; computers paste the link.
+  static bool get _canScan => defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android;
+
+  Future<void> _scan() async {
+    final raw = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const ScanScreen()));
+    if (raw == null || !mounted) return;
+    _linkField.text = raw;
+    _submitLink();
   }
 
   Future<void> _paste() async {
@@ -199,9 +210,13 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _help(widget.returning ? l.signInLinkHelp : l.joinLinkHelp),
+          if (_canScan) ...[
+            FilledButton.tonalIcon(onPressed: _scan, icon: const Icon(Icons.qr_code_scanner), label: Text(l.scanQr)),
+            const SizedBox(height: 16),
+          ],
           TextField(
             controller: _linkField,
-            autofocus: true,
+            autofocus: !_canScan,
             keyboardType: TextInputType.url,
             autocorrect: false,
             maxLines: 3,

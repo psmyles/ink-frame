@@ -35,7 +35,7 @@ const noSession = {
 export const admin = createClient(PROJECT_URL, SECRET_KEY, noSession);
 export const anon = createClient(PROJECT_URL, PUBLIC_KEY, noSession);
 
-export type User = { id: string; email: string; token: string; db: SupabaseClient };
+export type User = { id: string; email: string; password: string; token: string; db: SupabaseClient };
 
 const RUN = crypto.randomUUID().slice(0, 8);
 export const created = { users: [] as string[], frame: false };
@@ -49,7 +49,7 @@ export async function newUser(label: string): Promise<User> {
   const db = createClient(PROJECT_URL, PUBLIC_KEY, noSession);
   const s = await db.auth.signInWithPassword({ email, password });
   if (s.error) throw s.error;
-  return { id: data.user.id, email, token: s.data.session.access_token, db };
+  return { id: data.user.id, email, password, token: s.data.session.access_token, db };
 }
 
 const q = (s: string) => `'${s.replaceAll("'", "''")}'`;

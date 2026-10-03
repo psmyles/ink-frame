@@ -21,14 +21,14 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `deno run --allow-read --allow-net --allow-env tools/dev/migrate.ts [--status]`: apply pending migrations and the seed to the dev project (reads `backend/.env.local`).
 - New tables or functions in `public` get no client privileges by default (0002 revokes them); grant `SELECT` explicitly where members need to read.
 - `set -a; . backend/.env.local; set +a; supabase functions deploy device-api app-api --project-ref "$SUPABASE_PROJECT_REF" --use-api --workdir backend`: deploy the Edge Functions (no Docker needed).
-- `deno run --allow-read --allow-write tools/dev/gen-tz.ts`: regenerate `functions/_shared/tz.ts` from the system tzdata.
+- `deno run --allow-read --allow-write tools/dev/gen-tz.ts`: regenerate `functions/_shared/tz.ts` and the app's `lib/data/timezones.dart` from the system tzdata.
 - Pin `npm:` versions in the functions to releases at least 24 h old; Deno refuses newer ones by default.
 - `deno run --allow-all tools/dev/sim-scenario.ts`: the §12.1 scenario with the real `frame_sim` against the dev project (same owner requirement as the tests).
 - `deno run --allow-read --allow-net --allow-env tools/dev/reset-dev.ts --yes`: drop and re-apply all migrations on the dev project (unreleased migrations only).
 - `deno test central/tests/`: link parsing for the `central/site` pages (published to GitHub Pages by `.github/workflows/pages.yml`).
 - `cd app && flutter test`: app tests without network (incl. golden parity for `lib/imaging`). `node tools/golden/gen-vectors.mjs`: regenerate `shared/test-vectors/dither.json` from the reference. `deno run --allow-all tools/dev/app-live-test.ts`: the app's data layer against the dev project. More in `app/README.md`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/auth-providers.ts [--check]`: turn on Google/Apple sign-in on the dev project with the client IDs in `shared/oauth-clients.json` (provision.ts uses the same file).
-- `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists).
+- `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists). `--owner-login` (needs `--allow-write`) lets you sign in as its owner in developer mode; the password goes into `backend/.env.local` as `DEV_OWNER_PASSWORD`, never to the terminal.
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.
 - `deno test --allow-net --allow-env --allow-read backend/supabase/tests/`: integration tests against the project in `backend/.env.local` (~100 s; sets up the project's frame itself, cleans up after itself; skips if the project already has a real owner).

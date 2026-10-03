@@ -933,6 +933,528 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load this photo.'**
   String get couldntLoad;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @people.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get people;
+
+  /// No description provided for @storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storage;
+
+  /// No description provided for @frameName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get frameName;
+
+  /// No description provided for @renameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename the frame'**
+  String get renameTitle;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @sectionPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get sectionPhotos;
+
+  /// No description provided for @sectionChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for new photos'**
+  String get sectionChecking;
+
+  /// No description provided for @sectionBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get sectionBattery;
+
+  /// No description provided for @sectionHardware.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame'**
+  String get sectionHardware;
+
+  /// No description provided for @changePhotoEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo every'**
+  String get changePhotoEvery;
+
+  /// No description provided for @order.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get order;
+
+  /// No description provided for @orderShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get orderShuffle;
+
+  /// No description provided for @orderInOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'In order'**
+  String get orderInOrder;
+
+  /// No description provided for @quietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHours;
+
+  /// No description provided for @quietHoursHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame won\'t change photos during these hours.'**
+  String get quietHoursHint;
+
+  /// No description provided for @quietFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get quietFrom;
+
+  /// No description provided for @quietTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get quietTo;
+
+  /// No description provided for @timeZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get timeZone;
+
+  /// No description provided for @searchTimeZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a city'**
+  String get searchTimeZones;
+
+  /// No description provided for @checkForNewPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for new photos'**
+  String get checkForNewPhotos;
+
+  /// No description provided for @checkMoreOftenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'More often uses more battery.'**
+  String get checkMoreOftenHint;
+
+  /// No description provided for @lowBatteryWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Low battery warning'**
+  String get lowBatteryWarning;
+
+  /// No description provided for @lowBatteryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a warning when the battery drops below this.'**
+  String get lowBatteryHint;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// No description provided for @percent.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} %'**
+  String percent(int value);
+
+  /// No description provided for @frameModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get frameModel;
+
+  /// No description provided for @hardwareConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · software {version}'**
+  String hardwareConnected(String version);
+
+  /// No description provided for @hardwareConnectedNoVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get hardwareConnectedNoVersion;
+
+  /// No description provided for @hardwareNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected yet'**
+  String get hardwareNotConnected;
+
+  /// No description provided for @batteryNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery now: {value} %'**
+  String batteryNow(int value);
+
+  /// No description provided for @onlyOwnerChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {name} can change these settings.'**
+  String onlyOwnerChanges(String name);
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @savedNextCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved · the frame gets it at its next check'**
+  String get savedNextCheck;
+
+  /// No description provided for @couldntSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Try again.'**
+  String get couldntSave;
+
+  /// No description provided for @hoursCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String hoursCount(int count);
+
+  /// No description provided for @daysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String daysCount(int count);
+
+  /// No description provided for @inviteSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone'**
+  String get inviteSomeone;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone to add photos'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'They scan this with their phone\'s camera, or open the link.'**
+  String get inviteExplain;
+
+  /// No description provided for @shareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareLink;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLink;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @inviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCode;
+
+  /// No description provided for @inviteOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get inviteOptions;
+
+  /// No description provided for @worksFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Works for'**
+  String get worksFor;
+
+  /// No description provided for @onePerson.
+  ///
+  /// In en, this message translates to:
+  /// **'1 person'**
+  String get onePerson;
+
+  /// No description provided for @upToTen.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 10 people'**
+  String get upToTen;
+
+  /// No description provided for @expiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in'**
+  String get expiresIn;
+
+  /// No description provided for @inviteShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {frame} on Ink Frame to add photos: {link}'**
+  String inviteShareText(String frame, String link);
+
+  /// No description provided for @makingInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Making an invite…'**
+  String get makingInvite;
+
+  /// No description provided for @activeInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Invites'**
+  String get activeInvites;
+
+  /// No description provided for @inviteForOne.
+  ///
+  /// In en, this message translates to:
+  /// **'For 1 person · expires {date}'**
+  String inviteForOne(String date);
+
+  /// No description provided for @inviteForMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {max} joined · expires {date}'**
+  String inviteForMany(int used, int max, String date);
+
+  /// No description provided for @revoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revoke;
+
+  /// No description provided for @justYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Just you so far'**
+  String get justYou;
+
+  /// No description provided for @ownerBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get ownerBadge;
+
+  /// No description provided for @youBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youBadge;
+
+  /// No description provided for @removePerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removePerson;
+
+  /// No description provided for @removePersonConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from {frame}? Their photos stay; you can delete them.'**
+  String removePersonConfirm(String name, String frame);
+
+  /// No description provided for @leaveFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this frame'**
+  String get leaveFrame;
+
+  /// No description provided for @leaveFrameConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave {frame}? You\'ll stop seeing its photos. Photos you added stay.'**
+  String leaveFrameConfirm(String frame);
+
+  /// No description provided for @storageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit}'**
+  String storageUsed(String used, String limit);
+
+  /// No description provided for @freePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Supabase plan'**
+  String get freePlan;
+
+  /// No description provided for @photoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo} other{{count} photos}}'**
+  String photoCount(int count);
+
+  /// No description provided for @storageNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame\'s own downloads aren\'t counted here.'**
+  String get storageNote;
+
+  /// No description provided for @storageByPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'By person'**
+  String get storageByPerson;
+
+  /// No description provided for @storageGettingFull.
+  ///
+  /// In en, this message translates to:
+  /// **'{frame}\'s storage is getting full ({value} %).'**
+  String storageGettingFull(String frame, int value);
+
+  /// No description provided for @seeStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'See storage'**
+  String get seeStorage;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get yourName;
+
+  /// No description provided for @yourNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the others see, on every frame you\'re on.'**
+  String get yourNameHint;
+
+  /// No description provided for @nameUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Name updated'**
+  String get nameUpdated;
+
+  /// No description provided for @nameUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update your name on {frames}.'**
+  String nameUpdateFailed(String frames);
+
+  /// No description provided for @anotherDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use on another device'**
+  String get anotherDevice;
+
+  /// No description provided for @anotherDeviceExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.'**
+  String get anotherDeviceExplain;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll leave these frames and your account on them is deleted:'**
+  String get deleteAccountBody;
+
+  /// No description provided for @deletePhotosToo.
+  ///
+  /// In en, this message translates to:
+  /// **'Also delete my photos'**
+  String get deletePhotosToo;
+
+  /// No description provided for @deleteOwnedBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'You set up {frames}. To delete your account, those frames have to be deleted first, which isn\'t possible in the app yet.'**
+  String deleteOwnedBlock(String frames);
+
+  /// No description provided for @typeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get typeDelete;
+
+  /// No description provided for @deleteWord.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get deleteWord;
+
+  /// No description provided for @deleteAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountButton;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your account on {frames}. Try again.'**
+  String deleteFailed(String frames);
+
+  /// No description provided for @scanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get scanQr;
+
+  /// No description provided for @scanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the invite\'s QR code.'**
+  String get scanHint;
+
+  /// No description provided for @notAnInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'That QR code isn\'t an Ink Frame link.'**
+  String get notAnInvite;
 }
 
 class _AppLocalizationsDelegate

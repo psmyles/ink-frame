@@ -339,6 +339,18 @@ Deno.test({
         expectError(await patch(A.token, {}), 400, "invalid_request");
         expectError(await patch(B.token, { display_order: "sequential" }), 403, "not_owner");
         assertEquals((await patch(A.token, { quiet_start: null, quiet_end: null })).body.quiet_start, null);
+
+        // The battery warning is app-only: it doesn't make the frame "Changes waiting".
+        await sync(device.secret, version, imageIds);
+        assertEquals(await upToDate(), true);
+        const b = await patch(A.token, { low_battery_pct: 30 });
+        assertEquals(b.status, 200, JSON.stringify(b.body));
+        assertEquals([b.body.low_battery_pct, b.body.up_to_date], [30, true]);
+        assertEquals((await patch(A.token, { low_battery_pct: null })).body.low_battery_pct, null);
+        expectError(await patch(A.token, { low_battery_pct: 2 }), 400, "invalid_request");
+        expectError(await patch(B.token, { low_battery_pct: 10 }), 403, "not_owner");
+        const row = await B.db.from("frame").select("low_battery_pct").single();
+        assertEquals(row.data?.low_battery_pct, null, "members read it directly");
       });
 
       await t.step("rename; usage", async () => {

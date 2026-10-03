@@ -93,6 +93,9 @@ class FramesRepository {
     return raw == null ? null : (jsonDecode(raw) as Map<String, dynamic>)['display_name'] as String?;
   }
 
+  /// Remembers the name you go by (Account → Your name), for the next frame you join.
+  Future<void> setDisplayName(String name) => _store.write('profile', jsonEncode({'display_name': name}));
+
   /// Last known name, owner and role, so Home can say which frame is asleep or
   /// offline when it can't be read. Stored under `cache:<ref>`.
   Future<CachedFrame?> cached(FrameAddress address) async {

@@ -4,6 +4,9 @@
 //   deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--name Kitchen] [--uses 5]
 //   deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts --invite     (another link)
 //   deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts --remove     (so the tests can run)
+//   deno run --allow-read --allow-write --allow-net --allow-env tools/dev/dev-frame.ts --owner-login
+//     (sign in as the owner in the app's developer mode: the password goes into
+//      backend/.env.local as DEV_OWNER_PASSWORD, never to the terminal)
 //
 // The owner (dev-owner@inkframe.invalid) isn't a test user, so the integration tests
 // skip while this frame exists instead of deleting it.
@@ -13,7 +16,7 @@ import { admin, call, PROJECT_URL, PUBLIC_KEY, sql, env } from "../../backend/su
 
 const args = parseArgs(Deno.args, {
   string: ["name", "uses"],
-  boolean: ["invite", "remove"],
+  boolean: ["invite", "remove", "owner-login"],
   default: { name: "Dev frame", uses: "5" },
 });
 const EMAIL = "dev-owner@inkframe.invalid";
@@ -30,9 +33,24 @@ async function ownerSession(password: string) {
   return (await res.json()).access_token as string;
 }
 
-// The owner's password is reset on every run; nobody needs to know it.
+const ENV_FILE = new URL("../../backend/.env.local", import.meta.url);
+
+// DEV_OWNER_PASSWORD from backend/.env.local, if --owner-login set one.
+async function savedOwnerPassword(): Promise<string | undefined> {
+  const text = await Deno.readTextFile(ENV_FILE);
+  return /^DEV_OWNER_PASSWORD=(.+)$/m.exec(text)?.[1].trim();
+}
+
+async function saveOwnerPassword(password: string) {
+  const lines = (await Deno.readTextFile(ENV_FILE)).split("\n").filter((l) => !l.startsWith("DEV_OWNER_PASSWORD="));
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  await Deno.writeTextFile(ENV_FILE, [...lines, `DEV_OWNER_PASSWORD=${password}`, ""].join("\n"));
+}
+
+// The owner's password: the saved one after --owner-login, else a fresh random one
+// each run (nobody needs to know it).
 async function owner(): Promise<{ id: string; token: string }> {
-  const password = crypto.randomUUID();
+  const password = (await savedOwnerPassword()) ?? crypto.randomUUID();
   const [row] = await sql<{ id: string }>(env, `select id from auth.users where email = ${q(EMAIL)}`);
   let id = row?.id;
   if (id) {
@@ -55,6 +73,13 @@ if (args.remove) {
   const [o] = await sql<{ id: string }>(env, `select id from auth.users where email = ${q(EMAIL)}`);
   if (o) await admin.auth.admin.deleteUser(o.id);
   console.log(`Removed the dev frame and its ${users.length} people.`);
+  Deno.exit(0);
+}
+
+if (args["owner-login"]) {
+  if (!(await savedOwnerPassword())) await saveOwnerPassword(crypto.randomUUID());
+  await owner();
+  console.log(`Owner sign-in for the app's developer mode:\n  email:    ${EMAIL}\n  password: DEV_OWNER_PASSWORD in backend/.env.local`);
   Deno.exit(0);
 }
 

@@ -10,14 +10,19 @@ import '../../data/api_error.dart';
 import '../../data/frame_link.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
+import '../../state/frame_admin.dart';
 import '../../state/photos.dart';
 import '../../state/providers.dart';
 import '../../theme/theme.dart';
 import '../../widgets/adaptive_shell.dart';
 import '../../widgets/photo_tile.dart';
+import '../../widgets/side_panel.dart';
 import '../../widgets/status_line.dart';
+import '../people/people_screen.dart';
 import '../prepare/prepare_screen.dart';
 import '../prepare/source_photo.dart';
+import '../settings/settings_screen.dart';
+import '../storage/storage_screen.dart';
 import 'reorder_screen.dart';
 import 'viewer_screen.dart';
 
@@ -221,6 +226,18 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
                       icon: const Icon(Icons.refresh),
                       onPressed: _refresh,
                     ),
+                    if (summary != null) ...[
+                      IconButton(
+                        tooltip: l.people,
+                        icon: const Icon(Icons.people_outline),
+                        onPressed: () => openPanel<void>(context, (_) => PeopleScreen(address: _a)),
+                      ),
+                      IconButton(
+                        tooltip: l.settings,
+                        icon: const Icon(Icons.settings_outlined),
+                        onPressed: () => openPanel<void>(context, (_) => SettingsScreen(address: _a)),
+                      ),
+                    ],
                     if (wide && summary != null)
                       Padding(
                         padding: const EdgeInsets.only(right: 12),
@@ -274,7 +291,9 @@ class _Header extends ConsumerWidget {
     final theme = Theme.of(context);
     final s = view.summary;
     final failed = queue.where((i) => i.status == UploadStatus.failed).toList();
-    final full = failed.any((i) => i.error?.code == 'quota_exceeded');
+    final usage = s == null ? null : ref.watch(usageProvider(address)).value;
+    final full = failed.any((i) => i.error?.code == 'quota_exceeded') || (usage?.full ?? false);
+    final name = view.name ?? l.unknownFrame;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -289,20 +308,31 @@ class _Header extends ConsumerWidget {
           const SizedBox(height: 6),
           Text(l.checkHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         ],
-        if (failed.isNotEmpty)
+        if (full)
           _Notice(
-            text: full ? l.storageFull(view.name ?? l.unknownFrame) : l.uploadsFailed(failed.length),
-            action: full
-                ? null
-                : TextButton(
-                    onPressed: () => ref.read(uploadQueueProvider(address).notifier).retryAll(),
-                    child: Text(l.retryAll),
-                  ),
+            text: l.storageFull(name),
+            action: TextButton(onPressed: () => _openStorage(context, address), child: Text(l.seeStorage)),
+          )
+        else if (failed.isNotEmpty)
+          _Notice(
+            text: l.uploadsFailed(failed.length),
+            action: TextButton(
+              onPressed: () => ref.read(uploadQueueProvider(address).notifier).retryAll(),
+              child: Text(l.retryAll),
+            ),
+          )
+        else if (usage != null && usage.nearlyFull)
+          _Notice(
+            text: l.storageGettingFull(name, (usage.fraction * 100).round()),
+            action: TextButton(onPressed: () => _openStorage(context, address), child: Text(l.seeStorage)),
           ),
       ],
     );
   }
 }
+
+void _openStorage(BuildContext context, FrameAddress address) =>
+    openPanel<void>(context, (_) => StorageScreen(address: address));
 
 class _Notice extends StatelessWidget {
   const _Notice({required this.text, this.action});

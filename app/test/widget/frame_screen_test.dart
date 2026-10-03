@@ -9,9 +9,12 @@ import 'package:ink_frame/features/frame/frame_screen.dart';
 import 'package:ink_frame/imaging/palette.dart';
 import 'package:ink_frame/imaging/png_encoder.dart';
 import 'package:ink_frame/l10n/app_localizations.dart';
+import 'package:ink_frame/state/frame_admin.dart';
 import 'package:ink_frame/state/photos.dart';
 import 'package:ink_frame/state/providers.dart';
 import 'package:ink_frame/theme/theme.dart';
+
+import 'fake_frame_api.dart';
 
 const kitchen = FrameAddress('https://aaaaaaaaaaaaaaaaaaaa.supabase.co', 'sb_publishable_aaaaaaaaaaaa');
 const alice = Member(userId: 'alice', role: Role.member, displayName: 'Alice');
@@ -67,7 +70,10 @@ class FakePhotos extends PhotosNotifier {
 
 late FakePhotos fake;
 
-Future<void> pump(WidgetTester tester, {required Member me, List<FrameImage>? images, bool inOrder = false}) async {
+late FakeFrameApi api;
+
+Future<void> pump(WidgetTester tester,
+    {required Member me, List<FrameImage>? images, bool inOrder = false, Usage? storage}) async {
   tester.view.physicalSize = const Size(420, 860);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -83,6 +89,7 @@ Future<void> pump(WidgetTester tester, {required Member me, List<FrameImage>? im
           )),
       displayBytesProvider.overrideWith((ref, key) async => png),
       memberNamesProvider.overrideWith((ref, a) async => {'alice': 'Alice', 'priya': 'Priya'}),
+      frameApiProvider.overrideWith((ref, a) => api = FakeFrameApi(usage: storage)),
     ],
     child: MaterialApp(
       theme: InkTheme.light(),

@@ -542,4 +542,322 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldntLoad => 'Couldn\'t load this photo.';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get people => 'People';
+
+  @override
+  String get storage => 'Storage';
+
+  @override
+  String get frameName => 'Name';
+
+  @override
+  String get renameTitle => 'Rename the frame';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get sectionPhotos => 'Photos';
+
+  @override
+  String get sectionChecking => 'Checking for new photos';
+
+  @override
+  String get sectionBattery => 'Battery';
+
+  @override
+  String get sectionHardware => 'The frame';
+
+  @override
+  String get changePhotoEvery => 'Change photo every';
+
+  @override
+  String get order => 'Order';
+
+  @override
+  String get orderShuffle => 'Shuffle';
+
+  @override
+  String get orderInOrder => 'In order';
+
+  @override
+  String get quietHours => 'Quiet hours';
+
+  @override
+  String get quietHoursHint =>
+      'The frame won\'t change photos during these hours.';
+
+  @override
+  String get quietFrom => 'From';
+
+  @override
+  String get quietTo => 'To';
+
+  @override
+  String get timeZone => 'Time zone';
+
+  @override
+  String get searchTimeZones => 'Search for a city';
+
+  @override
+  String get checkForNewPhotos => 'Check for new photos';
+
+  @override
+  String get checkMoreOftenHint => 'More often uses more battery.';
+
+  @override
+  String get lowBatteryWarning => 'Low battery warning';
+
+  @override
+  String get lowBatteryHint =>
+      'Shows a warning when the battery drops below this.';
+
+  @override
+  String get off => 'Off';
+
+  @override
+  String percent(int value) {
+    return '$value %';
+  }
+
+  @override
+  String get frameModel => 'Model';
+
+  @override
+  String hardwareConnected(String version) {
+    return 'Connected · software $version';
+  }
+
+  @override
+  String get hardwareConnectedNoVersion => 'Connected';
+
+  @override
+  String get hardwareNotConnected => 'Not connected yet';
+
+  @override
+  String batteryNow(int value) {
+    return 'Battery now: $value %';
+  }
+
+  @override
+  String onlyOwnerChanges(String name) {
+    return 'Only $name can change these settings.';
+  }
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get savedNextCheck => 'Saved · the frame gets it at its next check';
+
+  @override
+  String get couldntSave => 'Couldn\'t save. Try again.';
+
+  @override
+  String hoursCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String daysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inviteSomeone => 'Invite someone';
+
+  @override
+  String get inviteTitle => 'Invite someone to add photos';
+
+  @override
+  String get inviteExplain =>
+      'They scan this with their phone\'s camera, or open the link.';
+
+  @override
+  String get shareLink => 'Share link';
+
+  @override
+  String get copyLink => 'Copy link';
+
+  @override
+  String get copyCode => 'Copy code';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get inviteCode => 'Invite code';
+
+  @override
+  String get inviteOptions => 'Options';
+
+  @override
+  String get worksFor => 'Works for';
+
+  @override
+  String get onePerson => '1 person';
+
+  @override
+  String get upToTen => 'Up to 10 people';
+
+  @override
+  String get expiresIn => 'Expires in';
+
+  @override
+  String inviteShareText(String frame, String link) {
+    return 'Join $frame on Ink Frame to add photos: $link';
+  }
+
+  @override
+  String get makingInvite => 'Making an invite…';
+
+  @override
+  String get activeInvites => 'Invites';
+
+  @override
+  String inviteForOne(String date) {
+    return 'For 1 person · expires $date';
+  }
+
+  @override
+  String inviteForMany(int used, int max, String date) {
+    return '$used of $max joined · expires $date';
+  }
+
+  @override
+  String get revoke => 'Revoke';
+
+  @override
+  String get justYou => 'Just you so far';
+
+  @override
+  String get ownerBadge => 'Owner';
+
+  @override
+  String get youBadge => 'You';
+
+  @override
+  String get removePerson => 'Remove';
+
+  @override
+  String removePersonConfirm(String name, String frame) {
+    return 'Remove $name from $frame? Their photos stay; you can delete them.';
+  }
+
+  @override
+  String get leaveFrame => 'Leave this frame';
+
+  @override
+  String leaveFrameConfirm(String frame) {
+    return 'Leave $frame? You\'ll stop seeing its photos. Photos you added stay.';
+  }
+
+  @override
+  String storageUsed(String used, String limit) {
+    return '$used of $limit';
+  }
+
+  @override
+  String get freePlan => 'Free Supabase plan';
+
+  @override
+  String photoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '1 photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get storageNote => 'The frame\'s own downloads aren\'t counted here.';
+
+  @override
+  String get storageByPerson => 'By person';
+
+  @override
+  String storageGettingFull(String frame, int value) {
+    return '$frame\'s storage is getting full ($value %).';
+  }
+
+  @override
+  String get seeStorage => 'See storage';
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get yourNameHint => 'What the others see, on every frame you\'re on.';
+
+  @override
+  String get nameUpdated => 'Name updated';
+
+  @override
+  String nameUpdateFailed(String frames) {
+    return 'Couldn\'t update your name on $frames.';
+  }
+
+  @override
+  String get anotherDevice => 'Use on another device';
+
+  @override
+  String get anotherDeviceExplain =>
+      'On your other phone or computer, open Ink Frame, choose “Already use Ink Frame? Sign in”, then scan this or paste the link.';
+
+  @override
+  String get deleteAccount => 'Delete my account';
+
+  @override
+  String get deleteAccountBody =>
+      'You\'ll leave these frames and your account on them is deleted:';
+
+  @override
+  String get deletePhotosToo => 'Also delete my photos';
+
+  @override
+  String deleteOwnedBlock(String frames) {
+    return 'You set up $frames. To delete your account, those frames have to be deleted first, which isn\'t possible in the app yet.';
+  }
+
+  @override
+  String get typeDelete => 'Type DELETE to confirm';
+
+  @override
+  String get deleteWord => 'DELETE';
+
+  @override
+  String get deleteAccountButton => 'Delete account';
+
+  @override
+  String deleteFailed(String frames) {
+    return 'Couldn\'t delete your account on $frames. Try again.';
+  }
+
+  @override
+  String get scanQr => 'Scan QR code';
+
+  @override
+  String get scanHint => 'Point the camera at the invite\'s QR code.';
+
+  @override
+  String get notAnInvite => 'That QR code isn\'t an Ink Frame link.';
 }

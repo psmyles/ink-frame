@@ -46,6 +46,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan an invite's QR code.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose photos to show on your frame.</string>
 	<key>UIApplicationSceneManifest</key>
