@@ -553,7 +553,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google client IDs (web, iOS, desktop; Cloud project `ink-frame-510506`) and Apple team `48QFANT8RD` with Sign in with Apple added 2026-10-03 (`shared/oauth-clients.json`); Android client (debug key SHA-1) added the same day
 - [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) → 3e · frame_sim ✅ · dev tools ✅
 - [x] Phase 2 — `docs/app-flow.md` approved 2026-09-26 (D1–D5, D7–D11 as recommended)
-- [ ] Phase 3 — 3a (built; phone + Google/Apple sign-in pending client IDs) · 3b ✅ · 3c (built; to try on desktop and a phone) · 3d · 3e · 3f
+- [ ] Phase 3 — 3a (built; Google sign-in works on Android; Mac/iPhone/Windows sign-in to try) · 3b ✅ · 3c (built; to try on desktop and a phone) · 3d · 3e · 3f
 - [ ] Phase 4 — 4a · 4b · 4c
 - [ ] Phase 5 — release
 
@@ -563,7 +563,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - Supabase free-tier limits today (storage, egress, DB size, Edge Function calls, MAU), the **2 active free projects** rule, and whether daily Edge Function + DB traffic from a frame counts as activity against the **7-day inactivity pause**.
 - ✅ ~~Management API coverage~~: all confirmed with a PAT, see `docs/spikes/a-management-api.md`. **Exception:** no storage-size or egress endpoint (only hourly request counts), so the app shows storage from the database and can't show egress. **2 active free projects** rule confirmed (400, message quoted in the spike doc).
 - Supabase OAuth App: scopes, and whether **PKCE works without a client secret**. If not, add a small token-exchange function in `central/`.
-- Google provider: native ID-token sign-in **without a client secret**, and several client IDs (iOS, Android, Web, Desktop) allowed at once. Apple provider: bundle ID only for native. **Config part ✅** (accepted with no secret; IDs stored as one comma-separated list, `docs/spikes/b-auth-config.md`). Actual sign-in still to verify with real client IDs in Phase 3a.
+- Google provider: native ID-token sign-in **without a client secret**, and several client IDs (iOS, Android, Web, Desktop) allowed at once. Apple provider: bundle ID only for native. **Config part ✅** (accepted with no secret; IDs stored as one comma-separated list, `docs/spikes/b-auth-config.md`). Actual sign-in: **Google on Android ✅** (2026-10-03, Galaxy A55, joined the dev frame by invite link); macOS (Google, Apple), iOS and Windows still to try.
 - Mobile OAuth redirect via an HTTPS bounce page on GitHub Pages (§6.1): the Supabase OAuth App accepts it as a callback URL, and the system browser hands `inkframe://` back to the app on iOS and Android.
 - Windows desktop: the Google loopback PKCE flow, and whether `universal_ble` can do LESC passkey pairing on Windows (and macOS).
 - ✅ ~~Whether the Edge Functions gateway needs the anon key as `apikey` for device calls.~~ **No**, with `verify_jwt = false` (2026-09-25), so frames don't store `anon_key`.

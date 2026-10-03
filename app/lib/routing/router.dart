@@ -28,6 +28,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
     refreshListenable: refresh,
+    // An address no screen has (e.g. a stray link): go Home (or Welcome) rather
+    // than show an error page. Invite links are handled in app.dart.
+    onException: (context, state, router) => router.go('/home'),
     redirect: (context, state) {
       final frames = ref.read(framesProvider);
       if (frames.isLoading) return null;
