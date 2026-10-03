@@ -77,7 +77,12 @@ Future<Setup> open(WidgetTester tester, {FakePlatform? platform, bool connected 
   final repo = FramesRepository(store, connect: (a, _) => FakeConnection(a, summary));
   final router = GoRouter(routes: [
     GoRoute(path: '/', builder: (_, _) => const SetupScreen()),
-    GoRoute(path: '/frame/:ref', builder: (_, s) => Scaffold(body: Text('Frame ${s.pathParameters['ref']}'))),
+    GoRoute(
+      path: '/frame/:ref',
+      builder: (_, s) => Scaffold(
+        body: Text('Frame ${s.pathParameters['ref']}${s.uri.queryParameters['connect'] == '1' ? ', connect' : ''}'),
+      ),
+    ),
   ]);
   addTearDown(router.dispose);
   await tester.pumpWidget(ProviderScope(
@@ -136,9 +141,10 @@ void main() {
     expect(t.directory.accounts['priya'], [address]);
     expect(t.store.values['setup'], isNull);
 
-    await tester.tap(find.text('Add photos'));
+    expect(find.text('Later — add photos first'), findsOneWidget);
+    await tester.tap(find.text('Connect the frame'));
     await tester.pumpAndSettle();
-    expect(find.text('Frame ${project.ref}'), findsOneWidget);
+    expect(find.text('Frame ${project.ref}, connect'), findsOneWidget);
   });
 
   testWidgets('not connected yet: Connect Supabase first', (tester) async {

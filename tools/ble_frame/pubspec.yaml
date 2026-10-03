@@ -1,0 +1,23 @@
+name: ble_frame
+description: "A pretend Ink Frame over Bluetooth, for trying Connect the frame (docs/pairing.md)."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  frame_sim:
+    path: ../frame_sim
+  path_provider: ^2.1.6
+  universal_ble: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

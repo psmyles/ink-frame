@@ -61,7 +61,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               final address = byRef(state.pathParameters['ref']!)!;
               return NoTransitionPage(
                 key: ValueKey(address.ref),
-                child: FrameScreen(address: address, showTip: state.uri.queryParameters['tip'] == '1'),
+                child: FrameScreen(
+                  address: address,
+                  showTip: state.uri.queryParameters['tip'] == '1',
+                  connectNow: state.uri.queryParameters['connect'] == '1',
+                ),
               );
             },
           ),

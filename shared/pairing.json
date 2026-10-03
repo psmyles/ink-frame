@@ -1,0 +1,12 @@
+{
+  "$comment": "Bluetooth pairing (docs/pairing.md). The app's lib/ble/protocol.dart and the firmware's src/ble/provisioning use these; app/test/unit/ble_protocol_test.dart checks the app matches.",
+  "name_prefix": "InkFrame-",
+  "service": "42a40001-0087-4bd2-ab9b-8b4febd5191e",
+  "characteristics": {
+    "info": "42a40002-0087-4bd2-ab9b-8b4febd5191e",
+    "wifi_scan": "42a40003-0087-4bd2-ab9b-8b4febd5191e",
+    "provision": "42a40004-0087-4bd2-ab9b-8b4febd5191e",
+    "status": "42a40005-0087-4bd2-ab9b-8b4febd5191e"
+  },
+  "max_message_bytes": 1024
+}

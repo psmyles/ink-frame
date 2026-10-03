@@ -18,6 +18,7 @@ import '../../widgets/adaptive_shell.dart';
 import '../../widgets/photo_tile.dart';
 import '../../widgets/side_panel.dart';
 import '../../widgets/status_line.dart';
+import '../connect/connect_frame_screen.dart';
 import '../people/people_screen.dart';
 import '../prepare/prepare_screen.dart';
 import '../prepare/source_photo.dart';
@@ -29,10 +30,13 @@ import 'viewer_screen.dart';
 
 /// One frame (app-flow §3–4): status, the photo grid, adding, selecting, deleting.
 class FrameScreen extends ConsumerStatefulWidget {
-  const FrameScreen({super.key, required this.address, this.showTip = false});
+  const FrameScreen({super.key, required this.address, this.showTip = false, this.connectNow = false});
 
   final FrameAddress address;
   final bool showTip;
+
+  /// Straight from setup's "Connect the frame".
+  final bool connectNow;
 
   @override
   ConsumerState<FrameScreen> createState() => _FrameScreenState();
@@ -48,6 +52,7 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
   void initState() {
     super.initState();
     if (widget.showTip) WidgetsBinding.instance.addPostFrameCallback((_) => _tip());
+    if (widget.connectNow) WidgetsBinding.instance.addPostFrameCallback((_) => openConnectFrame(context, _a));
   }
 
   void _tip() {
@@ -306,8 +311,17 @@ class _Header extends ConsumerWidget {
               child: Text(l.setUpBy(s.owner.displayName), style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             ),
           StatusLine(view),
-          const SizedBox(height: 6),
-          Text(l.checkHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          if (s.frame.connected) ...[
+            const SizedBox(height: 6),
+            Text(l.checkHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ] else if (s.isMine) ...[
+            const SizedBox(height: 10),
+            FilledButton.tonalIcon(
+              onPressed: () => openConnectFrame(context, address),
+              icon: const Icon(Icons.bluetooth),
+              label: Text(l.connectFrame),
+            ),
+          ],
         ],
         if (full)
           _Notice(

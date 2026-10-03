@@ -399,9 +399,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         FilledButton(
           onPressed: () {
             ref.read(setupProvider.notifier).reset();
+            context.go('/frame/$frameRef?connect=1');
+          },
+          child: Text(l.connectFrame),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: () {
+            ref.read(setupProvider.notifier).reset();
             context.go('/frame/$frameRef');
           },
-          child: Text(l.addPhotos),
+          child: Text(l.connectLater),
         ),
       ],
     );

@@ -18,9 +18,17 @@ class FrameApi {
       Frame.fromJson(await conn.callApi('PATCH', '/frame', body: {'name': name}) as Map<String, dynamic>);
 
   /// `PATCH /frame` with another panel model (owner): deletes every photo, which was
-  /// made for the old panel (openapi.yaml).
-  Future<Frame> changeModel(String modelId) async =>
-      Frame.fromJson(await conn.callApi('PATCH', '/frame', body: {'model_id': modelId}) as Map<String, dynamic>);
+  /// made for the old panel, and disconnects the hardware (openapi.yaml). The caller
+  /// has already asked.
+  Future<Frame> changeModel(String modelId) async => Frame.fromJson(await conn.callApi('PATCH', '/frame',
+      body: {'model_id': modelId, 'clear_photos': true}) as Map<String, dynamic>);
+
+  /// A one-time token for connecting hardware (owner; 10 minutes).
+  Future<PairingToken> createPairingToken() async =>
+      PairingToken.fromJson(await conn.callApi('POST', '/pairing-tokens') as Map<String, dynamic>);
+
+  /// Disconnects the hardware (owner): it wipes itself at its next check.
+  Future<void> disconnect() => conn.callApi('POST', '/frame/disconnect');
 
   /// Everyone on the frame, owner first, then by when they joined.
   Future<List<Member>> members() => conn.guard(() async {

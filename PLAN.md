@@ -112,6 +112,7 @@ ink-frame/
     presets.json              devices + palettes (seed source; copied from reference)
     api/openapi.yaml          device-api + app-api contract
     api/directory.yaml        the directory's contract
+    pairing.json              Bluetooth pairing UUIDs and limits (docs/pairing.md)
     test-vectors/             golden dithering inputs/outputs generated from the JS reference
   backend/supabase/
     config.toml
@@ -126,6 +127,7 @@ ink-frame/
   tools/
     golden/                   Node script: runs reference dithering.js → shared/test-vectors
     frame_sim/                Dart CLI frame simulator (claim/sync/mirror/render)
+    ble_frame/                pretend frame over real Bluetooth (Flutter, macOS/Android; uses frame_sim)
     dev/                      dev scripts (upload test PNGs, reset dev project, bundle backend)
   central/                    GitHub Pages site: /join and /oauth pages; firmware feed (Phase 4); directory/ (Cloudflare Worker); (+ OAuth token-exchange fn if needed)
   docs/
@@ -429,14 +431,17 @@ SHOW: in quiet hours → sleep until quiet_end without refreshing
 - **Empty manifest:** "Ready. Add photos in the Ink Frame app."
 
 ### 9.5 BLE pairing (NimBLE custom GATT + LE Secure Connections)
-1. Entering PAIRING creates a random 6-digit **static passkey** and shows it on e-paper with the name `InkFrame-XXXX` and short instructions. It advertises for 10 min, then sleeps.
-2. Characteristics:
-   - `info` (read: hw_id, model_id, fw_version)
-   - `wifi_scan` (notify: SSIDs + RSSI)
-   - `provision` (write, chunked JSON: `ssid`, `password`, `api_base_url`, `pairing_token`)
-   - `status` (notify: `wifi_connecting|wifi_failed|claiming|claimed|error:<code>`)
-3. The link is encrypted by OS pairing with the passkey shown on screen, so the password and token are never sent in plaintext.
-4. Join Wi-Fi → `POST /claim` → store the secret → notify `claimed` → first sync → ready screen.
+
+Specified in [docs/pairing.md](docs/pairing.md) (UUIDs in `shared/pairing.json`); in short:
+1. Entering PAIRING creates a random 6-digit **static passkey** and shows it on e-paper with the name `InkFrame-XXXX` and short instructions. It advertises (service UUID; the name in the scan response) for 10 min, then sleeps.
+2. Characteristics, all needing an encrypted, authenticated link (so the first read triggers pairing); messages are one line of JSON ending in `\n`, split into MTU − 3 chunks:
+   - `info` (read: `hw_id`, `model_id`, `fw_version`, `frame_id` it's linked to or null)
+   - `wifi_scan` (write `{"scan":true}`; notify: one network per message, then `{"done":true}`)
+   - `provision` (write: `ssid`, `password`, `api_base_url`, `pairing_token`)
+   - `status` (notify: `wifi_connecting`, `wifi_failed` + `reason` (`auth`/`not_found`/`other`), `claiming`, `claimed`, `syncing`, `ready`, or `error` + `code`)
+3. The link is encrypted by OS pairing with the passkey shown on screen, so the password and token are never sent in plaintext. The frame keeps no bonds; the app removes the OS's bond when it's done (where the OS allows).
+4. Join Wi-Fi → `POST /claim` → store the secret → notify `claimed` → first sync → `ready` → ready screen, leave PAIRING.
+5. Hardware still linked to another frame (`frame_id` from `info`, or `api_base_url` differs) is refused (`linked_elsewhere`) until a 10-s reset.
 
 ---
 
@@ -498,7 +503,7 @@ Milestones will be refined in Phase 2. Baseline:
 - **3c** Core screens per `docs/app-flow.md`: frames, photos (add/crop/preview/upload/delete/reorder), settings, usage.
 - **3d** Invites and members; display names.
 - **3e** Spike (c) first (user registers the Supabase OAuth App; run `tools/dev/oauth-connect.ts`). Then the provisioning wizard (PAT in dev → OAuth in prod), schema upgrade, wake up, delete frame.
-- **3f** BLE add-frame flow (app side). Before hardware exists, the dev-mode "pair with token" path and `frame_sim` stand in for the frame.
+- **3f** BLE add-frame flow (app side). Before hardware exists, the dev-mode "pair with token" path and `frame_sim` stand in for the frame, and `tools/ble_frame` (a pretend frame over real Bluetooth).
 - **Exit:** the §12.2 scenarios pass on Windows desktop and on at least one phone.
 
 ### Phase 4 — Firmware (Claude + User with hardware)
@@ -560,7 +565,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - [x] Phase 1 — Supabase account + PAT available to sessions (user). Dev project `ink-frame` (ref `vrhsxzedzhvujnirsuhg`, `ap-south-1`); token in `backend/.env.local`. Google client IDs (web, iOS, desktop; Cloud project `ink-frame-510506`) and Apple team `48QFANT8RD` with Sign in with Apple added 2026-10-03 (`shared/oauth-clients.json`); Android client (debug key SHA-1) added the same day
 - [x] Phase 1B — contract ✅ · migrations ✅ · device-api ✅ · app-api ✅ · tests ✅ · dev project deployed ✅ · spikes (a) ✅ (b) config ✅ (c) ✅ 2026-10-03 (needs the secret → Worker; any account can approve) · frame_sim ✅ · dev tools ✅
 - [x] Phase 2 — `docs/app-flow.md` approved 2026-09-26 (D1–D5, D7–D11 as recommended)
-- [ ] Phase 3 — 3a (built; Google sign-in works on Android and macOS; Apple sign-in, iPhone and Windows to try) · 3b ✅ · 3c (built; tried on desktop and Android) · 3d (built 2026-10-03; to try on the phone: join by QR) · directory ✅ (deployed 2026-10-03 at `ink-frame-directory.psmyles.workers.dev`; Google alone finds the frames on Android and macOS) · 3e (built 2026-10-03; live wizard test ✅; to try: Set up a frame in the app with the second Supabase account) · 3f
+- [ ] Phase 3 — 3a (built; Google sign-in works on Android and macOS; Apple sign-in, iPhone and Windows to try) · 3b ✅ · 3c (built; tried on desktop and Android) · 3d (built 2026-10-03; to try on the phone: join by QR) · directory ✅ (deployed 2026-10-03 at `ink-frame-directory.psmyles.workers.dev`; Google alone finds the frames on Android and macOS) · 3e ✅ (Set up a frame works with a second Supabase account, 2026-10-03) · 3f (built 2026-10-03; live connect test ✅; to try: Connect the frame on a phone against `tools/ble_frame`)
 - [ ] Phase 4 — 4a · 4b · 4c
 - [ ] Phase 5 — release
 
@@ -601,6 +606,7 @@ Fresh owner → wizard → connect the frame over BLE → upload → press green
 - **Low-battery alert** (user request 2026-09-26). The frame already reports `battery_pct` on every `/sync`, and the app shows "Battery low" below 20 %. To add: a notification when a frame's battery falls below a level, so it's recharged before it stops checking in (and before its project could fall asleep, §14). Proposed: **local notifications** from a background refresh in the app (iOS background fetch, Android WorkManager) that reads each frame's `battery_pct`, with the level set per frame by the owner (default 20 %, stored on `frame`), rather than server push, which would need the developer's FCM/APNs credentials in every family's project. Schedule: Phase 3d (setting) and 3g (background refresh). **Confirmed by the user 2026-10-03; the setting is built** (`frame.low_battery_pct`, migration 0005; app-only, so it doesn't make the frame "Changes waiting"; Off turns the status warning off too). Who gets the notification is decided in 3g (default: the owner).
 
 ## 16. Decision log
+- 2026-10-03: **Phase 3f built.** Connect the frame (app-flow §6): get ready → find (scan for the service, auto-pick one frame after 2 s, list several by `InkFrame-XXXX`, give up after 30 s with tips) → pair (the OS asks for the frame's code when `info` is read) → the frame's model and link are checked from `info` ("This frame is a …" with Switch, which clears the photos; "still linked to another Ink Frame") → Wi-Fi from the frame's scan (strongest first, "Other network…", password with show/hide) → finishing checklist from `status` (Joining → Linking → Getting photos) → Done. Expired pairing tokens are replaced silently once; a disconnect after `claimed` counts as done, before it is "Lost the connection". Entry points: setup's end (Connect the frame / Later — add photos first), the frame screen while not connected (owner), Settings → The frame (Connect new hardware, Disconnect). Developer mode adds Connect with a code (token + `frame_sim claim` command, then waits for the claim). **Protocol decided** and written down in docs/pairing.md + `shared/pairing.json` (§9.5 updated): newline-terminated JSON chunked to MTU − 3 for writes and notifications; `info` carries `frame_id` so a frame linked elsewhere is caught before Wi-Fi; `status` gained `syncing`/`ready` and `wifi_failed.reason` so the app can say *why* Wi-Fi failed; the frame keeps no bonds and the app removes the OS bond afterwards; the name goes in the scan response (doesn't fit next to a 128-bit UUID); Android scans in legacy mode (ESP32). `tools/ble_frame` is a pretend frame over real Bluetooth (universal_ble peripheral mode + frame_sim) to try it on a phone before the firmware. **Fixed:** Change model never sent `clear_photos`, so it failed on any frame with photos (`connect_live_test.dart` now covers it with a photo). Not done: pairing with a real frame's static passkey (4b), Windows/macOS passkey pairing (§14). Found while testing: a frame set up (or joined) on one device appears on your other signed-in devices only after signing in again there, because the directory is read at sign-in; reading it again on start/refresh is for 3g.
 - 2026-10-03: **Phase 3e built.** Set up a frame (app-flow §1.3): connect Supabase (OAuth through the Worker; PAT in dev mode), model, name, time zone and your name, then a three-row checklist (photo storage, sign-in, signing you in) that saves progress after every step and resumes; the 2-project limit is explained with "Open Supabase"; "Cancel setup" deletes a half-made project. The app ships the backend as assets (`tools/dev/bundle-backend.ts`; a test fails when they're stale) and runs the provisioning in Dart (`Provisioner`, a port of `provision.ts`), verified against the real API by `provision-live-test.ts` (create → owner → app-api answers → delete, ~35 s). Owner tools: Supabase account (connect/reconnect on this device), **Update** (newer schema, or same schema with a different backend fingerprint), **Delete this frame** (typed name), **Wake up** on an asleep frame, **Change** model (warns that the photos go; `PATCH /frame`). Delete my account now deletes the frames you set up. The owner's frame goes on their directory list. Not done: Connect the frame (3f).
 - 2026-10-03: **Spike (c): the Supabase OAuth token exchange needs the client secret** (PKCE alone gets `422 Required parameter: client_secret`; with the secret: 24 h access token, refresh works, Management API calls work). The secret can't ship in the app, so the code exchange and refreshes go through a route on the Cloudflare Worker that adds it (stateless, logs nothing); this is the "token-exchange function in `central/`" §3 allowed for. The user registered the OAuth App and asked that owners never have to: confirmed, owners only sign in to their free Supabase account and click Authorize once. Creating projects without the owner's consent is only possible in the developer's own org (Supabase for Platforms), which costs per project and reverses one-project-per-family; not pursued. Details in `docs/spikes/c-supabase-oauth.md`.
 - 2026-10-03: **Directory for signing in on a new device.** The user found the link-first sign-in unworkable: someone with no invite and no other device couldn't get back to their frames. Options: the frame list in the user's own Google Drive/iCloud (no central state, but an extra consent and two mechanisms), or a small central directory. The user chose the **directory**, on a free host that doesn't sleep: **Cloudflare Workers + D1** (Supabase free projects pause and take one of the owner's 2 slots; Firebase isn't supported for production on Windows). It stores SHA-256 of `<provider>:<sub>`, frame addresses (not secret) and hashed device tokens, nothing else; `central/` is no longer stateless. The user also asked whether Cloudflare would suit the frame backend better: no. Per family its free storage without a card is about the same as Supabase's, its 10 GB needs a card with uncapped billing, and auth, row security and storage rules would have to be written by hand; it only wins if the developer hosts every family, which reverses the one-project-per-frame decision. Contract `shared/api/directory.yaml`; Worker `central/directory/`.

@@ -21,6 +21,7 @@ class Frame {
     this.quietStart,
     this.quietEnd,
     this.lowBatteryPct = 20,
+    this.hwId,
   });
 
   final String id;
@@ -44,6 +45,9 @@ class Frame {
   /// Warn below this battery percentage; null = no warning (app-only setting).
   final int? lowBatteryPct;
 
+  /// The connected hardware's id (`public.frame` only; app-api leaves it out).
+  final String? hwId;
+
   bool get inOrder => displayOrder == 'sequential';
   bool get hasQuietHours => quietStart != null && quietEnd != null;
 
@@ -65,6 +69,7 @@ class Frame {
         quietEnd: _hhmm(j['quiet_end']),
         // A project from before the battery warning (0005) has no column: the default.
         lowBatteryPct: j.containsKey('low_battery_pct') ? j['low_battery_pct'] as int? : 20,
+        hwId: j['hw_id'] as String?,
       );
 
   /// `22:00` from the API, `22:00:00` from the table.
@@ -121,6 +126,17 @@ class NewInvite {
         expiresAt: DateTime.parse(j['expires_at'] as String),
         maxUses: j['max_uses'] as int,
       );
+}
+
+/// `POST /pairing-tokens`: one use, 10 minutes.
+class PairingToken {
+  const PairingToken(this.token, this.expiresAt);
+
+  final String token;
+  final DateTime expiresAt;
+
+  factory PairingToken.fromJson(Map<String, dynamic> j) =>
+      PairingToken(j['pairing_token'] as String, DateTime.parse(j['expires_at'] as String));
 }
 
 /// Photos and bytes against limits (`GET /usage`); a null limit is unlimited.

@@ -58,6 +58,7 @@ dependencies:
   mobile_scanner: ^7.4.2
   flutter_timezone: ^5.1.0
   http_parser: ^4.1.2
+  universal_ble: ^2.3.0
 
 dev_dependencies:
   flutter_test:

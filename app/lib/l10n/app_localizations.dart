@@ -847,7 +847,7 @@ abstract class AppLocalizations {
   /// No description provided for @frameReadyBody.
   ///
   /// In en, this message translates to:
-  /// **'Add photos now. Connecting the frame itself over Bluetooth comes in a later version of the app.'**
+  /// **'Connect the frame now, or add photos first: it gets them once it\'s connected.'**
   String get frameReadyBody;
 
   /// No description provided for @account.
@@ -1809,6 +1809,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That QR code isn\'t an Ink Frame link.'**
   String get notAnInvite;
+
+  /// No description provided for @connectFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the frame'**
+  String get connectFrame;
+
+  /// No description provided for @connectLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later — add photos first'**
+  String get connectLater;
+
+  /// No description provided for @connectFrameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the frame'**
+  String get connectFrameTitle;
+
+  /// No description provided for @connectReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the frame ready'**
+  String get connectReadyTitle;
+
+  /// No description provided for @connectReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the green button on the frame for 3 seconds, until it shows a 6-digit code. A new frame shows the code when it\'s switched on.'**
+  String get connectReadyBody;
+
+  /// No description provided for @connectReplaces.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame connected to {name} now stops showing photos once this one is connected. The photos stay.'**
+  String connectReplaces(String name);
+
+  /// No description provided for @findFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the frame'**
+  String get findFrame;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
+  /// No description provided for @connectWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with a code (developer)'**
+  String get connectWithCode;
+
+  /// No description provided for @lookingForFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for the frame…'**
+  String get lookingForFrame;
+
+  /// No description provided for @lookingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it close, with the code showing on its screen.'**
+  String get lookingHint;
+
+  /// No description provided for @whichFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Which frame?'**
+  String get whichFrame;
+
+  /// No description provided for @whichFrameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the name shown on the frame\'s screen.'**
+  String get whichFrameHint;
+
+  /// No description provided for @pairingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to the frame…'**
+  String get pairingTitle;
+
+  /// No description provided for @pairingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When asked, type the 6-digit code shown on the frame.'**
+  String get pairingHint;
+
+  /// No description provided for @startAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Start again'**
+  String get startAgain;
+
+  /// No description provided for @modelMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This frame is a {device}, but {frame} is set up for a {model}.'**
+  String modelMismatch(String device, String frame, String model);
+
+  /// No description provided for @wifiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which Wi-Fi should the frame use?'**
+  String get wifiTitle;
+
+  /// No description provided for @wifiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame needs a 2.4 GHz network.'**
+  String get wifiHint;
+
+  /// No description provided for @otherNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Other network…'**
+  String get otherNetwork;
+
+  /// No description provided for @wifiScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for networks…'**
+  String get wifiScanning;
+
+  /// No description provided for @scanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Look again'**
+  String get scanAgain;
+
+  /// No description provided for @networkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Network name'**
+  String get networkName;
+
+  /// No description provided for @wifiPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi password'**
+  String get wifiPassword;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @connectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectAction;
+
+  /// No description provided for @connectingNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting {name}'**
+  String connectingNamed(String name);
+
+  /// No description provided for @stageJoinWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining {ssid}'**
+  String stageJoinWifi(String ssid);
+
+  /// No description provided for @stageLinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Linking to {name}'**
+  String stageLinking(String name);
+
+  /// No description provided for @stageGettingPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting photos'**
+  String get stageGettingPhotos;
+
+  /// No description provided for @frameConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is connected'**
+  String frameConnected(String name);
+
+  /// No description provided for @frameConnectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It shows a photo in a moment. Photos you add appear at its next check, or press its green button to check now.'**
+  String get frameConnectedBody;
+
+  /// No description provided for @bluetoothOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Bluetooth on this device, then try again.'**
+  String get bluetoothOff;
+
+  /// No description provided for @bluetoothDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Ink Frame needs permission to use Bluetooth to find the frame. Allow it in Settings, then try again.'**
+  String get bluetoothDenied;
+
+  /// No description provided for @noBluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'This device can\'t use Bluetooth. Connect the frame from your phone instead.'**
+  String get noBluetooth;
+
+  /// No description provided for @noFrameFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find the frame.'**
+  String get noFrameFound;
+
+  /// No description provided for @noFrameTipCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that it shows a 6-digit code.'**
+  String get noFrameTipCode;
+
+  /// No description provided for @noFrameTipCloser.
+  ///
+  /// In en, this message translates to:
+  /// **'Move closer to the frame.'**
+  String get noFrameTipCloser;
+
+  /// No description provided for @noFrameTipButton.
+  ///
+  /// In en, this message translates to:
+  /// **'No code? Hold its green button for 3 seconds.'**
+  String get noFrameTipButton;
+
+  /// No description provided for @wrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'The code didn\'t match. Check the frame\'s screen and try again.'**
+  String get wrongCode;
+
+  /// No description provided for @pairingCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting was cancelled.'**
+  String get pairingCancelled;
+
+  /// No description provided for @linkedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again.'**
+  String get linkedElsewhere;
+
+  /// No description provided for @wifiWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join {ssid}: the password didn\'t work.'**
+  String wifiWrongPassword(String ssid);
+
+  /// No description provided for @wifiNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame couldn\'t find {ssid}. It needs a 2.4 GHz network, close enough to the router.'**
+  String wifiNotFound(String ssid);
+
+  /// No description provided for @wifiFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join {ssid}. Check the password, that it\'s a 2.4 GHz network, and that the frame is close enough to the router.'**
+  String wifiFailed(String ssid);
+
+  /// No description provided for @frameNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame joined {ssid} but couldn\'t reach the internet. Try another network, or check the router.'**
+  String frameNoInternet(String ssid);
+
+  /// No description provided for @phoneOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is offline. Connect it to the internet and try again.'**
+  String get phoneOffline;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost the connection to the frame.'**
+  String get connectionLost;
+
+  /// No description provided for @devCodeExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Run this in tools/frame_sim. The frame shows as connected once it has claimed its place.'**
+  String get devCodeExplain;
+
+  /// No description provided for @codeExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'The code works until {time}, once.'**
+  String codeExpires(String time);
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @waitingForFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the frame…'**
+  String get waitingForFrame;
+
+  /// No description provided for @newCode.
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get newCode;
+
+  /// No description provided for @connectNewHardware.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect new hardware'**
+  String get connectNewHardware;
+
+  /// No description provided for @disconnectFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnectFrame;
+
+  /// No description provided for @disconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {name}, ready for new hardware.'**
+  String disconnectConfirm(String name);
+
+  /// No description provided for @disconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected. The frame clears itself at its next check.'**
+  String get disconnected;
 }
 
 class _AppLocalizationsDelegate

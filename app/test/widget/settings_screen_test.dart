@@ -151,6 +151,8 @@ void main() {
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('An update for Kitchen is ready'), findsOneWidget);
 
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Update'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Update'));
     await tester.pumpAndSettle();
     expect(platform.projects[kitchen.ref]!.schemaVersion, 2);
@@ -197,10 +199,27 @@ void main() {
     expect(api.calls, ['model pimoroni-7-3']);
   });
 
+  testWidgets('the frame: connect new hardware, or disconnect (the photos stay)', (tester) async {
+    final api = await open(tester);
+    await tester.scrollUntilVisible(find.text('Connect new hardware'), 200);
+    await tester.ensureVisible(find.text('Disconnect'));
+    await tester.tap(find.text('Disconnect'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('The photos stay in Kitchen'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Disconnect'));
+    await tester.pumpAndSettle();
+    expect(api.calls, ['disconnect']);
+    expect(find.text('Not connected yet'), findsOneWidget);
+    expect(find.text('Connect the frame'), findsOneWidget);
+    expect(find.text('Disconnect'), findsNothing);
+  });
+
   testWidgets('others see no owner tools and no Change', (tester) async {
     await open(tester, owner: false);
     await tester.scrollUntilVisible(find.text('Storage'), 200);
     expect(find.text('Owner tools'), findsNothing);
     expect(find.text('Change'), findsNothing);
+    expect(find.text('Disconnect'), findsNothing);
+    expect(find.text('Connect new hardware'), findsNothing);
   });
 }

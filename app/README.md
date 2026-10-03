@@ -46,6 +46,10 @@ Sign-in buttons only appear for providers that are configured.
   `backend_bundle.dart`: the setup wizard and owner tools: the Management API, "Connect
   Supabase" (OAuth through the directory Worker, or a token in dev mode) and the
   backend in `assets/backend/` (from `tools/dev/bundle-backend.ts`).
+- `lib/ble/`: Connect the frame over Bluetooth LE (docs/pairing.md): the messages
+  (`protocol.dart`), a `FrameBluetooth` interface and its universal_ble implementation.
+  Tests use a pretend frame (`test/unit/fake_bluetooth.dart`); on real devices,
+  `tools/ble_frame` stands in for the hardware.
 - `lib/auth/`: Google and Apple ID tokens.
 - `lib/state/`: Riverpod providers. `lib/routing/`: go_router.
 - `lib/features/<screen>/`, `lib/widgets/`, `lib/theme/`, `lib/l10n/` (all strings).
@@ -57,7 +61,7 @@ Sign-in buttons only appear for providers that are configured.
 ```sh
 flutter test                                            # unit, widget, imaging (golden parity); no network
 PHOTOS=<dir> flutter test test/imaging/png_bench_test.dart   # PNG size benchmark on real photos
-deno run --allow-all ../tools/dev/app-live-test.ts      # against the dev project (needs no dev frame)
+deno run --allow-all ../tools/dev/app-live-test.ts      # against the dev project (needs no dev frame; see CLAUDE.md for a throwaway one)
 PREVIEW=1 flutter test test/preview --update-goldens    # renders screens to test/preview/out/ for a look
 deno run --allow-all ../tools/dev/provision-live-test.ts  # the setup wizard's steps against the real Management API
 ```

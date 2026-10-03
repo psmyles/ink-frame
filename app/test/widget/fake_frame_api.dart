@@ -22,11 +22,12 @@ import 'package:ink_frame/theme/theme.dart';
 
 const gb = 1024 * 1024 * 1024;
 
-Map<String, dynamic> frameJson({String name = 'Kitchen', bool inOrder = false, int? battery = 80}) => {
+Map<String, dynamic> frameJson({String name = 'Kitchen', bool inOrder = false, int? battery = 80, bool connected = true}) => {
       'id': 'f',
       'name': name,
       'model_id': 'reterminal-e1002',
-      'connected': true,
+      'connected': connected,
+      'hw_id': connected ? 'e1002-24ec4a1b0000' : null,
       'up_to_date': true,
       'fw_version': '1.0.0',
       'last_seen_at': DateTime.now().subtract(const Duration(hours: 1)).toUtc().toIso8601String(),
@@ -101,9 +102,37 @@ class FakeFrameApi implements FrameApi {
   @override
   Future<Frame> changeModel(String modelId) async {
     _write('model $modelId');
-    frame['model_id'] = modelId;
+    frame
+      ..['model_id'] = modelId
+      ..['connected'] = false
+      ..['hw_id'] = null;
     return current;
   }
+
+  /// Pairing tokens handed out, oldest first.
+  final tokens = <String>[];
+
+  @override
+  Future<PairingToken> createPairingToken() async {
+    _write('pairing-token');
+    final t = 'T${tokens.length + 1}'.padRight(26, '0');
+    tokens.add(t);
+    return PairingToken(t, DateTime.now().add(const Duration(minutes: 10)));
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _write('disconnect');
+    frame
+      ..['connected'] = false
+      ..['hw_id'] = null;
+  }
+
+  /// What a claim does to the frame (the hardware is now [hwId]).
+  void claimed(String hwId) => frame
+    ..['connected'] = true
+    ..['hw_id'] = hwId
+    ..['last_seen_at'] = null;
 
   @override
   Future<List<Member>> members() async => memberList;

@@ -490,7 +490,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get frameReadyBody =>
-      'Add photos now. Connecting the frame itself over Bluetooth comes in a later version of the app.';
+      'Connect the frame now, or add photos first: it gets them once it\'s connected.';
 
   @override
   String get account => 'Account';
@@ -1092,4 +1092,215 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notAnInvite => 'That QR code isn\'t an Ink Frame link.';
+
+  @override
+  String get connectFrame => 'Connect the frame';
+
+  @override
+  String get connectLater => 'Later — add photos first';
+
+  @override
+  String get connectFrameTitle => 'Connect the frame';
+
+  @override
+  String get connectReadyTitle => 'Get the frame ready';
+
+  @override
+  String get connectReadyBody =>
+      'Hold the green button on the frame for 3 seconds, until it shows a 6-digit code. A new frame shows the code when it\'s switched on.';
+
+  @override
+  String connectReplaces(String name) {
+    return 'The frame connected to $name now stops showing photos once this one is connected. The photos stay.';
+  }
+
+  @override
+  String get findFrame => 'Find the frame';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get connectWithCode => 'Connect with a code (developer)';
+
+  @override
+  String get lookingForFrame => 'Looking for the frame…';
+
+  @override
+  String get lookingHint =>
+      'Keep it close, with the code showing on its screen.';
+
+  @override
+  String get whichFrame => 'Which frame?';
+
+  @override
+  String get whichFrameHint => 'Pick the name shown on the frame\'s screen.';
+
+  @override
+  String get pairingTitle => 'Connecting to the frame…';
+
+  @override
+  String get pairingHint =>
+      'When asked, type the 6-digit code shown on the frame.';
+
+  @override
+  String get startAgain => 'Start again';
+
+  @override
+  String modelMismatch(String device, String frame, String model) {
+    return 'This frame is a $device, but $frame is set up for a $model.';
+  }
+
+  @override
+  String get wifiTitle => 'Which Wi-Fi should the frame use?';
+
+  @override
+  String get wifiHint => 'The frame needs a 2.4 GHz network.';
+
+  @override
+  String get otherNetwork => 'Other network…';
+
+  @override
+  String get wifiScanning => 'Looking for networks…';
+
+  @override
+  String get scanAgain => 'Look again';
+
+  @override
+  String get networkName => 'Network name';
+
+  @override
+  String get wifiPassword => 'Wi-Fi password';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get connectAction => 'Connect';
+
+  @override
+  String connectingNamed(String name) {
+    return 'Connecting $name';
+  }
+
+  @override
+  String stageJoinWifi(String ssid) {
+    return 'Joining $ssid';
+  }
+
+  @override
+  String stageLinking(String name) {
+    return 'Linking to $name';
+  }
+
+  @override
+  String get stageGettingPhotos => 'Getting photos';
+
+  @override
+  String frameConnected(String name) {
+    return '$name is connected';
+  }
+
+  @override
+  String get frameConnectedBody =>
+      'It shows a photo in a moment. Photos you add appear at its next check, or press its green button to check now.';
+
+  @override
+  String get bluetoothOff =>
+      'Turn on Bluetooth on this device, then try again.';
+
+  @override
+  String get bluetoothDenied =>
+      'Ink Frame needs permission to use Bluetooth to find the frame. Allow it in Settings, then try again.';
+
+  @override
+  String get noBluetooth =>
+      'This device can\'t use Bluetooth. Connect the frame from your phone instead.';
+
+  @override
+  String get noFrameFound => 'Couldn\'t find the frame.';
+
+  @override
+  String get noFrameTipCode => 'Check that it shows a 6-digit code.';
+
+  @override
+  String get noFrameTipCloser => 'Move closer to the frame.';
+
+  @override
+  String get noFrameTipButton =>
+      'No code? Hold its green button for 3 seconds.';
+
+  @override
+  String get wrongCode =>
+      'The code didn\'t match. Check the frame\'s screen and try again.';
+
+  @override
+  String get pairingCancelled => 'Connecting was cancelled.';
+
+  @override
+  String get linkedElsewhere =>
+      'This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again.';
+
+  @override
+  String wifiWrongPassword(String ssid) {
+    return 'Couldn\'t join $ssid: the password didn\'t work.';
+  }
+
+  @override
+  String wifiNotFound(String ssid) {
+    return 'The frame couldn\'t find $ssid. It needs a 2.4 GHz network, close enough to the router.';
+  }
+
+  @override
+  String wifiFailed(String ssid) {
+    return 'Couldn\'t join $ssid. Check the password, that it\'s a 2.4 GHz network, and that the frame is close enough to the router.';
+  }
+
+  @override
+  String frameNoInternet(String ssid) {
+    return 'The frame joined $ssid but couldn\'t reach the internet. Try another network, or check the router.';
+  }
+
+  @override
+  String get phoneOffline =>
+      'This device is offline. Connect it to the internet and try again.';
+
+  @override
+  String get connectionLost => 'Lost the connection to the frame.';
+
+  @override
+  String get devCodeExplain =>
+      'Run this in tools/frame_sim. The frame shows as connected once it has claimed its place.';
+
+  @override
+  String codeExpires(String time) {
+    return 'The code works until $time, once.';
+  }
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get waitingForFrame => 'Waiting for the frame…';
+
+  @override
+  String get newCode => 'New code';
+
+  @override
+  String get connectNewHardware => 'Connect new hardware';
+
+  @override
+  String get disconnectFrame => 'Disconnect';
+
+  @override
+  String disconnectConfirm(String name) {
+    return 'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in $name, ready for new hardware.';
+  }
+
+  @override
+  String get disconnected =>
+      'Disconnected. The frame clears itself at its next check.';
 }

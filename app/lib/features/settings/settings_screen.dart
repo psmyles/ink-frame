@@ -13,6 +13,7 @@ import '../../state/setup.dart';
 import '../../widgets/formatting.dart';
 import '../../widgets/side_panel.dart';
 import '../../widgets/text_prompt.dart';
+import '../connect/connect_frame_screen.dart';
 import '../storage/storage_screen.dart';
 import 'owner_tools.dart';
 
@@ -110,6 +111,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(frameViewProvider(_a));
       ref.invalidate(photosProvider(_a));
       messenger.showSnackBar(SnackBar(content: Text(l.savedNextCheck)));
+    } on ApiException {
+      messenger.showSnackBar(SnackBar(content: Text(l.couldntSave)));
+    }
+  }
+
+  /// The hardware wipes itself at its next check; the photos stay (openapi.yaml).
+  Future<void> _disconnect(String name) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(l.disconnectConfirm(name)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.disconnectFrame)),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(frameApiProvider(_a)).disconnect();
+      ref.invalidate(frameViewProvider(_a));
+      messenger.showSnackBar(SnackBar(content: Text(l.disconnected)));
     } on ApiException {
       messenger.showSnackBar(SnackBar(content: Text(l.couldntSave)));
     }
@@ -277,6 +302,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: f.batteryPct == null ? null : Text(l.batteryNow(f.batteryPct!)),
           leading: Icon(f.connected ? Icons.check_circle_outline : Icons.link_off),
         ),
+        if (owner)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Wrap(spacing: 8, children: [
+              if (f.connected) ...[
+                TextButton(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectNewHardware)),
+                TextButton(onPressed: () => _disconnect(name), child: Text(l.disconnectFrame)),
+              ] else
+                FilledButton.tonal(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectFrame)),
+            ]),
+          ),
         const Divider(height: 24),
         ListTile(
           leading: const Icon(Icons.storage_outlined),
