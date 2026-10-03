@@ -27,6 +27,7 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `deno run --allow-read --allow-net --allow-env tools/dev/reset-dev.ts --yes`: drop and re-apply all migrations on the dev project (unreleased migrations only).
 - `deno test central/tests/`: link parsing for the `central/site` pages (published to GitHub Pages by `.github/workflows/pages.yml`).
 - `cd app && flutter test`: app tests without network (incl. golden parity for `lib/imaging`). `node tools/golden/gen-vectors.mjs`: regenerate `shared/test-vectors/dither.json` from the reference. `deno run --allow-all tools/dev/app-live-test.ts`: the app's data layer against the dev project. More in `app/README.md`.
+- `deno run --allow-read --allow-net --allow-env tools/dev/auth-providers.ts [--check]`: turn on Google/Apple sign-in on the dev project with the client IDs in `shared/oauth-clients.json` (provision.ts uses the same file).
 - `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists).
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.

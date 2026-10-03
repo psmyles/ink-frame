@@ -5,15 +5,14 @@
 //     [--frame-name "Kitchen"] [--model reterminal-e1002] [--timezone Europe/Berlin]
 //     [--region ap-south-1] [--keep-email] [--no-frame]
 //
-// Optional env: GOOGLE_CLIENT_IDS (comma-separated; the first is the main one) and
-// APPLE_CLIENT_IDS (bundle ids). Email sign-in is turned off unless --keep-email
+// Google/Apple sign-in come from shared/oauth-clients.json. Email sign-in is turned off unless --keep-email
 // (the integration tests need it). Describes the frame like the wizard does, unless
 // --no-frame (the integration tests set up their own). Prints the new ref; the DB
 // password is not kept. The owner is added when they first sign in (the app).
 
 import { parseArgs } from "jsr:@std/cli@1/parse-args";
 import { deployFunctions } from "./deploy-functions.ts";
-import { loadEnv, mgmt, sql } from "./lib.ts";
+import { authProviders, loadEnv, mgmt, sql } from "./lib.ts";
 import { applyMigrations } from "./migrate.ts";
 
 const args = parseArgs(Deno.args, {
@@ -65,27 +64,10 @@ if (!args["no-frame"]) {
 await deployFunctions(env);
 lap("functions deployed");
 
-const split = (v?: string) => (v ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-const google = split(Deno.env.get("GOOGLE_CLIENT_IDS"));
-const apple = split(Deno.env.get("APPLE_CLIENT_IDS"));
-const auth: Record<string, unknown> = {};
+const auth: Record<string, unknown> = await authProviders();
 // Dev projects keep email/password sign-in (tests, and the app's dev mode) without confirmation mails.
 if (args["keep-email"]) auth.mailer_autoconfirm = true;
 else auth.external_email_enabled = false;
-if (google.length) {
-  Object.assign(auth, {
-    external_google_enabled: true,
-    external_google_client_id: google[0],
-    external_google_additional_client_ids: google.slice(1).join(",") || null,
-  });
-}
-if (apple.length) {
-  Object.assign(auth, {
-    external_apple_enabled: true,
-    external_apple_client_id: apple[0],
-    external_apple_additional_client_ids: apple.slice(1).join(",") || null,
-  });
-}
 if (Object.keys(auth).length) {
   await mgmt(env, "PATCH", `/v1/projects/${env.ref}/config/auth`, auth);
   lap(`auth configured: ${Object.keys(auth).join(", ")}`);

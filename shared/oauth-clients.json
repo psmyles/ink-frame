@@ -1,0 +1,12 @@
+{
+  "about": "The developer's OAuth client IDs (public by design; PLAN.md \u00a75.3, \u00a76.1). Every frame's project allows these for Google/Apple ID-token sign-in. The app has the same IDs in app/lib/config/app_config.dart. Google Cloud project: ink-frame-510506.",
+  "google": {
+    "web": "754064113071-tv7te223egk52cpplv9glhkf5p09kopq.apps.googleusercontent.com",
+    "ios": "754064113071-qhj80g401b1gbpsip8c3pharcsc0sk4b.apps.googleusercontent.com",
+    "desktop": "754064113071-rngfenpv03v146te0j1ng7osv0og7tv8.apps.googleusercontent.com",
+    "android": "754064113071-redvtvdl9mprvf5l5p7id87t64kcogla.apps.googleusercontent.com"
+  },
+  "apple": {
+    "bundleId": "com.psmyles.inkframe"
+  }
+}

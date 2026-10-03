@@ -30,6 +30,13 @@
 				<string>inkframe</string>
 			</array>
 		</dict>
+		<dict>
+			<!-- Google sign-in returns here: the iOS client's reversed client ID. -->
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.754064113071-qhj80g401b1gbpsip8c3pharcsc0sk4b</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>

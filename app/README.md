@@ -6,8 +6,12 @@ flows follow [docs/app-flow.md](../docs/app-flow.md); the technical base is PLAN
 ## Run
 
 ```sh
-flutter run -d macos --dart-define=DEV_MODE=true      # or -d windows, or a phone
+flutter run -d macos --dart-define=DEV_MODE=true                                    # Mac, iPhone, Android
+flutter run -d windows --dart-define=DEV_MODE=true --dart-define-from-file=.env.local  # Windows/Linux (Google's desktop secret)
 ```
+
+Run Flutter commands from this `app/` folder. `app/.env.local` (gitignored) holds
+`GOOGLE_DESKTOP_CLIENT_SECRET=...` from the Desktop client's JSON.
 
 Developer mode (also: Account → tap the version 7 times) adds email/password
 sign-in, which works on dev projects only. To get a frame to join on the dev project:
@@ -25,9 +29,9 @@ password (a new dev user is created) → your name.
 | Name | Use |
 |---|---|
 | `DEV_MODE` | start with developer mode on |
-| `GOOGLE_IOS_CLIENT_ID`, `GOOGLE_WEB_CLIENT_ID` | Google sign-in on iOS/macOS and Android (web ID = server client ID) |
-| `GOOGLE_DESKTOP_CLIENT_ID`, `GOOGLE_DESKTOP_CLIENT_SECRET` | Google sign-in on Windows/Linux (browser + loopback). Google treats a Desktop client's secret as public |
-| `APPLE_SIGN_IN` | `true` once the App ID has Sign in with Apple |
+| `GOOGLE_IOS_CLIENT_ID`, `GOOGLE_WEB_CLIENT_ID` | Google sign-in on iOS/macOS and Android (web ID = server client ID). Default: ours (`shared/oauth-clients.json`) |
+| `GOOGLE_DESKTOP_CLIENT_ID`, `GOOGLE_DESKTOP_CLIENT_SECRET` | Google sign-in on Windows/Linux (browser + loopback). The ID defaults to ours; the secret comes from `.env.local` (Google treats it as public, but it stays out of git) |
+| `APPLE_SIGN_IN` | Sign in with Apple on iOS/macOS; default `true` (team `48QFANT8RD`) |
 | `PAGES_URL` | the `central/site` address (default `https://psmyles.github.io/ink-frame`) |
 
 Sign-in buttons only appear for providers that are configured.

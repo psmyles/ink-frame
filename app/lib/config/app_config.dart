@@ -7,17 +7,29 @@ abstract final class AppConfig {
     defaultValue: 'https://psmyles.github.io/ink-frame',
   );
 
-  /// Google OAuth client IDs (PLAN.md §6.1). Empty = Google sign-in not offered.
-  static const googleIosClientId = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
-  static const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-  static const googleDesktopClientId = String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_ID');
+  /// Google OAuth client IDs (PLAN.md §6.1), Google Cloud project `ink-frame-510506`,
+  /// for the bundle/package ID `com.psmyles.inkframe`. Public by design; a fork with
+  /// its own IDs overrides them with --dart-define. Empty = Google not offered.
+  static const googleIosClientId = String.fromEnvironment(
+    'GOOGLE_IOS_CLIENT_ID',
+    defaultValue: '754064113071-qhj80g401b1gbpsip8c3pharcsc0sk4b.apps.googleusercontent.com',
+  );
+  static const googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '754064113071-tv7te223egk52cpplv9glhkf5p09kopq.apps.googleusercontent.com',
+  );
+  static const googleDesktopClientId = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_ID',
+    defaultValue: '754064113071-rngfenpv03v146te0j1ng7osv0og7tv8.apps.googleusercontent.com',
+  );
 
   /// Google treats a "Desktop app" client's secret as public (it ships in every
-  /// installed app); its token endpoint still asks for it.
+  /// installed app); its token endpoint still asks for it. Kept out of git anyway:
+  /// `--dart-define-from-file=.env.local` (app/README.md).
   static const googleDesktopClientSecret = String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_SECRET');
 
-  /// Sign in with Apple needs the App ID capability; off until it's registered.
-  static const appleSignIn = bool.fromEnvironment('APPLE_SIGN_IN');
+  /// Sign in with Apple (iOS/macOS; the App ID has the capability, team 48QFANT8RD).
+  static const appleSignIn = bool.fromEnvironment('APPLE_SIGN_IN', defaultValue: true);
 
   /// Starts with developer mode on (it can also be turned on in Account).
   static const devMode = bool.fromEnvironment('DEV_MODE');
