@@ -212,15 +212,15 @@ void main() {
 
   testWidgets('a different model: switch the frame (photos go), then carry on', (tester) async {
     final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
-    final hw = hardware(api, modelId: 'pimoroni-7-3');
+    final hw = hardware(api, modelId: 'other-7-3');
     await open(tester, FakeBluetooth([hw]), api: api);
     await findAndPair(tester);
-    expect(find.text('This frame is a Pimoroni Inky 7.3", but Kitchen is set up for a reTerminal E1002 7.3".'), findsOneWidget);
+    expect(find.text('This frame is a Test panel 7.3", but Kitchen is set up for a reTerminal E1002 7.3".'), findsOneWidget);
     expect(find.textContaining('All 48 photos will be removed'), findsOneWidget);
 
     await tester.tap(find.text('Switch'));
     await run(tester);
-    expect(api.calls, contains('model pimoroni-7-3'));
+    expect(api.calls, contains('model other-7-3'));
     expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
     await joinWifi(tester, 'Home', 'correct horse');
     expect(find.text('Kitchen is connected'), findsOneWidget);

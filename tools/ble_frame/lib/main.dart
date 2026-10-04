@@ -10,8 +10,6 @@ import 'package:path_provider/path_provider.dart';
 
 import 'pretend_frame.dart';
 
-const models = ['reterminal-e1002', 'waveshare-5-83', 'pimoroni-7-3', 'pimoroni-5-7', 'pimoroni-4'];
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final dir = Directory('${(await getApplicationSupportDirectory()).path}/frame');
@@ -53,12 +51,7 @@ class FramePage extends StatelessWidget {
                 ]),
                 const SizedBox(height: 8),
                 Row(children: [
-                  const Text('Model '),
-                  DropdownButton<String>(
-                    value: models.contains(frame.modelId) ? frame.modelId : models.first,
-                    items: [for (final m in models) DropdownMenuItem(value: m, child: Text(m))],
-                    onChanged: (m) => m == null ? null : frame.setModel(m),
-                  ),
+                  Text('Model ${frame.modelId}'),
                   const Spacer(),
                   const Text('Require pairing'),
                   Switch(

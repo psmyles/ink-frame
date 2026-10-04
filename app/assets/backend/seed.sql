@@ -8,10 +8,6 @@ insert into public.palettes (id, name, colors) values
 on conflict (id) do update set name = excluded.name, colors = excluded.colors;
 
 insert into public.device_models (id, name, width, height, palette_id) values
-  ('reterminal-e1002', 'reTerminal E1002 7.3"', 800, 480, 'spectra6'),
-  ('waveshare-5-83', 'Waveshare 5.83"', 648, 480, 'spectra6'),
-  ('pimoroni-7-3', 'Pimoroni Inky 7.3"', 800, 480, 'gallery'),
-  ('pimoroni-5-7', 'Pimoroni Inky 5.7"', 600, 448, 'gallery'),
-  ('pimoroni-4', 'Pimoroni Inky 4"', 640, 400, 'spectra6')
+  ('reterminal-e1002', 'reTerminal E1002 7.3"', 800, 480, 'spectra6')
 on conflict (id) do update set
   name = excluded.name, width = excluded.width, height = excluded.height, palette_id = excluded.palette_id;

@@ -302,7 +302,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ListTile(
           title: Text(l.frameModel),
           subtitle: Text(model),
-          trailing: owner ? TextButton(onPressed: () => _changeModel(s, model), child: Text(l.changeModel)) : null,
+          // Nothing to change to while there's one model (shared/presets.json).
+          trailing: owner && (ref.watch(backendBundleProvider).value?.models.length ?? 0) > 1
+              ? TextButton(onPressed: () => _changeModel(s, model), child: Text(l.changeModel))
+              : null,
         ),
         ListTile(
           title: Text(f.connected

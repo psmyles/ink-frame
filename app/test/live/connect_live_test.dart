@@ -85,8 +85,10 @@ void main() {
   });
 
   test('a different model is refused; switching the model clears the photos and the hardware', () async {
+    // The test-only second model that tools/dev/app-live-test.ts adds (backend/supabase/tests/_lib.ts).
+    const otherModel = 'test-other-7-3';
     final token = await owner.createPairingToken();
-    final (status, body) = await claim(token.token, 'live-inky-$run', model: 'pimoroni-7-3');
+    final (status, body) = await claim(token.token, 'live-other-$run', model: otherModel);
     expect(status, 409);
     expect((body!['error'] as Map)['code'], 'model_mismatch');
 
@@ -110,13 +112,13 @@ void main() {
     await photos.upload(p.png, p.sha256, p.width, p.height);
     expect(await photos.list(), isNotEmpty);
 
-    final switched = await owner.changeModel('pimoroni-7-3');
-    expect((switched.modelId, switched.connected), ('pimoroni-7-3', false));
+    final switched = await owner.changeModel(otherModel);
+    expect((switched.modelId, switched.connected), (otherModel, false));
     expect(await PhotosRepository(conn).list(), isEmpty);
     expect(await sync(secret), 410);
 
-    // Now the Inky claims, and the frame goes back to the E1002 for the other tests.
-    expect((await claim((await owner.createPairingToken()).token, 'live-inky-$run', model: 'pimoroni-7-3')).$1, 200);
+    // Now the other model's hardware claims, and the frame goes back to the E1002 for the other tests.
+    expect((await claim((await owner.createPairingToken()).token, 'live-other-$run', model: otherModel)).$1, 200);
     expect((await owner.changeModel('reterminal-e1002')).modelId, 'reterminal-e1002');
   });
 }

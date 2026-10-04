@@ -141,7 +141,7 @@ const testBundle = BackendBundle(
   },
   models: [
     ModelOption(id: 'reterminal-e1002', name: 'reTerminal E1002 7.3"', width: 800, height: 480),
-    ModelOption(id: 'pimoroni-7-3', name: 'Pimoroni Inky 7.3"', width: 800, height: 480),
+    ModelOption(id: 'other-7-3', name: 'Test panel 7.3"', width: 800, height: 480),
   ],
   auth: {'external_google_enabled': true},
   fingerprint: 'fp-2',

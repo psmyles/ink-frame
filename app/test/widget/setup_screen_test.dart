@@ -118,7 +118,7 @@ void main() {
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('reTerminal E1002 7.3"'), findsOneWidget);
     expect(find.text('800 × 480'), findsNWidgets(2));
-    await tester.tap(find.text('Pimoroni Inky 7.3"'));
+    await tester.tap(find.text('Test panel 7.3"'));
     await fillIn(tester);
 
     await tester.tap(find.text('Set up Kitchen'));

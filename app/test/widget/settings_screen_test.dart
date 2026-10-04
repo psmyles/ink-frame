@@ -8,6 +8,7 @@ import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/secure_store.dart';
 import 'package:ink_frame/features/settings/settings_screen.dart';
 import 'package:ink_frame/state/providers.dart';
+import 'package:ink_frame/data/backend_bundle.dart';
 import 'package:ink_frame/state/setup.dart';
 
 import '../unit/battery_watch_test.dart' show FakeNotifications, FakeWatchServer;
@@ -193,13 +194,35 @@ void main() {
     );
     await tester.tap(find.text('Change'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pimoroni Inky 7.3"'));
+    await tester.tap(find.text('Test panel 7.3"'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Switch Kitchen to the Pimoroni Inky 7.3"?'), findsOneWidget);
+    expect(find.textContaining('Switch Kitchen to the Test panel 7.3"?'), findsOneWidget);
     expect(find.textContaining('photos will be removed'), findsOneWidget);
     await tester.tap(find.text('Switch'));
     await tester.pumpAndSettle();
-    expect(api.calls, ['model pimoroni-7-3']);
+    expect(api.calls, ['model other-7-3']);
+  });
+
+  testWidgets('with one model there is nothing to change to', (tester) async {
+    await pumpFrameScreen(
+      tester,
+      () => const SettingsScreen(address: kitchen),
+      address: kitchen,
+      me: priya,
+      owner: priya,
+      overrides: [
+        backendBundleProvider.overrideWith((ref) async => BackendBundle(
+              migrations: const [],
+              seed: '',
+              functions: const {},
+              models: [testBundle.models.first],
+              auth: const {},
+              fingerprint: '',
+            )),
+      ],
+    );
+    expect(find.text('Model'), findsOneWidget);
+    expect(find.text('Change'), findsNothing);
   });
 
   testWidgets('the frame: connect new hardware, or disconnect (the photos stay)', (tester) async {

@@ -27,7 +27,7 @@ pairing prompt with the default settings; see below.)
   on, and neither a Mac nor a phone can use the frame's fixed code, so it's off: the
   pretend frame tests everything except the pairing itself, which needs the firmware
   (4b). The 6 digits in the window are for show.
-- **Model** picks the `model_id` it reports, to try "This frame is a …".
+- It reports the reTerminal E1002 (`reterminal-e1002`), the only model for now.
 - **Check now** is the green button (sync, then show the newest photo); **Pair again**
   is holding it 3 s; **Reset** is holding it 10 s (new `hw_id`, forgets the frame).
 - State (frame_sim's `config.json` and cache) lives in the app's support folder.

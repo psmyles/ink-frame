@@ -174,12 +174,6 @@ class PretendFrame extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setModel(String id) async {
-    frame.config['model_id'] = id;
-    await frame.save();
-    notifyListeners();
-  }
-
   // ── GATT ──
 
   PeripheralReadRequestResult? _onRead(String device, String characteristic, int offset, Uint8List? value) {

@@ -127,7 +127,7 @@ There's no pairing prompt with the default settings.
 | **Next photo** | The frame's white button: show the next photo. |
 | **Pair again (hold 3 s)** | Click once. It does what holding the green button for 3 s does on the real frame: get ready to connect again. A frame that isn't connected yet is already ready when the window opens. |
 | **Reset (hold 10 s)** | Click once. Forgets the frame, gets a new hardware ID, and gets ready to connect. Do this after the frame's photo storage was deleted. |
-| **Model** | The model the frame reports, to try "This frame is a …". |
+| **Model** | Shows the model it reports: the reTerminal E1002, the only one for now. |
 | **Require pairing** | Off by default. On makes everything need an encrypted link, like the real frame. A Mac refuses an Android phone's pairing, so leave it off. |
 | **Battery** slider | The battery level sent at the next check. To try the low-battery notification: set 15 %, press **Check now**, then **Account → Check batteries now** in the app. |
 

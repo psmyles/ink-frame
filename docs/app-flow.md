@@ -320,7 +320,7 @@ The pairing token is requested just before step 5 and re-requested automatically
 | Wrong code | "The code didn't match. Check the frame's screen and try again." (back to step 3) |
 | Wi-Fi failed | "Couldn't join <SSID>." Likely causes: wrong password, 5 GHz network, too far. Back to step 4 |
 | Token expired | handled silently (new token, retry) |
-| Different model (`model_mismatch`) | "This is a Pimoroni Inky 7.3″, but Kitchen is set up for a reTerminal E1002. Switch Kitchen to the Inky? Its N photos will be removed." → Switch (clears, retries) / Cancel |
+| Different model (`model_mismatch`) | "This is a <other model>, but Kitchen is set up for a reTerminal E1002. Switch Kitchen to the <other model>? Its N photos will be removed." → Switch (clears, retries) / Cancel. (Can't happen while the E1002 is the only model; kept for later models.) |
 | Hardware linked to another frame | "This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again." |
 | Connection lost mid-way | "Lost the connection to the frame." Retry from step 2 |
 

@@ -55,8 +55,14 @@ export async function newUser(label: string): Promise<User> {
 const q = (s: string) => `'${s.replaceAll("'", "''")}'`;
 
 // The setup wizard describes the frame and adds its owner with SQL; tests do the same.
+// A second panel model for the model-switching tests, since the seed has only the
+// reTerminal E1002 (shared/presets.json). setupFrame adds it; cleanup removes it.
+export const OTHER_MODEL = "test-other-7-3";
+
 export async function setupFrame(owner: User, ownerName: string, frameName = "Test frame",
   modelId = "reterminal-e1002", timezone = "Europe/Berlin"): Promise<string> {
+  await sql(env, `insert into public.device_models (id, name, width, height, palette_id)
+    values (${q(OTHER_MODEL)}, 'Test panel 7.3"', 800, 480, 'spectra6') on conflict (id) do nothing`);
   const [{ id }] = await sql<{ id: string }>(env,
     `select private.setup_frame(${q(frameName)}, ${q(modelId)}, ${q(timezone)}) as id`);
   created.frame = true;
@@ -182,6 +188,12 @@ async function removeFrame() {
 export async function cleanup() {
   if (created.frame) await removeFrame();
   for (const id of created.users) await admin.auth.admin.deleteUser(id);
+  await removeOtherModel();
+}
+
+async function removeOtherModel() {
+  await sql(env, `delete from public.device_models where id = ${q(OTHER_MODEL)}
+    and not exists (select 1 from public.frame where model_id = ${q(OTHER_MODEL)})`);
 }
 
 // Whether the project already has a frame that isn't the tests' own (a real owner).
@@ -198,5 +210,6 @@ export async function purgeLeftovers(): Promise<number> {
   if (!(await hasRealFrame())) await removeFrame();
   const users = await sql<{ id: string }>(env, `select id from auth.users where email like '%@test.invalid'`);
   for (const u of users) await admin.auth.admin.deleteUser(u.id);
+  await removeOtherModel();
   return users.length;
 }

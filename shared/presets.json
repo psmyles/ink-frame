@@ -8,42 +8,6 @@
         "h": 480
       },
       "palette": "spectra6"
-    },
-    {
-      "id": "waveshare-5.83",
-      "name": "Waveshare 5.83\"",
-      "resolution": {
-        "w": 648,
-        "h": 480
-      },
-      "palette": "spectra6"
-    },
-    {
-      "id": "pimoroni-7.3",
-      "name": "Pimoroni Inky 7.3\"",
-      "resolution": {
-        "w": 800,
-        "h": 480
-      },
-      "palette": "gallery"
-    },
-    {
-      "id": "pimoroni-5.7",
-      "name": "Pimoroni Inky 5.7\"",
-      "resolution": {
-        "w": 600,
-        "h": 448
-      },
-      "palette": "gallery"
-    },
-    {
-      "id": "pimoroni-4",
-      "name": "Pimoroni Inky 4\"",
-      "resolution": {
-        "w": 640,
-        "h": 400
-      },
-      "palette": "spectra6"
     }
   ],
   "palettes": [

@@ -18,6 +18,7 @@ import {
   hasRealFrame,
   makePng,
   newUser,
+  OTHER_MODEL,
   purgeLeftovers,
   sha256Hex,
   setupFrame,
@@ -123,9 +124,9 @@ Deno.test({
         const claim = (model: string) => call("POST", "/device-api/claim", {
           body: { pairing_token: t1.body.pairing_token, hw_id: hw(3), model_id: model, fw_version: "x" },
         });
-        const wrong = await claim("pimoroni-7-3");
+        const wrong = await claim(OTHER_MODEL);
         expectError(wrong, 409, "model_mismatch");
-        assertEquals(wrong.body.error.details, { frame_model: "reterminal-e1002", device_model: "pimoroni-7-3" });
+        assertEquals(wrong.body.error.details, { frame_model: "reterminal-e1002", device_model: OTHER_MODEL });
         expectError(await claim("no-such-model"), 422, "unknown_model");
         // Failed claims don't use up the token or disturb the connected device.
         assertEquals((await sync(device.secret, version)).status, 200);
@@ -221,7 +222,7 @@ Deno.test({
         assertEquals((await B.db.from("members").select("user_id")).data?.length, 2);
         assertEquals((await A.db.from("invites").select("id")).error, null);
 
-        assert(((await anon.from("device_models").select("id")).data?.length ?? 0) >= 5);
+        assert((await anon.from("device_models").select("id")).data?.some((m) => m.id === "reterminal-e1002"));
         assertExists((await anon.from("members").select("*")).error, "anon must not read members");
         assertExists((await A.db.from("frame").update({ name: "hacked" }).eq("id", frameId)).error, "no direct writes");
 
@@ -404,14 +405,14 @@ Deno.test({
       await t.step("switching the panel model clears photos and disconnects", async () => {
         const c = await connect(A, hw(6));
         const change = (body: unknown) => call("PATCH", "/app-api/frame", { token: A.token, body });
-        const refused = await change({ model_id: "pimoroni-7-3" });
+        const refused = await change({ model_id: OTHER_MODEL });
         expectError(refused, 409, "photos_would_be_cleared");
         assertEquals(refused.body.error.details, { images: 3 });
         expectError(await change({ model_id: "no-such-model", clear_photos: true }), 422, "unknown_model");
 
-        const ok = await change({ model_id: "pimoroni-7-3", clear_photos: true });
+        const ok = await change({ model_id: OTHER_MODEL, clear_photos: true });
         assertEquals(ok.status, 200, JSON.stringify(ok.body));
-        assertEquals(ok.body.model_id, "pimoroni-7-3");
+        assertEquals(ok.body.model_id, OTHER_MODEL);
         assertEquals(ok.body.connected, false);
         expectError(await sync(c.secret, 0), 410, "frame_removed");
         const [{ n }] = await sql<{ n: number }>(env,
@@ -421,10 +422,10 @@ Deno.test({
         // Hardware of the new model connects; the old model is refused.
         const e1002 = await connect(A, hw(7));
         expectError(e1002.res, 409, "model_mismatch");
-        const inky = await connect(A, hw(8), "pimoroni-7-3");
-        assertEquals(inky.res.status, 200);
-        assertEquals((await sync(inky.secret, 0)).body.images, []);
-        device = { secret: inky.secret, hwId: hw(8) };
+        const other = await connect(A, hw(8), OTHER_MODEL);
+        assertEquals(other.res.status, 200);
+        assertEquals((await sync(other.secret, 0)).body.images, []);
+        device = { secret: other.secret, hwId: hw(8) };
       });
 
       await t.step("watch tokens: battery checks without a session", async () => {
