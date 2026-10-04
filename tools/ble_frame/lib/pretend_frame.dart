@@ -42,7 +42,9 @@ class PretendFrame extends ChangeNotifier {
   /// is required, and then the OS picks its own code (a Mac can't use a fixed one).
   var passkey = '';
   var advertising = false;
-  var requireEncryption = true;
+  /// Off by default: a Mac refuses LE pairing as a peripheral, and can't use the
+  /// frame's fixed code anyway (seen with an Android phone, 2026-10-04).
+  var requireEncryption = false;
   String? central;
   File? showing;
   var busy = false;
@@ -238,30 +240,46 @@ class PretendFrame extends ChangeNotifier {
     }
 
     await _status({'state': 'claiming'});
+    final String frameId;
     try {
-      final frameId = await frame.claim(apiBaseUrl: base, pairingToken: m['pairing_token'] as String);
-      await _status({'state': 'claimed', 'frame_id': frameId});
-      await _status({'state': 'syncing'});
-      try {
-        final r = await frame.sync(force: true);
-        _say('First check: ${r.total} photos');
-      } catch (e) {
-        _say('First check failed ($e); the frame retries later');
-      }
-      await _status({'state': 'ready'});
-      await UniversalBlePeripheral.stopAdvertising();
-      advertising = false;
-      await _showNext();
+      frameId = await frame.claim(apiBaseUrl: base, pairingToken: m['pairing_token'] as String);
     } on sim.ApiException catch (e) {
       final code = switch (e.code) {
         'invalid_pairing_token' || 'model_mismatch' || 'unknown_model' => e.code,
         _ => 'server',
       };
       await _status({'state': 'error', 'code': code, 'message': e.message});
+      return;
     } catch (e) {
       // No answer from the API (offline, DNS, TLS).
       await _status({'state': 'error', 'code': 'unreachable', 'message': '$e'});
+      return;
     }
+
+    // Linked: from here on the frame finishes whatever happens to the phone, like the
+    // firmware (a status the phone doesn't get is only logged).
+    _say('Linked to frame $frameId');
+    await _status({'state': 'claimed', 'frame_id': frameId});
+    await _status({'state': 'syncing'});
+    try {
+      final r = await frame.sync(force: true);
+      _say('First check: ${r.total} photos');
+    } catch (e) {
+      _say('First check failed ($e); the frame retries later');
+    }
+    await _status({'state': 'ready'});
+    await _stopAdvertising();
+    await _showNext();
+  }
+
+  Future<void> _stopAdvertising() async {
+    advertising = false;
+    try {
+      await UniversalBlePeripheral.stopAdvertising();
+    } catch (e) {
+      _say('Stop advertising: $e');
+    }
+    notifyListeners();
   }
 
   Future<void> _status(Map<String, Object?> s) async {
@@ -269,16 +287,29 @@ class PretendFrame extends ChangeNotifier {
     await _notify(Pairing.status, s);
   }
 
-  /// One message, in chunks the phone can take.
+  /// One message, in chunks the phone can take. Never throws: the Mac refuses a
+  /// notification when the phone has gone or its send queue is full; the first is
+  /// logged, the second retried.
   Future<void> _notify(String characteristic, Map<String, Object?> message) async {
-    final device = central;
     final bytes = utf8.encode('${jsonEncode(message)}\n');
     for (var i = 0; i < bytes.length; i += _notifyLength) {
-      await UniversalBlePeripheral.updateCharacteristicValue(
-        characteristicId: characteristic,
-        value: Uint8List.sublistView(bytes, i, min(i + _notifyLength, bytes.length)),
-        deviceId: device,
-      );
+      final chunk = Uint8List.sublistView(bytes, i, min(i + _notifyLength, bytes.length));
+      for (var attempt = 1;; attempt++) {
+        try {
+          await UniversalBlePeripheral.updateCharacteristicValue(
+            characteristicId: characteristic,
+            value: chunk,
+            deviceId: central,
+          );
+          break;
+        } catch (e) {
+          if (attempt >= 5 || central == null || !'$e'.contains('queue full')) {
+            _say('Couldn\'t tell the phone (${message['state'] ?? _short(characteristic)}): $e');
+            return;
+          }
+          await Future<void>.delayed(Duration(milliseconds: 100 * attempt));
+        }
+      }
     }
   }
 
@@ -294,7 +325,7 @@ class PretendFrame extends ChangeNotifier {
       final pick = await frame.pickNext();
       showing = pick == null ? null : frame.imageFile(pick.id);
     }
-    notifyListeners();
+    _say(showing == null ? 'No photos yet' : 'Showing ${showing!.uri.pathSegments.last} (${images.length} cached)');
   }
 
   Future<void> _run(Future<void> Function() body) async {
@@ -318,6 +349,12 @@ class PretendFrame extends ChangeNotifier {
     log.insert(0, '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}  $line');
     if (log.length > 200) log.removeLast();
     debugPrint(line);
+    // Also on disk, so the log can be read from outside the app.
+    try {
+      File('${frame.dir.path}/log.txt').writeAsStringSync('${t.toIso8601String()}  $line\n', mode: FileMode.append);
+    } catch (_) {
+      // Not set up yet.
+    }
     notifyListeners();
   }
 

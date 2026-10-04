@@ -26,6 +26,11 @@ App side: `app/lib/ble/` (built in 3f). Firmware side: `src/ble/provisioning.*` 
 - The frame **doesn't keep bonds**: each PAIRING session needs its new code. The app
   removes the OS's bond when it's done (Android, Windows, Linux; Apple platforms can't),
   so the next pairing asks for the new code instead of failing on old keys.
+- The app pairs by **reading `info`**: the encrypted read makes Android, iOS and macOS
+  run pairing (the passkey prompt) and then retry the read. Only if the read is refused
+  for lack of pairing does it ask for a bond explicitly (Windows and Linux don't pair by
+  themselves). It doesn't bond before the first read: a peripheral that pairs on
+  demand may refuse that (a Mac did).
 - A wrong passkey fails pairing; the app says "The code didn't match" and tries again.
 
 ## Service and characteristics

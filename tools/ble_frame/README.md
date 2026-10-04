@@ -16,16 +16,17 @@ flutter run -d macos        # or: flutter run -d <android-device-id>
 ```
 
 macOS asks once for Bluetooth permission. Then in the Ink Frame app (as the frame's
-owner): **Connect the frame** → **Find the frame** → pair when the phone asks →
-pick a network → Connect.
+owner): **Connect the frame** → **Find the frame** → pick a network → Connect. (No
+pairing prompt with the default settings; see below.)
 
 - Wi-Fi is pretend: any password works except `wrong` (→ "the password didn't
   work"), and "Far away" is never found. After "joining", it really calls the
   frame's `device-api`.
-- **Require pairing** (default on) makes every characteristic need an encrypted link,
-  like the real frame, so the phone shows the OS pairing prompt. A Mac or phone can't
-  use a fixed code, so the OS shows its own (often "Pair?" or a number to compare),
-  not the 6 digits on screen. Turn it off if pairing gets in the way.
+- **Require pairing** (default off) makes every characteristic need an encrypted link,
+  like the real frame. A Mac refused an Android phone's pairing outright when it was
+  on, and neither a Mac nor a phone can use the frame's fixed code, so it's off: the
+  pretend frame tests everything except the pairing itself, which needs the firmware
+  (4b). The 6 digits in the window are for show.
 - **Model** picks the `model_id` it reports, to try "This frame is a …".
 - **Check now** is the green button (sync, then show the newest photo); **Pair again**
   is holding it 3 s; **Reset** is holding it 10 s (new `hw_id`, forgets the frame).

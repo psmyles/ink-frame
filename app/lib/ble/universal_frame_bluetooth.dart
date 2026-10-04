@@ -122,16 +122,37 @@ class _Link implements PairingLink {
     }
   }
 
+  /// Errors that mean "pair first".
+  static const _needsPairing = {
+    UniversalBleErrorCode.insufficientAuthentication,
+    UniversalBleErrorCode.insufficientEncryption,
+    UniversalBleErrorCode.insufficientKeySize,
+    UniversalBleErrorCode.protectionLevelNotMet,
+    UniversalBleErrorCode.authenticationFailure,
+    UniversalBleErrorCode.notPaired,
+  };
+
   @override
   Future<FrameInfo> pair() async {
     try {
-      // Reading `info` needs an encrypted link, so the OS asks for the frame's code.
-      await UniversalBle.pair(
-        id,
-        pairingCommand: BleCommand(service: Pairing.service, characteristic: Pairing.info),
-        timeout: const Duration(minutes: 3),
-      );
-      final bytes = await UniversalBle.read(id, Pairing.service, Pairing.info, timeout: const Duration(seconds: 15));
+      // `info` needs an encrypted link: reading it makes Android, iOS and macOS pair
+      // (asking for the frame's code) and then retry the read. An explicit bond
+      // first would be refused by a frame that only pairs on demand.
+      Future<Uint8List> read() => UniversalBle.read(id, Pairing.service, Pairing.info, timeout: const Duration(minutes: 3));
+      Uint8List bytes;
+      try {
+        bytes = await read();
+      } on UniversalBleException catch (e) {
+        // Windows and Linux don't pair by themselves: bond, then read again.
+        if (!_needsPairing.contains(e.code) || !BleCapabilities.hasSystemPairingApi) rethrow;
+        try {
+          await UniversalBle.pair(id, timeout: const Duration(minutes: 3));
+        } on PairingException catch (e) {
+          // A refused bond doesn't say why; most often the code didn't match.
+          throw LinkException(LinkFailure.wrongCode, '${e.code.name}: ${e.message}');
+        }
+        bytes = await read();
+      }
       final info = FrameInfo.fromJson(jsonDecode(utf8.decode(bytes).trim()) as Map<String, dynamic>);
 
       final reader = MessageReader();

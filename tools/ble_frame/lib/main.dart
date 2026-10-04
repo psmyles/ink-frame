@@ -107,7 +107,12 @@ class _Screen extends StatelessWidget {
         if (frame.central != null) const Padding(padding: EdgeInsets.only(top: 8), child: Text('Phone connected')),
       ]);
     } else if (frame.showing != null) {
-      content = Image.file(frame.showing!, fit: BoxFit.contain, gaplessPlayback: true);
+      content = Image.file(
+        frame.showing!,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+        errorBuilder: (_, error, _) => Center(child: Text("Couldn't show ${frame.showing!.path}: $error")),
+      );
     } else {
       content = Center(
         child: Text(frame.frame.isPaired ? 'Ready. Add photos in the Ink Frame app.' : 'Not set up. Hold 3 s to set up.'),
