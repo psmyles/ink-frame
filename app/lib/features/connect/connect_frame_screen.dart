@@ -6,12 +6,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../ble/frame_bluetooth.dart';
 import '../../ble/protocol.dart';
 import '../../data/frame_link.dart';
+import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connect_frame.dart';
 import '../../state/frame_admin.dart';
 import '../../state/providers.dart';
 import '../../state/setup.dart';
 import '../../widgets/checklist_row.dart';
+import '../../widgets/formatting.dart';
 import 'dev_connect_screen.dart';
 
 /// Opens Connect the frame over everything else (owner only).
@@ -37,6 +39,9 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
   WifiNetwork? _picked;
   var _other = false;
   var _showPassword = false;
+
+  /// "Erase the memory card first"; null until chosen (then: on for an unreadable card).
+  bool? _erase;
 
   AppLocalizations get l => AppLocalizations.of(context);
   ConnectFrame get _flow => ref.read(connectFrameProvider(widget.address).notifier);
@@ -295,20 +300,75 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
           onSubmitted: (_) => ready ? _flow.join(ssid, _password.text) : null,
         ),
       ],
+      ..._card(s),
       const SizedBox(height: 24),
       FilledButton(
-        onPressed: ready ? () => _flow.join(ssid, needsPassword ? _password.text : '') : null,
+        onPressed: ready ? () => _flow.join(ssid, needsPassword ? _password.text : '', eraseSd: _eraseChosen(s)) : null,
         child: Text(l.connectAction),
       ),
     ];
   }
 
+  bool _eraseChosen(ConnectState s) => _erase ?? s.info?.sd?.state == SdState.unreadable;
+
+  /// The frame's memory card (`info.sd`): what's on it, whether the photos fit, and the
+  /// choice to erase it first.
+  List<Widget> _card(ConnectState s) {
+    final sd = s.info?.sd;
+    if (sd == null) return const [];
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    final erase = _eraseChosen(s);
+    final warn = TextStyle(color: theme.colorScheme.error);
+    final photos = ref.watch(usageProvider(widget.address)).value?.frame.bytes;
+    final name = ref.watch(frameViewProvider(widget.address)).value?.name ?? '';
+    // After erasing, the whole card; otherwise what's free plus the frame's own photos.
+    final room = sd.state != SdState.ok
+        ? 0
+        : (erase ? sd.totalBytes : sd.freeBytes + sd.cacheBytes) - Frame.cardReserveBytes;
+    return [
+      const SizedBox(height: 20),
+      Text(l.memoryCard, style: theme.textTheme.titleMedium),
+      const SizedBox(height: 4),
+      if (sd.state == SdState.missing)
+        Text(l.cardMissingConnect, style: warn)
+      else ...[
+        if (sd.state == SdState.unreadable)
+          Text(l.cardUnreadableConnect, style: warn)
+        else ...[
+          Text(l.cardSize(formatBytes(sd.totalBytes, locale), formatBytes(sd.freeBytes, locale))),
+          if (sd.otherBytes > 0)
+            Text(l.cardOtherFiles(formatBytes(sd.otherBytes, locale)),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+          if (photos != null && photos > room)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(l.cardTooSmallConnect(name, formatBytes(photos, locale), formatBytes(room.clamp(0, 1 << 62), locale)),
+                  style: warn),
+            ),
+        ],
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: erase,
+          onChanged: (v) => setState(() => _erase = v ?? false),
+          title: Text(l.eraseCard),
+          subtitle: Text(l.eraseCardHint),
+        ),
+      ],
+    ];
+  }
+
   List<Widget> _finishing(ConnectState s, String name) {
     final theme = Theme.of(context);
+    // With erasing first, that's row 0 and the rest move down one.
+    final first = s.eraseSd ? 1 : 0;
     final at = switch (s.progress) {
-      null || LinkState.wifiConnecting => 0,
-      LinkState.claiming => 1,
-      _ => 2,
+      null => 0,
+      LinkState.erasing => 0,
+      LinkState.wifiConnecting => first,
+      LinkState.claiming => first + 1,
+      _ => first + 2,
     };
     Widget row(int i, String title) => ChecklistRow(
           title: title,
@@ -322,9 +382,10 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
     return [
       Text(l.connectingNamed(name), style: theme.textTheme.headlineSmall),
       const SizedBox(height: 16),
-      row(0, l.stageJoinWifi(s.ssid ?? '')),
-      row(1, l.stageLinking(name)),
-      row(2, l.stageGettingPhotos),
+      if (s.eraseSd) row(0, l.stageErasing),
+      row(first, l.stageJoinWifi(s.ssid ?? '')),
+      row(first + 1, l.stageLinking(name)),
+      row(first + 2, l.stageGettingPhotos),
     ];
   }
 
@@ -376,6 +437,7 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
       ConnectProblem.cancelled => l.pairingCancelled,
       ConnectProblem.modelMismatch => '',
       ConnectProblem.linkedElsewhere => l.linkedElsewhere,
+      ConnectProblem.sdFailed => l.sdFailed,
       ConnectProblem.wifiFailed => switch (s.wifiReason) {
           'auth' => l.wifiWrongPassword(ssid),
           'not_found' => l.wifiNotFound(ssid),

@@ -128,6 +128,7 @@ There's no pairing prompt with the default settings.
 | **Pair again (hold 3 s)** | Click once. It does what holding the green button for 3 s does on the real frame: get ready to connect again. A frame that isn't connected yet is already ready when the window opens. |
 | **Reset (hold 10 s)** | Click once. Forgets the frame, gets a new hardware ID, and gets ready to connect. Do this after the frame's photo storage was deleted. |
 | **Model** | Shows the model it reports: the reTerminal E1002, the only one for now. |
+| **Memory card** | Pretends an OK card, no card, or one it can't read, to see what the app says. |
 | **Require pairing** | Off by default. On makes everything need an encrypted link, like the real frame. A Mac refuses an Android phone's pairing, so leave it off. |
 | **Battery** slider | The battery level sent at the next check. To try the low-battery notification: set 15 %, press **Check now**, then **Account → Check batteries now** in the app. |
 
@@ -136,6 +137,18 @@ The pretend frame's log on the Mac:
 ```sh
 tail -f ~/Library/Containers/com.psmyles.inkframe.bleFrame/Data/Library/Application\ Support/com.psmyles.inkframe.bleFrame/frame/log.txt
 ```
+
+## The real frame (firmware, Phase 4a)
+
+From `firmware/`, with the E1002 on USB-C and its power switch on:
+
+```sh
+pio run -t upload          # build and flash
+pio device monitor         # its logs
+```
+
+Until Bluetooth (4b) it's set up over USB. See `firmware/README.md` for the console and
+for linking it to a test album.
 
 ## Without Bluetooth: `frame_sim`
 

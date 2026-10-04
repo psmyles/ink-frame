@@ -22,12 +22,14 @@ import 'package:ink_frame/theme/theme.dart';
 
 const gb = 1024 * 1024 * 1024;
 
-Map<String, dynamic> frameJson({String name = 'Kitchen', bool inOrder = false, int? battery = 80, bool connected = true}) => {
+Map<String, dynamic> frameJson(
+        {String name = 'Kitchen', bool inOrder = false, int? battery = 80, bool connected = true, Map<String, int?>? card}) =>
+    {
       'id': 'f',
       'name': name,
       'model_id': 'reterminal-e1002',
       'connected': connected,
-      'hw_id': connected ? 'e1002-24ec4a1b0000' : null,
+      'hw_id': connected ? 'e1002-24ec4a1b1a2b' : null,
       'up_to_date': true,
       'fw_version': '1.0.0',
       'last_seen_at': DateTime.now().subtract(const Duration(hours: 1)).toUtc().toIso8601String(),
@@ -39,6 +41,7 @@ Map<String, dynamic> frameJson({String name = 'Kitchen', bool inOrder = false, i
       'quiet_end': null,
       'timezone': 'Asia/Kolkata',
       'low_battery_pct': 20,
+      ...?card,
     };
 
 Usage sampleUsage({int bytes = 312 * 1024 * 1024, int images = 48, List<UsageEntry>? users}) => Usage(

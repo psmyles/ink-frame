@@ -121,11 +121,11 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         await ref.read(framesProvider.notifier).signedIn(link.frames);
         if (!mounted) return;
         if (skipped.length == link.frames.length) {
-          setState(() => _error = l.noFramesOnLink);
+          setState(() => _error = l.noAlbumsOnLink);
           return;
         }
         if (skipped.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.skippedFrames(skipped.length))));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.skippedAlbums(skipped.length))));
         }
         context.go('/home');
       }
@@ -166,7 +166,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         'invalid_invite' => l.inviteInvalid,
         ApiException.offline => l.offline,
         ApiException.asleep => l.asleepJoin,
-        ApiException.gone => l.frameGoneJoin,
+        ApiException.gone => l.albumGoneJoin,
         _ => _devDetail(l.somethingWrong, e),
       };
 

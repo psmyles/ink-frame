@@ -13,13 +13,13 @@
     <div class="mark" aria-hidden="true"></div>
 
     <section id="invite" hidden>
-      <h1>You're invited to add photos to a frame</h1>
+      <h1>You're invited to add photos to an album</h1>
       <p>Open this link in the Ink Frame app to join.</p>
     </section>
 
     <section id="devices" hidden>
-      <h1>Open your frames in Ink Frame</h1>
-      <p id="devices-text">Sign in on this device to see your frames.</p>
+      <h1>Open your albums in Ink Frame</h1>
+      <p id="devices-text">Sign in on this device to see your albums.</p>
     </section>
 
     <section id="broken" hidden>
@@ -65,7 +65,7 @@
         $("devices").hidden = false;
         const n = link.frames.length;
         $("devices-text").textContent =
-          `Sign in on this device to see your ${n === 1 ? "frame" : `${n} frames`}.`;
+          `Sign in on this device to see your ${n === 1 ? "album" : `${n} albums`}.`;
       }
       $("actions").hidden = false;
       $("open").href = link.appUrl;

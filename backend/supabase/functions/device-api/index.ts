@@ -38,7 +38,9 @@ const SyncBody = z.strictObject({
   fw_version: FwVersion,
   battery_pct: z.int().min(0).max(100).nullable().optional(),
   rssi: z.int().min(-127).max(0).nullable().optional(),
+  sd_total_bytes: z.int().min(0).nullable().optional(),
   sd_free_bytes: z.int().min(0).nullable().optional(),
+  cache_bytes: z.int().min(0).nullable().optional(),
   local_ids: z.array(Uuid).max(2000),
 });
 
@@ -57,7 +59,9 @@ app.post("/sync", async (c) => {
     p_fw_version: b.fw_version,
     p_battery_pct: b.battery_pct ?? null,
     p_rssi: b.rssi ?? null,
+    p_sd_total_bytes: b.sd_total_bytes ?? null,
     p_sd_free_bytes: b.sd_free_bytes ?? null,
+    p_cache_bytes: b.cache_bytes ?? null,
   });
 
   const { timezone, ...settings } = r.settings;

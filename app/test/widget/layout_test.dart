@@ -87,7 +87,7 @@ void main() {
     expect(find.text("Grandma's"), findsOneWidget);
     expect(find.text('Set up by Priya'), findsOneWidget);
     expect(find.text('Asleep'), findsOneWidget);
-    expect(find.text('Choose a frame'), findsNothing);
+    expect(find.text('Choose an album'), findsNothing);
 
     await tester.tap(find.text('Kitchen'));
     await tester.pumpAndSettle();
@@ -97,8 +97,8 @@ void main() {
 
   testWidgets('wide window: sidebar and detail', (tester) async {
     await pumpApp(tester, const Size(1200, 800), frames: [kitchen, grandma]);
-    expect(find.text('FRAMES'), findsOneWidget);
-    expect(find.text('Choose a frame'), findsOneWidget);
+    expect(find.text('ALBUMS'), findsOneWidget);
+    expect(find.text('Choose an album'), findsOneWidget);
 
     await tester.tap(find.text("Grandma's"));
     await tester.pumpAndSettle();
@@ -108,10 +108,10 @@ void main() {
 
   testWidgets('narrowing a wide window switches to the phone layout', (tester) async {
     await pumpApp(tester, const Size(1200, 800), frames: [kitchen]);
-    expect(find.text('FRAMES'), findsOneWidget);
+    expect(find.text('ALBUMS'), findsOneWidget);
     tester.view.physicalSize = const Size(600, 800);
     await tester.pumpAndSettle();
-    expect(find.text('FRAMES'), findsNothing);
+    expect(find.text('ALBUMS'), findsNothing);
     expect(find.text('Kitchen'), findsOneWidget);
   });
 }

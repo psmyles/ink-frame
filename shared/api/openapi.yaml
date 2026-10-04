@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ink Frame frame-project API
-  version: 2.1.0
+  version: 2.2.0
   description: |
     Contract for the two Edge Functions deployed into every frame's Supabase project
     (PLAN.md §7.3, §7.4). **One project holds one frame.** The functions,
@@ -123,7 +123,13 @@ paths:
       summary: Report status and fetch settings and the photo manifest
       description: |
         Called on every scheduled or forced sync. Updates the heartbeat fields
-        (`last_seen_at`, `fw_version`, `battery_pct`, `rssi`, `sd_free_bytes`).
+        (`last_seen_at`, `fw_version`, `battery_pct`, `rssi`, `sd_total_bytes`,
+        `sd_free_bytes`, `cache_bytes`).
+
+        The memory card: the frame mirrors the manifest into its cache, so after this
+        sync its photos take the manifest's total `bytes`. They fit when that is at most
+        `sd_free_bytes + cache_bytes - 8 MB` (the frame keeps 8 MB free and skips photos
+        that don't fit; the app warns). Files outside the cache are never touched.
 
         - `settings` is always returned.
         - `images` is omitted when the request's `manifest_version` equals the current
@@ -163,10 +169,22 @@ paths:
                   minimum: -127
                   maximum: 0
                   description: Wi-Fi signal in dBm.
+                sd_total_bytes:
+                  type: [integer, 'null']
+                  format: int64
+                  minimum: 0
+                  description: >-
+                    The memory card's size. `0`: no card, or one the frame can't read
+                    (not FAT, or damaged); `null`: not reported.
                 sd_free_bytes:
                   type: [integer, 'null']
                   format: int64
                   minimum: 0
+                cache_bytes:
+                  type: [integer, 'null']
+                  format: int64
+                  minimum: 0
+                  description: Bytes the frame's own photo cache takes on the card.
                 local_ids:
                   type: array
                   maxItems: 2000
@@ -1100,6 +1118,19 @@ components:
         fw_version: { type: [string, 'null'] }
         last_seen_at: { type: [string, 'null'], format: date-time }
         battery_pct: { type: [integer, 'null'] }
+        sd_total_bytes:
+          type: [integer, 'null']
+          format: int64
+          description: >-
+            The hardware's memory card size at its last check (`/device-api/sync`); `0`
+            = no card or unreadable; `null` = not known (not connected, or not reported).
+        sd_free_bytes: { type: [integer, 'null'], format: int64 }
+        cache_bytes:
+          type: [integer, 'null']
+          format: int64
+          description: >-
+            What the frame's photos took on the card at its last check. The photos fit
+            when their total size is at most `sd_free_bytes + cache_bytes - 8 MB`.
         image_interval_s: { type: integer }
         display_order: { $ref: '#/components/schemas/DisplayOrder' }
         sync_interval_s: { type: integer }

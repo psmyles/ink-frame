@@ -83,7 +83,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _rename(String current) async {
     final l = AppLocalizations.of(context);
-    final name = await promptText(context, title: l.renameTitle, initial: current, label: l.frameName);
+    final name = await promptText(context, title: l.renameTitle, initial: current, label: l.albumName);
     if (name != null) await _save({'name': name}, reachesFrame: false);
   }
 
@@ -178,6 +178,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final battery = _v('low_battery_pct', f.lowBatteryPct);
     String batteryLabel(int? v) => v == null ? l.off : l.percent(v);
     final (city, region) = timeZoneParts(timezone);
+    // "Frame F7C4" (what its setup screen shows), then its software and battery.
+    final suffix = f.hwSuffix;
+    final hardwareDetails = [
+      if (f.connected && suffix != null) f.fwVersion == null ? l.hardwareConnectedNoVersion : l.hardwareConnected(f.fwVersion!),
+      if (f.batteryPct != null) l.batteryNow(f.batteryPct!),
+    ];
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -187,12 +193,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(l.onlyOwnerChanges(s.owner.displayName), style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           ),
+        // The album (photos, people, storage), then the frame on the wall (PLAN.md §2).
+        _Section(l.sectionAlbum),
         ListTile(
-          title: Text(l.frameName),
+          title: Text(l.albumName),
           subtitle: Text(name),
           trailing: owner ? const Icon(Icons.edit_outlined) : null,
           onTap: owner ? () => _rename(name) : null,
         ),
+        ListTile(
+          title: Text(l.storage),
+          subtitle: usage == null
+              ? null
+              : Text(l.storageUsed(formatBytes(usage.frame.bytes, locale), formatBytes(usage.limitBytes, locale))),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => openPanel<void>(context, (_) => StorageScreen(address: _a)),
+        ),
+        _Section(l.sectionHardware),
+        ListTile(
+          title: Text(!f.connected
+              ? l.hardwareNotConnected
+              : suffix != null
+                  ? l.frameNamed(suffix)
+                  : (f.fwVersion == null ? l.hardwareConnectedNoVersion : l.hardwareConnected(f.fwVersion!))),
+          subtitle: hardwareDetails.isEmpty ? null : Text(hardwareDetails.join(' · ')),
+          leading: Icon(f.connected ? Icons.check_circle_outline : Icons.link_off),
+        ),
+        if (f.connected && f.sdTotalBytes != null) _CardTile(frame: f, photoBytes: usage?.frame.bytes),
+        ListTile(
+          title: Text(l.frameModel),
+          subtitle: Text(model),
+          // Nothing to change to while there's one model (shared/presets.json).
+          trailing: owner && (ref.watch(backendBundleProvider).value?.models.length ?? 0) > 1
+              ? TextButton(onPressed: () => _changeModel(s, model), child: Text(l.changeModel))
+              : null,
+        ),
+        if (owner)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Wrap(spacing: 8, children: [
+              if (f.connected) ...[
+                TextButton(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectDifferentFrame)),
+                TextButton(onPressed: () => _disconnect(name), child: Text(l.disconnectFrame)),
+              ] else
+                FilledButton.tonal(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectFrame)),
+            ]),
+          ),
         _Section(l.sectionPhotos),
         ListTile(
           title: Text(l.changePhotoEvery),
@@ -298,43 +344,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               : null,
         ),
         if (ref.watch(batteryWatchProvider).supported) _NotifyTile(address: _a, summary: s, warningOn: battery != null),
-        _Section(l.sectionHardware),
-        ListTile(
-          title: Text(l.frameModel),
-          subtitle: Text(model),
-          // Nothing to change to while there's one model (shared/presets.json).
-          trailing: owner && (ref.watch(backendBundleProvider).value?.models.length ?? 0) > 1
-              ? TextButton(onPressed: () => _changeModel(s, model), child: Text(l.changeModel))
-              : null,
-        ),
-        ListTile(
-          title: Text(f.connected
-              ? (f.fwVersion == null ? l.hardwareConnectedNoVersion : l.hardwareConnected(f.fwVersion!))
-              : l.hardwareNotConnected),
-          subtitle: f.batteryPct == null ? null : Text(l.batteryNow(f.batteryPct!)),
-          leading: Icon(f.connected ? Icons.check_circle_outline : Icons.link_off),
-        ),
-        if (owner)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Wrap(spacing: 8, children: [
-              if (f.connected) ...[
-                TextButton(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectNewHardware)),
-                TextButton(onPressed: () => _disconnect(name), child: Text(l.disconnectFrame)),
-              ] else
-                FilledButton.tonal(onPressed: () => openConnectFrame(context, _a), child: Text(l.connectFrame)),
-            ]),
-          ),
-        const Divider(height: 24),
-        ListTile(
-          leading: const Icon(Icons.storage_outlined),
-          title: Text(l.storage),
-          subtitle: usage == null
-              ? null
-              : Text(l.storageUsed(formatBytes(usage.frame.bytes, locale), formatBytes(usage.limitBytes, locale))),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => openPanel<void>(context, (_) => StorageScreen(address: _a)),
-        ),
         if (owner) ...[
           _Section(l.sectionOwner),
           OwnerTools(address: _a, frameName: name),
@@ -496,6 +505,40 @@ class _TimeZonePickerState extends State<TimeZonePicker> {
           );
         },
       ),
+    );
+  }
+}
+
+/// The frame's memory card at its last check: size, use, and whether the photos fit.
+class _CardTile extends StatelessWidget {
+  const _CardTile({required this.frame, required this.photoBytes});
+
+  final Frame frame;
+  final int? photoBytes;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    if (frame.noCard) {
+      return ListTile(
+        leading: Icon(Icons.sd_card_alert_outlined, color: theme.colorScheme.error),
+        title: Text(l.memoryCard),
+        subtitle: Text(l.cardMissing),
+      );
+    }
+    final total = frame.sdTotalBytes!;
+    final used = total - (frame.sdFreeBytes ?? total);
+    final short = photoBytes == null ? 0 : frame.cardShortBy(photoBytes!);
+    return ListTile(
+      leading: const Icon(Icons.sd_card_outlined),
+      title: Text(l.memoryCard),
+      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(l.cardUsage(formatBytes(used, locale), formatBytes(total, locale), formatBytes(frame.cacheBytes ?? 0, locale))),
+        if (short > 0)
+          Text(l.cardTooSmall(frame.name, formatBytes(short, locale)), style: TextStyle(color: theme.colorScheme.error)),
+      ]),
     );
   }
 }

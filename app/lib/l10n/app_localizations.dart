@@ -151,7 +151,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinTitle.
   ///
   /// In en, this message translates to:
-  /// **'Join a frame'**
+  /// **'Join an album'**
   String get joinTitle;
 
   /// No description provided for @signInTitle.
@@ -181,7 +181,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinLinkHelp.
   ///
   /// In en, this message translates to:
-  /// **'Paste the link you were sent. A code on its own isn\'t enough, because the app also needs the frame\'s address.'**
+  /// **'Paste the whole link you were sent. The code on its own isn\'t enough.'**
   String get joinLinkHelp;
 
   /// No description provided for @signInLinkHelp.
@@ -199,20 +199,20 @@ abstract class AppLocalizations {
   /// No description provided for @signInExplain.
   ///
   /// In en, this message translates to:
-  /// **'Your account is only used to recognise you, and to find your frames when you sign in on a new device.'**
+  /// **'Your account is only used to recognise you, and to find your albums when you sign in on a new phone or computer.'**
   String get signInExplain;
 
-  /// No description provided for @findingFrames.
+  /// No description provided for @findingAlbums.
   ///
   /// In en, this message translates to:
-  /// **'Looking for your frames…'**
-  String get findingFrames;
+  /// **'Looking for your albums…'**
+  String get findingAlbums;
 
-  /// No description provided for @noFramesOnAccount.
+  /// No description provided for @noAlbumsOnAccount.
   ///
   /// In en, this message translates to:
-  /// **'There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.'**
-  String get noFramesOnAccount;
+  /// **'There are no albums on this account yet. Set up a frame to start your own album, or join one with the invite you were sent. If you used a different account before, try that one.'**
+  String get noAlbumsOnAccount;
 
   /// No description provided for @differentAccount.
   ///
@@ -223,13 +223,13 @@ abstract class AppLocalizations {
   /// No description provided for @findOffline.
   ///
   /// In en, this message translates to:
-  /// **'Can\'t look for your frames right now. Check your internet connection and try again.'**
+  /// **'Can\'t look for your albums right now. Check your internet connection and try again.'**
   String get findOffline;
 
   /// No description provided for @findFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t look for your frames. Try again, or use a link or QR code.'**
+  /// **'Couldn\'t look for your albums. Try again, or use a link or QR code.'**
   String get findFailed;
 
   /// No description provided for @continueWithGoogle.
@@ -313,7 +313,7 @@ abstract class AppLocalizations {
   /// No description provided for @offline.
   ///
   /// In en, this message translates to:
-  /// **'Can\'t reach the frame. Check your internet connection.'**
+  /// **'Can\'t reach the album. Check your internet connection.'**
   String get offline;
 
   /// No description provided for @firstTip.
@@ -328,29 +328,29 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get gotIt;
 
-  /// No description provided for @noFramesOnLink.
+  /// No description provided for @noAlbumsOnLink.
   ///
   /// In en, this message translates to:
-  /// **'You\'re not on any of the frames in that link any more.'**
-  String get noFramesOnLink;
+  /// **'You\'re not in any of the albums in that link any more.'**
+  String get noAlbumsOnLink;
 
-  /// No description provided for @skippedFrames.
+  /// No description provided for @skippedAlbums.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{You\'re no longer on one frame from that link, so it was skipped.} other{You\'re no longer on {count} frames from that link, so they were skipped.}}'**
-  String skippedFrames(int count);
+  /// **'{count, plural, =1{You\'re no longer in one album from that link, so it was skipped.} other{You\'re no longer in {count} albums from that link, so they were skipped.}}'**
+  String skippedAlbums(int count);
 
-  /// No description provided for @noFramesYet.
+  /// No description provided for @noAlbumsYet.
   ///
   /// In en, this message translates to:
-  /// **'No frames yet'**
-  String get noFramesYet;
+  /// **'No albums yet'**
+  String get noAlbumsYet;
 
-  /// No description provided for @loadingFrames.
+  /// No description provided for @loadingAlbums.
   ///
   /// In en, this message translates to:
-  /// **'Loading your frames…'**
-  String get loadingFrames;
+  /// **'Loading your albums…'**
+  String get loadingAlbums;
 
   /// No description provided for @loading.
   ///
@@ -358,11 +358,11 @@ abstract class AppLocalizations {
   /// **'Loading…'**
   String get loading;
 
-  /// No description provided for @noFramesBody.
+  /// No description provided for @noAlbumsBody.
   ///
   /// In en, this message translates to:
-  /// **'Set up your own frame, or join one with the invite link you were sent.'**
-  String get noFramesBody;
+  /// **'Set up a frame to start your own album, or join one with the invite link you were sent.'**
+  String get noAlbumsBody;
 
   /// No description provided for @setUpBy.
   ///
@@ -370,11 +370,11 @@ abstract class AppLocalizations {
   /// **'Set up by {name}'**
   String setUpBy(String name);
 
-  /// No description provided for @frames.
+  /// No description provided for @albums.
   ///
   /// In en, this message translates to:
-  /// **'Frames'**
-  String get frames;
+  /// **'Albums'**
+  String get albums;
 
   /// No description provided for @setUpOrJoin.
   ///
@@ -382,11 +382,11 @@ abstract class AppLocalizations {
   /// **'Set up or join'**
   String get setUpOrJoin;
 
-  /// No description provided for @chooseFrame.
+  /// No description provided for @chooseAlbum.
   ///
   /// In en, this message translates to:
-  /// **'Choose a frame'**
-  String get chooseFrame;
+  /// **'Choose an album'**
+  String get chooseAlbum;
 
   /// No description provided for @statusUpToDate.
   ///
@@ -397,13 +397,13 @@ abstract class AppLocalizations {
   /// No description provided for @statusChangesWaiting.
   ///
   /// In en, this message translates to:
-  /// **'Changes waiting · next check around {time}'**
+  /// **'The frame gets the changes around {time}'**
   String statusChangesWaiting(String time);
 
   /// No description provided for @statusChangesWaitingSoon.
   ///
   /// In en, this message translates to:
-  /// **'Changes waiting · next check soon'**
+  /// **'The frame gets the changes soon'**
   String get statusChangesWaitingSoon;
 
   /// No description provided for @statusFirstCheck.
@@ -415,13 +415,13 @@ abstract class AppLocalizations {
   /// No description provided for @statusNotConnected.
   ///
   /// In en, this message translates to:
-  /// **'Not connected yet'**
+  /// **'No frame connected yet'**
   String get statusNotConnected;
 
   /// No description provided for @statusNotCheckedIn.
   ///
   /// In en, this message translates to:
-  /// **'Hasn\'t checked in since {when}. Check the frame\'s Wi-Fi and battery.'**
+  /// **'The frame hasn\'t checked in since {when}. Check its Wi-Fi and battery.'**
   String statusNotCheckedIn(String when);
 
   /// No description provided for @batteryLow.
@@ -463,14 +463,14 @@ abstract class AppLocalizations {
   /// No description provided for @asleepOwner.
   ///
   /// In en, this message translates to:
-  /// **'{frame}\'s photo storage is asleep because it wasn\'t used for a while. The frame keeps showing its photos.'**
-  String asleepOwner(String frame);
+  /// **'{album}\'s photo storage is asleep because it wasn\'t used for a while. The frame keeps showing its photos.'**
+  String asleepOwner(String album);
 
   /// No description provided for @asleepOther.
   ///
   /// In en, this message translates to:
-  /// **'{frame} is asleep because it wasn\'t used for a while. Ask {owner} to open Ink Frame to wake it up. The frame keeps showing its photos.'**
-  String asleepOther(String frame, String owner);
+  /// **'{album} is asleep because it wasn\'t used for a while. Ask {owner} to open Ink Frame to wake it up. The frame keeps showing its photos.'**
+  String asleepOther(String album, String owner);
 
   /// No description provided for @asleepShort.
   ///
@@ -481,7 +481,7 @@ abstract class AppLocalizations {
   /// No description provided for @asleepJoin.
   ///
   /// In en, this message translates to:
-  /// **'This frame is asleep because it wasn\'t used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.'**
+  /// **'This album is asleep because it wasn\'t used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.'**
   String get asleepJoin;
 
   /// No description provided for @theOwner.
@@ -490,11 +490,11 @@ abstract class AppLocalizations {
   /// **'the person who set it up'**
   String get theOwner;
 
-  /// No description provided for @removedFromFrame.
+  /// No description provided for @removedFromAlbum.
   ///
   /// In en, this message translates to:
-  /// **'You\'re no longer on this frame.'**
-  String get removedFromFrame;
+  /// **'You\'re no longer in this album.'**
+  String get removedFromAlbum;
 
   /// No description provided for @removeFromDevice.
   ///
@@ -502,29 +502,29 @@ abstract class AppLocalizations {
   /// **'Remove from this device'**
   String get removeFromDevice;
 
-  /// No description provided for @frameGone.
+  /// No description provided for @albumGone.
   ///
   /// In en, this message translates to:
-  /// **'{frame} no longer exists: its photo storage was deleted.'**
-  String frameGone(String frame);
+  /// **'{album} no longer exists: its photo storage was deleted.'**
+  String albumGone(String album);
 
-  /// No description provided for @frameGoneShort.
+  /// No description provided for @albumGoneShort.
   ///
   /// In en, this message translates to:
   /// **'No longer exists'**
-  String get frameGoneShort;
+  String get albumGoneShort;
 
-  /// No description provided for @frameGoneJoin.
+  /// No description provided for @albumGoneJoin.
   ///
   /// In en, this message translates to:
-  /// **'This frame no longer exists: its photo storage was deleted.'**
-  String get frameGoneJoin;
+  /// **'This album no longer exists: its photo storage was deleted.'**
+  String get albumGoneJoin;
 
-  /// No description provided for @signedOutOfFrame.
+  /// No description provided for @signedOutOfAlbum.
   ///
   /// In en, this message translates to:
-  /// **'You were signed out of this frame.'**
-  String get signedOutOfFrame;
+  /// **'You were signed out of this album.'**
+  String get signedOutOfAlbum;
 
   /// No description provided for @signInAgain.
   ///
@@ -532,11 +532,11 @@ abstract class AppLocalizations {
   /// **'Sign in again'**
   String get signInAgain;
 
-  /// No description provided for @unknownFrame.
+  /// No description provided for @unknownAlbum.
   ///
   /// In en, this message translates to:
-  /// **'A frame'**
-  String get unknownFrame;
+  /// **'An album'**
+  String get unknownAlbum;
 
   /// No description provided for @noPhotosYet.
   ///
@@ -547,7 +547,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupExplain.
   ///
   /// In en, this message translates to:
-  /// **'Your frame\'s photos are kept in your own free Supabase account, and you\'ll be the frame\'s owner. A free account can run 2 frames. Nobody else, including us, can see the photos.'**
+  /// **'Each frame has its own album: its photos and the people you share them with. The album is kept in your own free Supabase account, and you\'ll be its owner. A free account can run 2 albums. Nobody else, including us, can see the photos.'**
   String get setupExplain;
 
   /// No description provided for @setupConnectTitle.
@@ -607,14 +607,14 @@ abstract class AppLocalizations {
   /// No description provided for @setupNameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Name it'**
+  /// **'Name the album'**
   String get setupNameTitle;
 
-  /// No description provided for @frameNameHint.
+  /// No description provided for @albumNameHint.
   ///
   /// In en, this message translates to:
   /// **'Kitchen, Grandma\'s…'**
-  String get frameNameHint;
+  String get albumNameHint;
 
   /// No description provided for @setUpNamed.
   ///
@@ -655,7 +655,7 @@ abstract class AppLocalizations {
   /// No description provided for @ownerSignInHint.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with the account you use Ink Frame with. You\'ll be the frame\'s owner.'**
+  /// **'Sign in with the account you use Ink Frame with. You\'ll be the album\'s owner.'**
   String get ownerSignInHint;
 
   /// No description provided for @setupStopped.
@@ -685,7 +685,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupLimit.
   ///
   /// In en, this message translates to:
-  /// **'Your free Supabase account already runs 2 projects. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need.'**
+  /// **'Your free Supabase account already runs 2 projects, the most a free account can. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need in Supabase.'**
   String get setupLimit;
 
   /// No description provided for @openSupabase.
@@ -709,7 +709,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t sign you in to the new frame. Try again.'**
+  /// **'Couldn\'t sign you in to the new album. Try again.'**
   String get setupSignInFailed;
 
   /// No description provided for @sectionOwner.
@@ -727,7 +727,7 @@ abstract class AppLocalizations {
   /// No description provided for @supabaseNotHere.
   ///
   /// In en, this message translates to:
-  /// **'Not connected on this device. Connect it to update, wake up or delete the frame.'**
+  /// **'Not connected on this device. Connect it here to update, wake up or delete the album.'**
   String get supabaseNotHere;
 
   /// No description provided for @connect.
@@ -739,8 +739,8 @@ abstract class AppLocalizations {
   /// No description provided for @updateReady.
   ///
   /// In en, this message translates to:
-  /// **'An update for {frame} is ready'**
-  String updateReady(String frame);
+  /// **'An update for {album} is ready'**
+  String updateReady(String album);
 
   /// No description provided for @updateHint.
   ///
@@ -754,35 +754,35 @@ abstract class AppLocalizations {
   /// **'Update'**
   String get update;
 
-  /// No description provided for @updatingFrame.
+  /// No description provided for @updatingAlbum.
   ///
   /// In en, this message translates to:
-  /// **'Updating {frame}…'**
-  String updatingFrame(String frame);
+  /// **'Updating {album}…'**
+  String updatingAlbum(String album);
 
   /// No description provided for @updated.
   ///
   /// In en, this message translates to:
-  /// **'{frame} is up to date'**
-  String updated(String frame);
+  /// **'{album} is up to date'**
+  String updated(String album);
 
   /// No description provided for @updateFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t update {frame}. Try again.'**
-  String updateFailed(String frame);
+  /// **'Couldn\'t update {album}. Try again.'**
+  String updateFailed(String album);
 
-  /// No description provided for @deleteFrame.
+  /// No description provided for @deleteAlbum.
   ///
   /// In en, this message translates to:
-  /// **'Delete this frame'**
-  String get deleteFrame;
+  /// **'Delete this album'**
+  String get deleteAlbum;
 
-  /// No description provided for @deleteFrameConfirm.
+  /// No description provided for @deleteAlbumConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete {frame}? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.'**
-  String deleteFrameConfirm(String frame);
+  /// **'Delete {album}? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.'**
+  String deleteAlbumConfirm(String album);
 
   /// No description provided for @typeToConfirm.
   ///
@@ -790,23 +790,23 @@ abstract class AppLocalizations {
   /// **'Type {word} to confirm'**
   String typeToConfirm(String word);
 
-  /// No description provided for @deletingFrame.
+  /// No description provided for @deletingAlbum.
   ///
   /// In en, this message translates to:
-  /// **'Deleting {frame}…'**
-  String deletingFrame(String frame);
+  /// **'Deleting {album}…'**
+  String deletingAlbum(String album);
 
-  /// No description provided for @deleteFrameFailed.
+  /// No description provided for @deleteAlbumFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t delete {frame}. Try again.'**
-  String deleteFrameFailed(String frame);
+  /// **'Couldn\'t delete {album}. Try again.'**
+  String deleteAlbumFailed(String album);
 
   /// No description provided for @wrongSupabaseAccount.
   ///
   /// In en, this message translates to:
-  /// **'This Supabase account can\'t reach {frame}. Connect the account it was set up with.'**
-  String wrongSupabaseAccount(String frame);
+  /// **'This Supabase account can\'t reach {album}. Connect the account it was set up with.'**
+  String wrongSupabaseAccount(String album);
 
   /// No description provided for @wakeUp.
   ///
@@ -817,14 +817,14 @@ abstract class AppLocalizations {
   /// No description provided for @wakingUp.
   ///
   /// In en, this message translates to:
-  /// **'Waking up {frame}… This takes about 3 minutes.'**
-  String wakingUp(String frame);
+  /// **'Waking up {album}… This takes about 3 minutes.'**
+  String wakingUp(String album);
 
   /// No description provided for @wakeUpFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t wake up {frame}. Try again.'**
-  String wakeUpFailed(String frame);
+  /// **'Couldn\'t wake up {album}. Try again.'**
+  String wakeUpFailed(String album);
 
   /// No description provided for @changeModel.
   ///
@@ -835,8 +835,8 @@ abstract class AppLocalizations {
   /// No description provided for @changeModelConfirm.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{Switch {frame} to the {model}?} =1{Switch {frame} to the {model}? Its photo will be removed, because it was made for the {old} screen.} other{Switch {frame} to the {model}? All {count} photos will be removed, because they were made for the {old} screen.}}'**
-  String changeModelConfirm(int count, String frame, String model, String old);
+  /// **'{count, plural, =0{Switch {album} to the {model}?} =1{Switch {album} to the {model}? Its photo will be removed, because it was made for the {old} screen.} other{Switch {album} to the {model}? All {count} photos will be removed, because they were made for the {old} screen.}}'**
+  String changeModelConfirm(int count, String album, String model, String old);
 
   /// No description provided for @switchModel.
   ///
@@ -844,17 +844,17 @@ abstract class AppLocalizations {
   /// **'Switch'**
   String get switchModel;
 
-  /// No description provided for @frameReady.
+  /// No description provided for @albumReady.
   ///
   /// In en, this message translates to:
   /// **'{name} is ready'**
-  String frameReady(String name);
+  String albumReady(String name);
 
-  /// No description provided for @frameReadyBody.
+  /// No description provided for @albumReadyBody.
   ///
   /// In en, this message translates to:
   /// **'Connect the frame now, or add photos first: it gets them once it\'s connected.'**
-  String get frameReadyBody;
+  String get albumReadyBody;
 
   /// No description provided for @account.
   ///
@@ -865,7 +865,7 @@ abstract class AppLocalizations {
   /// No description provided for @onThisDevice.
   ///
   /// In en, this message translates to:
-  /// **'Frames on this device'**
+  /// **'Albums on this device'**
   String get onThisDevice;
 
   /// No description provided for @signOut.
@@ -877,7 +877,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOutConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Sign out of every frame on this device? You can sign in again with a link from another device or an invite.'**
+  /// **'Sign out on this device? Your albums come back when you sign in again with the same account.'**
   String get signOutConfirm;
 
   /// No description provided for @version.
@@ -1147,8 +1147,8 @@ abstract class AppLocalizations {
   /// No description provided for @dropHere.
   ///
   /// In en, this message translates to:
-  /// **'Drop photos to add them to {frame}'**
-  String dropHere(String frame);
+  /// **'Drop photos to add them to {album}'**
+  String dropHere(String album);
 
   /// No description provided for @preparing.
   ///
@@ -1198,17 +1198,17 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 photo couldn\'t be added.} other{{count} photos couldn\'t be added.}}'**
   String uploadsFailed(int count);
 
-  /// No description provided for @alreadyOnFrame.
+  /// No description provided for @alreadyInAlbum.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 photo was already on the frame.} other{{count} photos were already on the frame.}}'**
-  String alreadyOnFrame(int count);
+  /// **'{count, plural, =1{1 photo was already in the album.} other{{count} photos were already in the album.}}'**
+  String alreadyInAlbum(int count);
 
   /// No description provided for @storageFull.
   ///
   /// In en, this message translates to:
-  /// **'{frame}\'s storage is full. Delete some photos to add more.'**
-  String storageFull(String frame);
+  /// **'{album}\'s storage is full. Delete some photos to add more.'**
+  String storageFull(String album);
 
   /// No description provided for @addedBy.
   ///
@@ -1243,13 +1243,13 @@ abstract class AppLocalizations {
   /// No description provided for @deleteConfirm.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Delete this photo from the frame?} other{Delete {count} photos from the frame?}}'**
+  /// **'{count, plural, =1{Delete this photo from the album?} other{Delete {count} photos from the album?}}'**
   String deleteConfirm(int count);
 
   /// No description provided for @cantDeleteOthers.
   ///
   /// In en, this message translates to:
-  /// **'You can only delete your own photos. The frame\'s owner can delete any.'**
+  /// **'You can only delete your own photos. The album\'s owner can delete any.'**
   String get cantDeleteOthers;
 
   /// No description provided for @noReEdit.
@@ -1312,16 +1312,106 @@ abstract class AppLocalizations {
   /// **'Storage'**
   String get storage;
 
-  /// No description provided for @frameName.
+  /// No description provided for @memoryCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory card'**
+  String get memoryCard;
+
+  /// No description provided for @cardUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} used · its photos take {photos}'**
+  String cardUsage(String used, String total, String photos);
+
+  /// No description provided for @cardMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No memory card, or the frame can\'t read it. Put in a microSD card, or erase it when you connect the frame.'**
+  String get cardMissing;
+
+  /// No description provided for @cardMissingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'No memory card'**
+  String get cardMissingShort;
+
+  /// No description provided for @cardMissingConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no memory card in the frame. It needs one to keep photos: put a microSD card in, then connect again.'**
+  String get cardMissingConnect;
+
+  /// No description provided for @cardUnreadableConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame can\'t read its memory card. It may be set up for a camera or computer, or be damaged. Erasing it makes it work here.'**
+  String get cardUnreadableConnect;
+
+  /// No description provided for @cardSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} card, {free} free'**
+  String cardSize(String total, String free);
+
+  /// No description provided for @cardOtherFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{other} of other files on it stay, unless you erase it.'**
+  String cardOtherFiles(String other);
+
+  /// No description provided for @cardTooSmallConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'{album}\'s photos ({photos}) won\'t all fit: there\'s room for {room}.'**
+  String cardTooSmallConnect(String album, String photos, String room);
+
+  /// No description provided for @eraseCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase the memory card first'**
+  String get eraseCard;
+
+  /// No description provided for @eraseCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes everything on it and sets it up for the frame.'**
+  String get eraseCardHint;
+
+  /// No description provided for @stageErasing.
+  ///
+  /// In en, this message translates to:
+  /// **'Erasing the memory card'**
+  String get stageErasing;
+
+  /// No description provided for @sdFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The frame couldn\'t erase its memory card. Check it\'s pushed in properly, or try another card.'**
+  String get sdFailed;
+
+  /// No description provided for @cardTooSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'{album}\'s photos don\'t all fit on the frame\'s memory card ({short} too much). Remove some photos, or put a bigger card in the frame.'**
+  String cardTooSmall(String album, String short);
+
+  /// No description provided for @albumName.
   ///
   /// In en, this message translates to:
   /// **'Name'**
-  String get frameName;
+  String get albumName;
+
+  /// No description provided for @sectionAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get sectionAlbum;
 
   /// No description provided for @renameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rename the frame'**
+  /// **'Rename the album'**
   String get renameTitle;
 
   /// No description provided for @save.
@@ -1333,7 +1423,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionPhotos.
   ///
   /// In en, this message translates to:
-  /// **'Photos'**
+  /// **'Showing photos'**
   String get sectionPhotos;
 
   /// No description provided for @sectionChecking.
@@ -1353,6 +1443,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The frame'**
   String get sectionHardware;
+
+  /// No description provided for @frameNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame {id}'**
+  String frameNamed(String id);
 
   /// No description provided for @changePhotoEvery.
   ///
@@ -1471,7 +1567,7 @@ abstract class AppLocalizations {
   /// No description provided for @hardwareNotConnected.
   ///
   /// In en, this message translates to:
-  /// **'Not connected yet'**
+  /// **'No frame connected yet'**
   String get hardwareNotConnected;
 
   /// No description provided for @batteryNow.
@@ -1597,8 +1693,8 @@ abstract class AppLocalizations {
   /// No description provided for @inviteShareText.
   ///
   /// In en, this message translates to:
-  /// **'Join {frame} on Ink Frame to add photos: {link}'**
-  String inviteShareText(String frame, String link);
+  /// **'Join {album} on Ink Frame to add photos: {link}'**
+  String inviteShareText(String album, String link);
 
   /// No description provided for @makingInvite.
   ///
@@ -1624,11 +1720,11 @@ abstract class AppLocalizations {
   /// **'{used} of {max} joined · expires {date}'**
   String inviteForMany(int used, int max, String date);
 
-  /// No description provided for @revoke.
+  /// No description provided for @cancelInvite.
   ///
   /// In en, this message translates to:
-  /// **'Revoke'**
-  String get revoke;
+  /// **'Cancel invite'**
+  String get cancelInvite;
 
   /// No description provided for @justYou.
   ///
@@ -1657,20 +1753,20 @@ abstract class AppLocalizations {
   /// No description provided for @removePersonConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Remove {name} from {frame}? Their photos stay; you can delete them.'**
-  String removePersonConfirm(String name, String frame);
+  /// **'Remove {name} from {album}? Their photos stay; you can delete them.'**
+  String removePersonConfirm(String name, String album);
 
-  /// No description provided for @leaveFrame.
+  /// No description provided for @leaveAlbum.
   ///
   /// In en, this message translates to:
-  /// **'Leave this frame'**
-  String get leaveFrame;
+  /// **'Leave this album'**
+  String get leaveAlbum;
 
-  /// No description provided for @leaveFrameConfirm.
+  /// No description provided for @leaveAlbumConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Leave {frame}? You\'ll stop seeing its photos. Photos you added stay.'**
-  String leaveFrameConfirm(String frame);
+  /// **'Leave {album}? You\'ll stop seeing its photos. Photos you added stay.'**
+  String leaveAlbumConfirm(String album);
 
   /// No description provided for @storageUsed.
   ///
@@ -1693,7 +1789,7 @@ abstract class AppLocalizations {
   /// No description provided for @storageNote.
   ///
   /// In en, this message translates to:
-  /// **'The frame\'s own downloads aren\'t counted here.'**
+  /// **'This is the album\'s online storage. The copies the frame keeps on its memory card aren\'t counted.'**
   String get storageNote;
 
   /// No description provided for @storageByPerson.
@@ -1705,8 +1801,8 @@ abstract class AppLocalizations {
   /// No description provided for @storageGettingFull.
   ///
   /// In en, this message translates to:
-  /// **'{frame}\'s storage is getting full ({value} %).'**
-  String storageGettingFull(String frame, int value);
+  /// **'{album}\'s storage is getting full ({value} %).'**
+  String storageGettingFull(String album, int value);
 
   /// No description provided for @seeStorage.
   ///
@@ -1723,7 +1819,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourNameHint.
   ///
   /// In en, this message translates to:
-  /// **'What the others see, on every frame you\'re on.'**
+  /// **'What the others see, in every album you\'re in.'**
   String get yourNameHint;
 
   /// No description provided for @nameUpdated.
@@ -1735,8 +1831,8 @@ abstract class AppLocalizations {
   /// No description provided for @nameUpdateFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t update your name on {frames}.'**
-  String nameUpdateFailed(String frames);
+  /// **'Couldn\'t update your name in {albums}.'**
+  String nameUpdateFailed(String albums);
 
   /// No description provided for @anotherDevice.
   ///
@@ -1747,7 +1843,7 @@ abstract class AppLocalizations {
   /// No description provided for @anotherDeviceExplain.
   ///
   /// In en, this message translates to:
-  /// **'On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.'**
+  /// **'On your other phone or computer, sign in with the same account: your albums come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.'**
   String get anotherDeviceExplain;
 
   /// No description provided for @deleteAccount.
@@ -1759,7 +1855,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountBody.
   ///
   /// In en, this message translates to:
-  /// **'You\'ll leave these frames and your account on them is deleted:'**
+  /// **'You\'ll leave these albums and your account in them is deleted:'**
   String get deleteAccountBody;
 
   /// No description provided for @deletePhotosToo.
@@ -1771,7 +1867,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteOwnedBody.
   ///
   /// In en, this message translates to:
-  /// **'These frames you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:'**
+  /// **'These albums you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:'**
   String get deleteOwnedBody;
 
   /// No description provided for @typeDelete.
@@ -1795,8 +1891,8 @@ abstract class AppLocalizations {
   /// No description provided for @deleteFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t delete your account on {frames}. Try again.'**
-  String deleteFailed(String frames);
+  /// **'Couldn\'t delete your account in {albums}. Try again.'**
+  String deleteFailed(String albums);
 
   /// No description provided for @scanQr.
   ///
@@ -1849,8 +1945,8 @@ abstract class AppLocalizations {
   /// No description provided for @connectReplaces.
   ///
   /// In en, this message translates to:
-  /// **'The frame connected to {name} now stops showing photos once this one is connected. The photos stay.'**
-  String connectReplaces(String name);
+  /// **'The frame now showing {album} stops once this one is connected. The photos stay in the album.'**
+  String connectReplaces(String album);
 
   /// No description provided for @findFrame.
   ///
@@ -1951,8 +2047,8 @@ abstract class AppLocalizations {
   /// No description provided for @modelMismatch.
   ///
   /// In en, this message translates to:
-  /// **'This frame is a {device}, but {frame} is set up for a {model}.'**
-  String modelMismatch(String device, String frame, String model);
+  /// **'This frame is a {device}, but {album} is made for a {model}.'**
+  String modelMismatch(String device, String album, String model);
 
   /// No description provided for @wifiTitle.
   ///
@@ -1963,7 +2059,7 @@ abstract class AppLocalizations {
   /// No description provided for @wifiHint.
   ///
   /// In en, this message translates to:
-  /// **'The frame needs a 2.4 GHz network.'**
+  /// **'The frame needs a 2.4 GHz network. If your Wi-Fi has two names, pick the one without “5G”.'**
   String get wifiHint;
 
   /// No description provided for @otherNetwork.
@@ -2017,7 +2113,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectingNamed.
   ///
   /// In en, this message translates to:
-  /// **'Connecting {name}'**
+  /// **'Connecting the frame to {name}'**
   String connectingNamed(String name);
 
   /// No description provided for @stageJoinWifi.
@@ -2041,7 +2137,7 @@ abstract class AppLocalizations {
   /// No description provided for @frameConnected.
   ///
   /// In en, this message translates to:
-  /// **'{name} is connected'**
+  /// **'The frame is connected to {name}'**
   String frameConnected(String name);
 
   /// No description provided for @frameConnectedBody.
@@ -2107,7 +2203,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkedElsewhere.
   ///
   /// In en, this message translates to:
-  /// **'This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again.'**
+  /// **'This frame is still linked to another album. Hold its green button for 10 seconds to reset it, then start again.'**
   String get linkedElsewhere;
 
   /// No description provided for @wifiWrongPassword.
@@ -2176,11 +2272,11 @@ abstract class AppLocalizations {
   /// **'New code'**
   String get newCode;
 
-  /// No description provided for @connectNewHardware.
+  /// No description provided for @connectDifferentFrame.
   ///
   /// In en, this message translates to:
-  /// **'Connect new hardware'**
-  String get connectNewHardware;
+  /// **'Connect a different frame'**
+  String get connectDifferentFrame;
 
   /// No description provided for @disconnectFrame.
   ///
@@ -2191,8 +2287,8 @@ abstract class AppLocalizations {
   /// No description provided for @disconnectConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {name}, ready for new hardware.'**
-  String disconnectConfirm(String name);
+  /// **'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {album}, ready for another frame.'**
+  String disconnectConfirm(String album);
 
   /// No description provided for @disconnected.
   ///
@@ -2200,17 +2296,17 @@ abstract class AppLocalizations {
   /// **'Disconnected. The frame clears itself at its next check.'**
   String get disconnected;
 
-  /// No description provided for @moreFrames.
+  /// No description provided for @moreAlbums.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 more frame is on your account} other{{count} more frames are on your account}}'**
-  String moreFrames(int count);
+  /// **'{count, plural, =1{1 more album is on your account} other{{count} more albums are on your account}}'**
+  String moreAlbums(int count);
 
-  /// No description provided for @moreFramesBody.
+  /// No description provided for @moreAlbumsBody.
   ///
   /// In en, this message translates to:
   /// **'{count, plural, =1{It was added on another device. Sign in again to see it here too.} other{They were added on another device. Sign in again to see them here too.}}'**
-  String moreFramesBody(int count);
+  String moreAlbumsBody(int count);
 
   /// No description provided for @addToDevice.
   ///
@@ -2224,22 +2320,22 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get notNow;
 
-  /// No description provided for @moreFramesElsewhere.
+  /// No description provided for @moreAlbumsElsewhere.
   ///
   /// In en, this message translates to:
   /// **'Your account uses Sign in with Apple, which this device doesn\'t have. Use Account → Use on another device on your iPhone or Mac instead.'**
-  String get moreFramesElsewhere;
+  String get moreAlbumsElsewhere;
 
-  /// No description provided for @moreFramesFailed.
+  /// No description provided for @moreAlbumsFailed.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t add them. Check your internet connection and try again.'**
-  String get moreFramesFailed;
+  String get moreAlbumsFailed;
 
   /// No description provided for @batteryLowTitle.
   ///
   /// In en, this message translates to:
-  /// **'{name}\'s battery is low'**
+  /// **'{name}: the frame\'s battery is low'**
   String batteryLowTitle(String name);
 
   /// No description provided for @batteryLowBody.
@@ -2281,13 +2377,13 @@ abstract class AppLocalizations {
   /// No description provided for @notifyNeedsUpdateOwner.
   ///
   /// In en, this message translates to:
-  /// **'Needs the frame update in Owner tools first.'**
+  /// **'Update the album in Owner tools first.'**
   String get notifyNeedsUpdateOwner;
 
   /// No description provided for @notifyNeedsUpdate.
   ///
   /// In en, this message translates to:
-  /// **'Needs {owner} to update the frame first.'**
+  /// **'Ask {owner} to update the album first.'**
   String notifyNeedsUpdate(String owner);
 
   /// No description provided for @connectedNotifyNote.

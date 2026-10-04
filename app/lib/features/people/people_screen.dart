@@ -57,7 +57,7 @@ class PeopleScreen extends ConsumerWidget {
 
   Future<void> _leave(BuildContext context, WidgetRef ref, Member me, String frameName) async {
     final l = AppLocalizations.of(context);
-    if (!await _confirm(context, l.leaveFrameConfirm(frameName), l.leave)) return;
+    if (!await _confirm(context, l.leaveAlbumConfirm(frameName), l.leave)) return;
     try {
       await ref.read(frameApiProvider(address)).removeMember(me.userId);
     } on ApiException {
@@ -93,7 +93,7 @@ class PeopleScreen extends ConsumerWidget {
     final members = ref.watch(membersProvider(address));
     final owner = summary?.isMine ?? false;
     final invites = owner ? ref.watch(invitesProvider(address)).value ?? const <Invite>[] : const <Invite>[];
-    final frameName = summary?.frame.name ?? l.unknownFrame;
+    final frameName = summary?.frame.name ?? l.unknownAlbum;
     final date = DateFormat.MMMd(Localizations.localeOf(context).toString());
 
     return Scaffold(
@@ -138,7 +138,7 @@ class PeopleScreen extends ConsumerWidget {
                       title: Text(i.maxUses == 1
                           ? l.inviteForOne(date.format(i.expiresAt.toLocal()))
                           : l.inviteForMany(i.uses, i.maxUses, date.format(i.expiresAt.toLocal()))),
-                      trailing: TextButton(onPressed: () => _revoke(context, ref, i), child: Text(l.revoke)),
+                      trailing: TextButton(onPressed: () => _revoke(context, ref, i), child: Text(l.cancelInvite)),
                     ),
                 ],
                 if (summary != null && !owner)
@@ -148,7 +148,7 @@ class PeopleScreen extends ConsumerWidget {
                       style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
                       onPressed: () => _leave(context, ref, summary.me, frameName),
                       icon: const Icon(Icons.logout),
-                      label: Text(l.leaveFrame),
+                      label: Text(l.leaveAlbum),
                     ),
                   ),
               ],

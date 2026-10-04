@@ -46,7 +46,10 @@ async function connect(owner: User, hwId: string, modelId = "reterminal-e1002") 
 const sync = (secret: string, manifest_version: number, local_ids: string[] = []) =>
   call("POST", "/device-api/sync", {
     token: secret,
-    body: { manifest_version, fw_version: "0.0.0-test", battery_pct: 80, rssi: -60, sd_free_bytes: 1e9, local_ids },
+    body: {
+      manifest_version, fw_version: "0.0.0-test", battery_pct: 80, rssi: -60,
+      sd_total_bytes: 8e9, sd_free_bytes: 1e9, cache_bytes: 2e6, local_ids,
+    },
   });
 
 const invite = async (owner: User, body: Record<string, unknown> = {}) => {
@@ -202,6 +205,9 @@ Deno.test({
           assertEquals(img.sha256, await sha256Hex(pngs[n]));
         }
         assertEquals(await upToDate(), true);
+        // The memory card, as the frame reported it (members read it with the frame).
+        assertEquals((await B.db.from("frame").select("sd_total_bytes, sd_free_bytes, cache_bytes")).data,
+          [{ sd_total_bytes: 8e9, sd_free_bytes: 1e9, cache_bytes: 2e6 }]);
       });
 
       await t.step("unchanged manifest omits images; local ids get no url", async () => {
@@ -399,7 +405,8 @@ Deno.test({
         expectError(await call("POST", "/app-api/frame/disconnect", { token: B.token }), 403, "not_owner");
         assertEquals((await call("POST", "/app-api/frame/disconnect", { token: A.token })).status, 204);
         expectError(await sync(device.secret, 0), 410, "frame_removed");
-        assertEquals((await A.db.from("frame").select("hw_id, up_to_date")).data, [{ hw_id: null, up_to_date: false }]);
+        assertEquals((await A.db.from("frame").select("hw_id, up_to_date, sd_total_bytes, cache_bytes")).data,
+          [{ hw_id: null, up_to_date: false, sd_total_bytes: null, cache_bytes: null }]);
       });
 
       await t.step("switching the panel model clears photos and disconnects", async () => {

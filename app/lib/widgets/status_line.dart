@@ -40,9 +40,9 @@ class StatusLine extends StatelessWidget {
     final (IconData icon, Color color, String text) = switch (view.error?.code) {
       ApiException.asleep => (Icons.bedtime_outlined, ink.warning, l.asleepShort),
       ApiException.offline => (Icons.cloud_off_outlined, theme.colorScheme.onSurfaceVariant, l.offline),
-      ApiException.notMember => (Icons.block, theme.colorScheme.error, l.removedFromFrame),
-      ApiException.gone => (Icons.link_off, theme.colorScheme.error, l.frameGoneShort),
-      ApiException.signedOut => (Icons.login, ink.warning, l.signedOutOfFrame),
+      ApiException.notMember => (Icons.block, theme.colorScheme.error, l.removedFromAlbum),
+      ApiException.gone => (Icons.link_off, theme.colorScheme.error, l.albumGoneShort),
+      ApiException.signedOut => (Icons.login, ink.warning, l.signedOutOfAlbum),
       null => _status(context, l, FrameStatus.of(summary!.frame, at), at),
       _ => (Icons.error_outline, theme.colorScheme.error, l.somethingWrong),
     };
@@ -56,6 +56,10 @@ class StatusLine extends StatelessWidget {
         if (battery != null) ...[
           const SizedBox(height: 4),
           _row(theme, Icons.battery_alert, ink.warning, l.batteryLow(battery)),
+        ],
+        if (summary?.frame.noCard ?? false) ...[
+          const SizedBox(height: 4),
+          _row(theme, Icons.sd_card_alert_outlined, ink.warning, l.cardMissingShort),
         ],
       ],
     );

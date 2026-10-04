@@ -103,7 +103,7 @@ try {
   assertEquals((await call("POST", "/app-api/frame/disconnect", { token: M.token })).status, 204);
   const gone = await sim("sync");
   assertEquals(gone.code, 1);
-  assertMatch(gone.out, /This frame was removed/);
+  assertMatch(gone.out, /Not connected to an album/);
   const left = [...Deno.readDirSync(`${state}/cache`)].filter((e) => e.name.endsWith(".png"));
   assertEquals(left.length, 0);
   assertMatch((await sim("status")).out, /paired\s+no/);

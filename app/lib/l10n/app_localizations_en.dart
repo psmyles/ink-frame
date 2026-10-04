@@ -37,7 +37,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get joinTitle => 'Join a frame';
+  String get joinTitle => 'Join an album';
 
   @override
   String get signInTitle => 'Sign in';
@@ -53,7 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinLinkHelp =>
-      'Paste the link you were sent. A code on its own isn\'t enough, because the app also needs the frame\'s address.';
+      'Paste the whole link you were sent. The code on its own isn\'t enough.';
 
   @override
   String get signInLinkHelp =>
@@ -65,25 +65,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInExplain =>
-      'Your account is only used to recognise you, and to find your frames when you sign in on a new device.';
+      'Your account is only used to recognise you, and to find your albums when you sign in on a new phone or computer.';
 
   @override
-  String get findingFrames => 'Looking for your frames…';
+  String get findingAlbums => 'Looking for your albums…';
 
   @override
-  String get noFramesOnAccount =>
-      'There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.';
+  String get noAlbumsOnAccount =>
+      'There are no albums on this account yet. Set up a frame to start your own album, or join one with the invite you were sent. If you used a different account before, try that one.';
 
   @override
   String get differentAccount => 'Use a different account';
 
   @override
   String get findOffline =>
-      'Can\'t look for your frames right now. Check your internet connection and try again.';
+      'Can\'t look for your albums right now. Check your internet connection and try again.';
 
   @override
   String get findFailed =>
-      'Couldn\'t look for your frames. Try again, or use a link or QR code.';
+      'Couldn\'t look for your albums. Try again, or use a link or QR code.';
 
   @override
   String get continueWithGoogle => 'Continue with Google';
@@ -129,7 +129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offline =>
-      'Can\'t reach the frame. Check your internet connection.';
+      'Can\'t reach the album. Check your internet connection.';
 
   @override
   String get firstTip =>
@@ -139,33 +139,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gotIt => 'Got it';
 
   @override
-  String get noFramesOnLink =>
-      'You\'re not on any of the frames in that link any more.';
+  String get noAlbumsOnLink =>
+      'You\'re not in any of the albums in that link any more.';
 
   @override
-  String skippedFrames(int count) {
+  String skippedAlbums(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other:
-          'You\'re no longer on $count frames from that link, so they were skipped.',
-      one: 'You\'re no longer on one frame from that link, so it was skipped.',
+          'You\'re no longer in $count albums from that link, so they were skipped.',
+      one: 'You\'re no longer in one album from that link, so it was skipped.',
     );
     return '$_temp0';
   }
 
   @override
-  String get noFramesYet => 'No frames yet';
+  String get noAlbumsYet => 'No albums yet';
 
   @override
-  String get loadingFrames => 'Loading your frames…';
+  String get loadingAlbums => 'Loading your albums…';
 
   @override
   String get loading => 'Loading…';
 
   @override
-  String get noFramesBody =>
-      'Set up your own frame, or join one with the invite link you were sent.';
+  String get noAlbumsBody =>
+      'Set up a frame to start your own album, or join one with the invite link you were sent.';
 
   @override
   String setUpBy(String name) {
@@ -173,13 +173,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get frames => 'Frames';
+  String get albums => 'Albums';
 
   @override
   String get setUpOrJoin => 'Set up or join';
 
   @override
-  String get chooseFrame => 'Choose a frame';
+  String get chooseAlbum => 'Choose an album';
 
   @override
   String statusUpToDate(String ago) {
@@ -188,21 +188,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String statusChangesWaiting(String time) {
-    return 'Changes waiting · next check around $time';
+    return 'The frame gets the changes around $time';
   }
 
   @override
-  String get statusChangesWaitingSoon => 'Changes waiting · next check soon';
+  String get statusChangesWaitingSoon => 'The frame gets the changes soon';
 
   @override
   String get statusFirstCheck => 'Connected · waiting for its first check';
 
   @override
-  String get statusNotConnected => 'Not connected yet';
+  String get statusNotConnected => 'No frame connected yet';
 
   @override
   String statusNotCheckedIn(String when) {
-    return 'Hasn\'t checked in since $when. Check the frame\'s Wi-Fi and battery.';
+    return 'The frame hasn\'t checked in since $when. Check its Wi-Fi and battery.';
   }
 
   @override
@@ -239,13 +239,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String asleepOwner(String frame) {
-    return '$frame\'s photo storage is asleep because it wasn\'t used for a while. The frame keeps showing its photos.';
+  String asleepOwner(String album) {
+    return '$album\'s photo storage is asleep because it wasn\'t used for a while. The frame keeps showing its photos.';
   }
 
   @override
-  String asleepOther(String frame, String owner) {
-    return '$frame is asleep because it wasn\'t used for a while. Ask $owner to open Ink Frame to wake it up. The frame keeps showing its photos.';
+  String asleepOther(String album, String owner) {
+    return '$album is asleep because it wasn\'t used for a while. Ask $owner to open Ink Frame to wake it up. The frame keeps showing its photos.';
   }
 
   @override
@@ -253,44 +253,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get asleepJoin =>
-      'This frame is asleep because it wasn\'t used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.';
+      'This album is asleep because it wasn\'t used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.';
 
   @override
   String get theOwner => 'the person who set it up';
 
   @override
-  String get removedFromFrame => 'You\'re no longer on this frame.';
+  String get removedFromAlbum => 'You\'re no longer in this album.';
 
   @override
   String get removeFromDevice => 'Remove from this device';
 
   @override
-  String frameGone(String frame) {
-    return '$frame no longer exists: its photo storage was deleted.';
+  String albumGone(String album) {
+    return '$album no longer exists: its photo storage was deleted.';
   }
 
   @override
-  String get frameGoneShort => 'No longer exists';
+  String get albumGoneShort => 'No longer exists';
 
   @override
-  String get frameGoneJoin =>
-      'This frame no longer exists: its photo storage was deleted.';
+  String get albumGoneJoin =>
+      'This album no longer exists: its photo storage was deleted.';
 
   @override
-  String get signedOutOfFrame => 'You were signed out of this frame.';
+  String get signedOutOfAlbum => 'You were signed out of this album.';
 
   @override
   String get signInAgain => 'Sign in again';
 
   @override
-  String get unknownFrame => 'A frame';
+  String get unknownAlbum => 'An album';
 
   @override
   String get noPhotosYet => 'No photos yet';
 
   @override
   String get setupExplain =>
-      'Your frame\'s photos are kept in your own free Supabase account, and you\'ll be the frame\'s owner. A free account can run 2 frames. Nobody else, including us, can see the photos.';
+      'Each frame has its own album: its photos and the people you share them with. The album is kept in your own free Supabase account, and you\'ll be its owner. A free account can run 2 albums. Nobody else, including us, can see the photos.';
 
   @override
   String get setupConnectTitle => 'Connect your Supabase account';
@@ -323,10 +323,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get setupNameTitle => 'Name it';
+  String get setupNameTitle => 'Name the album';
 
   @override
-  String get frameNameHint => 'Kitchen, Grandma\'s…';
+  String get albumNameHint => 'Kitchen, Grandma\'s…';
 
   @override
   String setUpNamed(String name) {
@@ -352,7 +352,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerSignInHint =>
-      'Sign in with the account you use Ink Frame with. You\'ll be the frame\'s owner.';
+      'Sign in with the account you use Ink Frame with. You\'ll be the album\'s owner.';
 
   @override
   String setupStopped(String name) {
@@ -372,7 +372,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupLimit =>
-      'Your free Supabase account already runs 2 projects. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need.';
+      'Your free Supabase account already runs 2 projects, the most a free account can. Someone else in the family can set up this frame with their own free account, or you can delete a project you don\'t need in Supabase.';
 
   @override
   String get openSupabase => 'Open Supabase';
@@ -386,7 +386,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupSignInFailed =>
-      'Couldn\'t sign you in to the new frame. Try again.';
+      'Couldn\'t sign you in to the new album. Try again.';
 
   @override
   String get sectionOwner => 'Owner tools';
@@ -396,14 +396,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supabaseNotHere =>
-      'Not connected on this device. Connect it to update, wake up or delete the frame.';
+      'Not connected on this device. Connect it here to update, wake up or delete the album.';
 
   @override
   String get connect => 'Connect';
 
   @override
-  String updateReady(String frame) {
-    return 'An update for $frame is ready';
+  String updateReady(String album) {
+    return 'An update for $album is ready';
   }
 
   @override
@@ -413,26 +413,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get update => 'Update';
 
   @override
-  String updatingFrame(String frame) {
-    return 'Updating $frame…';
+  String updatingAlbum(String album) {
+    return 'Updating $album…';
   }
 
   @override
-  String updated(String frame) {
-    return '$frame is up to date';
+  String updated(String album) {
+    return '$album is up to date';
   }
 
   @override
-  String updateFailed(String frame) {
-    return 'Couldn\'t update $frame. Try again.';
+  String updateFailed(String album) {
+    return 'Couldn\'t update $album. Try again.';
   }
 
   @override
-  String get deleteFrame => 'Delete this frame';
+  String get deleteAlbum => 'Delete this album';
 
   @override
-  String deleteFrameConfirm(String frame) {
-    return 'Delete $frame? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.';
+  String deleteAlbumConfirm(String album) {
+    return 'Delete $album? All its photos and everyone\'s access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it\'s reset.';
   }
 
   @override
@@ -441,46 +441,46 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String deletingFrame(String frame) {
-    return 'Deleting $frame…';
+  String deletingAlbum(String album) {
+    return 'Deleting $album…';
   }
 
   @override
-  String deleteFrameFailed(String frame) {
-    return 'Couldn\'t delete $frame. Try again.';
+  String deleteAlbumFailed(String album) {
+    return 'Couldn\'t delete $album. Try again.';
   }
 
   @override
-  String wrongSupabaseAccount(String frame) {
-    return 'This Supabase account can\'t reach $frame. Connect the account it was set up with.';
+  String wrongSupabaseAccount(String album) {
+    return 'This Supabase account can\'t reach $album. Connect the account it was set up with.';
   }
 
   @override
   String get wakeUp => 'Wake up';
 
   @override
-  String wakingUp(String frame) {
-    return 'Waking up $frame… This takes about 3 minutes.';
+  String wakingUp(String album) {
+    return 'Waking up $album… This takes about 3 minutes.';
   }
 
   @override
-  String wakeUpFailed(String frame) {
-    return 'Couldn\'t wake up $frame. Try again.';
+  String wakeUpFailed(String album) {
+    return 'Couldn\'t wake up $album. Try again.';
   }
 
   @override
   String get changeModel => 'Change';
 
   @override
-  String changeModelConfirm(int count, String frame, String model, String old) {
+  String changeModelConfirm(int count, String album, String model, String old) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other:
-          'Switch $frame to the $model? All $count photos will be removed, because they were made for the $old screen.',
+          'Switch $album to the $model? All $count photos will be removed, because they were made for the $old screen.',
       one:
-          'Switch $frame to the $model? Its photo will be removed, because it was made for the $old screen.',
-      zero: 'Switch $frame to the $model?',
+          'Switch $album to the $model? Its photo will be removed, because it was made for the $old screen.',
+      zero: 'Switch $album to the $model?',
     );
     return '$_temp0';
   }
@@ -489,26 +489,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchModel => 'Switch';
 
   @override
-  String frameReady(String name) {
+  String albumReady(String name) {
     return '$name is ready';
   }
 
   @override
-  String get frameReadyBody =>
+  String get albumReadyBody =>
       'Connect the frame now, or add photos first: it gets them once it\'s connected.';
 
   @override
   String get account => 'Account';
 
   @override
-  String get onThisDevice => 'Frames on this device';
+  String get onThisDevice => 'Albums on this device';
 
   @override
   String get signOut => 'Sign out';
 
   @override
   String get signOutConfirm =>
-      'Sign out of every frame on this device? You can sign in again with a link from another device or an invite.';
+      'Sign out on this device? Your albums come back when you sign in again with the same account.';
 
   @override
   String version(String v) {
@@ -668,8 +668,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openingPhotos => 'Opening photos…';
 
   @override
-  String dropHere(String frame) {
-    return 'Drop photos to add them to $frame';
+  String dropHere(String album) {
+    return 'Drop photos to add them to $album';
   }
 
   @override
@@ -705,19 +705,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String alreadyOnFrame(int count) {
+  String alreadyInAlbum(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count photos were already on the frame.',
-      one: '1 photo was already on the frame.',
+      other: '$count photos were already in the album.',
+      one: '1 photo was already in the album.',
     );
     return '$_temp0';
   }
 
   @override
-  String storageFull(String frame) {
-    return '$frame\'s storage is full. Delete some photos to add more.';
+  String storageFull(String album) {
+    return '$album\'s storage is full. Delete some photos to add more.';
   }
 
   @override
@@ -744,15 +744,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Delete $count photos from the frame?',
-      one: 'Delete this photo from the frame?',
+      other: 'Delete $count photos from the album?',
+      one: 'Delete this photo from the album?',
     );
     return '$_temp0';
   }
 
   @override
   String get cantDeleteOthers =>
-      'You can only delete your own photos. The frame\'s owner can delete any.';
+      'You can only delete your own photos. The album\'s owner can delete any.';
 
   @override
   String get noReEdit =>
@@ -791,16 +791,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storage => 'Storage';
 
   @override
-  String get frameName => 'Name';
+  String get memoryCard => 'Memory card';
 
   @override
-  String get renameTitle => 'Rename the frame';
+  String cardUsage(String used, String total, String photos) {
+    return '$used of $total used · its photos take $photos';
+  }
+
+  @override
+  String get cardMissing =>
+      'No memory card, or the frame can\'t read it. Put in a microSD card, or erase it when you connect the frame.';
+
+  @override
+  String get cardMissingShort => 'No memory card';
+
+  @override
+  String get cardMissingConnect =>
+      'There\'s no memory card in the frame. It needs one to keep photos: put a microSD card in, then connect again.';
+
+  @override
+  String get cardUnreadableConnect =>
+      'The frame can\'t read its memory card. It may be set up for a camera or computer, or be damaged. Erasing it makes it work here.';
+
+  @override
+  String cardSize(String total, String free) {
+    return '$total card, $free free';
+  }
+
+  @override
+  String cardOtherFiles(String other) {
+    return '$other of other files on it stay, unless you erase it.';
+  }
+
+  @override
+  String cardTooSmallConnect(String album, String photos, String room) {
+    return '$album\'s photos ($photos) won\'t all fit: there\'s room for $room.';
+  }
+
+  @override
+  String get eraseCard => 'Erase the memory card first';
+
+  @override
+  String get eraseCardHint =>
+      'Deletes everything on it and sets it up for the frame.';
+
+  @override
+  String get stageErasing => 'Erasing the memory card';
+
+  @override
+  String get sdFailed =>
+      'The frame couldn\'t erase its memory card. Check it\'s pushed in properly, or try another card.';
+
+  @override
+  String cardTooSmall(String album, String short) {
+    return '$album\'s photos don\'t all fit on the frame\'s memory card ($short too much). Remove some photos, or put a bigger card in the frame.';
+  }
+
+  @override
+  String get albumName => 'Name';
+
+  @override
+  String get sectionAlbum => 'Album';
+
+  @override
+  String get renameTitle => 'Rename the album';
 
   @override
   String get save => 'Save';
 
   @override
-  String get sectionPhotos => 'Photos';
+  String get sectionPhotos => 'Showing photos';
 
   @override
   String get sectionChecking => 'Checking for new photos';
@@ -810,6 +870,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sectionHardware => 'The frame';
+
+  @override
+  String frameNamed(String id) {
+    return 'Frame $id';
+  }
 
   @override
   String get changePhotoEvery => 'Change photo every';
@@ -875,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hardwareConnectedNoVersion => 'Connected';
 
   @override
-  String get hardwareNotConnected => 'Not connected yet';
+  String get hardwareNotConnected => 'No frame connected yet';
 
   @override
   String batteryNow(int value) {
@@ -959,8 +1024,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiresIn => 'Expires in';
 
   @override
-  String inviteShareText(String frame, String link) {
-    return 'Join $frame on Ink Frame to add photos: $link';
+  String inviteShareText(String album, String link) {
+    return 'Join $album on Ink Frame to add photos: $link';
   }
 
   @override
@@ -980,7 +1045,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get revoke => 'Revoke';
+  String get cancelInvite => 'Cancel invite';
 
   @override
   String get justYou => 'Just you so far';
@@ -995,16 +1060,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removePerson => 'Remove';
 
   @override
-  String removePersonConfirm(String name, String frame) {
-    return 'Remove $name from $frame? Their photos stay; you can delete them.';
+  String removePersonConfirm(String name, String album) {
+    return 'Remove $name from $album? Their photos stay; you can delete them.';
   }
 
   @override
-  String get leaveFrame => 'Leave this frame';
+  String get leaveAlbum => 'Leave this album';
 
   @override
-  String leaveFrameConfirm(String frame) {
-    return 'Leave $frame? You\'ll stop seeing its photos. Photos you added stay.';
+  String leaveAlbumConfirm(String album) {
+    return 'Leave $album? You\'ll stop seeing its photos. Photos you added stay.';
   }
 
   @override
@@ -1027,14 +1092,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get storageNote => 'The frame\'s own downloads aren\'t counted here.';
+  String get storageNote =>
+      'This is the album\'s online storage. The copies the frame keeps on its memory card aren\'t counted.';
 
   @override
   String get storageByPerson => 'By person';
 
   @override
-  String storageGettingFull(String frame, int value) {
-    return '$frame\'s storage is getting full ($value %).';
+  String storageGettingFull(String album, int value) {
+    return '$album\'s storage is getting full ($value %).';
   }
 
   @override
@@ -1044,14 +1110,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourName => 'Your name';
 
   @override
-  String get yourNameHint => 'What the others see, on every frame you\'re on.';
+  String get yourNameHint => 'What the others see, in every album you\'re in.';
 
   @override
   String get nameUpdated => 'Name updated';
 
   @override
-  String nameUpdateFailed(String frames) {
-    return 'Couldn\'t update your name on $frames.';
+  String nameUpdateFailed(String albums) {
+    return 'Couldn\'t update your name in $albums.';
   }
 
   @override
@@ -1059,21 +1125,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anotherDeviceExplain =>
-      'On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.';
+      'On your other phone or computer, sign in with the same account: your albums come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.';
 
   @override
   String get deleteAccount => 'Delete my account';
 
   @override
   String get deleteAccountBody =>
-      'You\'ll leave these frames and your account on them is deleted:';
+      'You\'ll leave these albums and your account in them is deleted:';
 
   @override
   String get deletePhotosToo => 'Also delete my photos';
 
   @override
   String get deleteOwnedBody =>
-      'These frames you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:';
+      'These albums you set up are deleted, with all their photos and everyone\'s access, and their storage in your Supabase account:';
 
   @override
   String get typeDelete => 'Type DELETE to confirm';
@@ -1085,8 +1151,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountButton => 'Delete account';
 
   @override
-  String deleteFailed(String frames) {
-    return 'Couldn\'t delete your account on $frames. Try again.';
+  String deleteFailed(String albums) {
+    return 'Couldn\'t delete your account in $albums. Try again.';
   }
 
   @override
@@ -1115,8 +1181,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hold the green button on the frame for 3 seconds, until it shows a 6-digit code. A new frame shows the code when it\'s switched on.';
 
   @override
-  String connectReplaces(String name) {
-    return 'The frame connected to $name now stops showing photos once this one is connected. The photos stay.';
+  String connectReplaces(String album) {
+    return 'The frame now showing $album stops once this one is connected. The photos stay in the album.';
   }
 
   @override
@@ -1176,15 +1242,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startAgain => 'Start again';
 
   @override
-  String modelMismatch(String device, String frame, String model) {
-    return 'This frame is a $device, but $frame is set up for a $model.';
+  String modelMismatch(String device, String album, String model) {
+    return 'This frame is a $device, but $album is made for a $model.';
   }
 
   @override
   String get wifiTitle => 'Which Wi-Fi should the frame use?';
 
   @override
-  String get wifiHint => 'The frame needs a 2.4 GHz network.';
+  String get wifiHint =>
+      'The frame needs a 2.4 GHz network. If your Wi-Fi has two names, pick the one without “5G”.';
 
   @override
   String get otherNetwork => 'Other network…';
@@ -1212,7 +1279,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String connectingNamed(String name) {
-    return 'Connecting $name';
+    return 'Connecting the frame to $name';
   }
 
   @override
@@ -1230,7 +1297,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String frameConnected(String name) {
-    return '$name is connected';
+    return 'The frame is connected to $name';
   }
 
   @override
@@ -1271,7 +1338,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkedElsewhere =>
-      'This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again.';
+      'This frame is still linked to another album. Hold its green button for 10 seconds to reset it, then start again.';
 
   @override
   String wifiWrongPassword(String ssid) {
@@ -1319,14 +1386,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newCode => 'New code';
 
   @override
-  String get connectNewHardware => 'Connect new hardware';
+  String get connectDifferentFrame => 'Connect a different frame';
 
   @override
   String get disconnectFrame => 'Disconnect';
 
   @override
-  String disconnectConfirm(String name) {
-    return 'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in $name, ready for new hardware.';
+  String disconnectConfirm(String album) {
+    return 'Disconnect the frame? It clears its photos and settings at its next check. The photos stay in $album, ready for another frame.';
   }
 
   @override
@@ -1334,18 +1401,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Disconnected. The frame clears itself at its next check.';
 
   @override
-  String moreFrames(int count) {
+  String moreAlbums(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count more frames are on your account',
-      one: '1 more frame is on your account',
+      other: '$count more albums are on your account',
+      one: '1 more album is on your account',
     );
     return '$_temp0';
   }
 
   @override
-  String moreFramesBody(int count) {
+  String moreAlbumsBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -1362,16 +1429,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notNow => 'Not now';
 
   @override
-  String get moreFramesElsewhere =>
+  String get moreAlbumsElsewhere =>
       'Your account uses Sign in with Apple, which this device doesn\'t have. Use Account → Use on another device on your iPhone or Mac instead.';
 
   @override
-  String get moreFramesFailed =>
+  String get moreAlbumsFailed =>
       'Couldn\'t add them. Check your internet connection and try again.';
 
   @override
   String batteryLowTitle(String name) {
-    return '$name\'s battery is low';
+    return '$name: the frame\'s battery is low';
   }
 
   @override
@@ -1396,12 +1463,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifyWarningOff => 'Turn on the low battery warning first.';
 
   @override
-  String get notifyNeedsUpdateOwner =>
-      'Needs the frame update in Owner tools first.';
+  String get notifyNeedsUpdateOwner => 'Update the album in Owner tools first.';
 
   @override
   String notifyNeedsUpdate(String owner) {
-    return 'Needs $owner to update the frame first.';
+    return 'Ask $owner to update the album first.';
   }
 
   @override

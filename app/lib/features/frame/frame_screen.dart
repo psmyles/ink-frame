@@ -17,6 +17,7 @@ import '../../theme/theme.dart';
 import '../../widgets/adaptive_shell.dart';
 import '../../widgets/photo_tile.dart';
 import '../../widgets/side_panel.dart';
+import '../../widgets/formatting.dart';
 import '../../widgets/status_line.dart';
 import '../connect/connect_frame_screen.dart';
 import '../people/people_screen.dart';
@@ -136,7 +137,7 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
       if (q.duplicates > 0) {
         final n = q.duplicates;
         q.duplicates = 0;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.alreadyOnFrame(n))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.alreadyInAlbum(n))));
       }
     });
 
@@ -309,7 +310,7 @@ class _Header extends ConsumerWidget {
     final failed = queue.where((i) => i.status == UploadStatus.failed).toList();
     final usage = s == null ? null : ref.watch(usageProvider(address)).value;
     final full = failed.any((i) => i.error?.code == 'quota_exceeded') || (usage?.full ?? false);
-    final name = view.name ?? l.unknownFrame;
+    final name = view.name ?? l.unknownAlbum;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -350,6 +351,14 @@ class _Header extends ConsumerWidget {
           _Notice(
             text: l.storageGettingFull(name, (usage.fraction * 100).round()),
             action: TextButton(onPressed: () => _openStorage(context, address), child: Text(l.seeStorage)),
+          ),
+        // The frame's memory card (openapi.yaml, /device-api/sync): none, or too small.
+        if (s != null && s.frame.noCard)
+          _Notice(text: l.cardMissing)
+        else if (s != null && usage != null && s.frame.cardShortBy(usage.frame.bytes) > 0)
+          _Notice(
+            text: l.cardTooSmall(
+                name, formatBytes(s.frame.cardShortBy(usage.frame.bytes), Localizations.localeOf(context))),
           ),
       ],
     );
@@ -418,17 +427,17 @@ class _Banner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final name = view.name ?? l.unknownFrame;
+    final name = view.name ?? l.unknownAlbum;
     final error = view.error!;
 
     final (String text, Widget? action) = switch (error.code) {
       ApiException.asleep => (view.cached?.isMine ?? false)
           ? (l.asleepOwner(name), FilledButton(onPressed: () => wakeUpFrame(context, ref, address, name), child: Text(l.wakeUp)))
           : (l.asleepOther(name, view.cached?.ownerName ?? l.theOwner), null),
-      ApiException.notMember => (l.removedFromFrame, _removeButton(context, ref, l)),
-      ApiException.gone => (l.frameGone(name), _removeButton(context, ref, l)),
+      ApiException.notMember => (l.removedFromAlbum, _removeButton(context, ref, l)),
+      ApiException.gone => (l.albumGone(name), _removeButton(context, ref, l)),
       ApiException.signedOut => (
-          l.signedOutOfFrame,
+          l.signedOutOfAlbum,
           FilledButton(
             onPressed: () => context.push(Uri(path: '/join', queryParameters: {
               'mode': 'signin',

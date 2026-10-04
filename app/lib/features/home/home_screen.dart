@@ -21,8 +21,8 @@ class HomeScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final list = ref.watch(framesProvider);
     // Still reading this device's frames (a moment at start): not "no frames yet".
-    final loading = Center(child: AfterDelay(child: LoadingLine(l.loadingFrames)));
-    if (AdaptiveShell.isWide(context)) return list.hasValue ? _ChooseFrame(text: l.chooseFrame) : Scaffold(body: loading);
+    final loading = Center(child: AfterDelay(child: LoadingLine(l.loadingAlbums)));
+    if (AdaptiveShell.isWide(context)) return list.hasValue ? _ChooseFrame(text: l.chooseAlbum) : Scaffold(body: loading);
 
     final frames = list.value ?? [];
     final more = ref.watch(moreFramesProvider).value?.isNotEmpty ?? false;
@@ -103,9 +103,9 @@ class NoFrames extends StatelessWidget {
             children: [
               const Center(child: FrameMark(size: 88)),
               const SizedBox(height: 20),
-              Text(l.noFramesYet, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
+              Text(l.noAlbumsYet, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
-              Text(l.noFramesBody, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+              Text(l.noAlbumsBody, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
               const SizedBox(height: 24),
               FilledButton(onPressed: () => context.push('/join'), child: Text(l.invited)),
               const SizedBox(height: 12),

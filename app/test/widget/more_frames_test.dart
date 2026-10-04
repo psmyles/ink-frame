@@ -57,26 +57,26 @@ Future<(FakeRepo, FakeDirectoryServer)> open(WidgetTester tester, {bool signedIn
 void main() {
   testWidgets('a frame added on another device: Add to this device', (tester) async {
     final (repo, _) = await open(tester);
-    expect(find.text('1 more frame is on your account'), findsOneWidget);
+    expect(find.text('1 more album is on your account'), findsOneWidget);
     expect(find.textContaining('added on another device'), findsOneWidget);
 
     await tester.tap(find.text('Add to this device'));
     await tester.pumpAndSettle();
     expect(repo.signedIn, [hallway]);
     expect(await repo.load(), [kitchen, hallway]);
-    expect(find.text('1 more frame is on your account'), findsNothing);
+    expect(find.text('1 more album is on your account'), findsNothing);
   });
 
   testWidgets('Not now puts it away', (tester) async {
     await open(tester);
     await tester.tap(find.byTooltip('Not now'));
     await tester.pumpAndSettle();
-    expect(find.text('1 more frame is on your account'), findsNothing);
+    expect(find.text('1 more album is on your account'), findsNothing);
   });
 
   testWidgets('without a directory sign-in (dev-mode email) nothing is asked', (tester) async {
     final (_, server) = await open(tester, signedInToDirectory: false);
-    expect(find.text('1 more frame is on your account'), findsNothing);
+    expect(find.text('1 more album is on your account'), findsNothing);
     expect(server.calls, isEmpty);
   });
 }

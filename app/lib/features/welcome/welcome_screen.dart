@@ -179,7 +179,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5)),
               const SizedBox(width: 12),
-              Flexible(child: Text(l.findingFrames)),
+              Flexible(child: Text(l.findingAlbums)),
             ]),
           ),
         if (_error != null)
@@ -203,14 +203,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         const Center(child: FrameMark(size: 88)),
         const SizedBox(height: 20),
         if (problem == null) ...[
-          Text(l.noFramesYet, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
+          Text(l.noAlbumsYet, textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
-          Text(_checked ? l.noFramesOnAccount : l.noFramesBody, textAlign: TextAlign.center, style: muted),
+          Text(_checked ? l.noAlbumsOnAccount : l.noAlbumsBody, textAlign: TextAlign.center, style: muted),
         ] else ...[
           Text(_problemText(problem), textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.error)),
           TextButton(onPressed: _busy ? null : _retry, child: Text(l.tryAgain)),
           const SizedBox(height: 8),
-          Text(l.noFramesBody, textAlign: TextAlign.center, style: muted),
+          Text(l.noAlbumsBody, textAlign: TextAlign.center, style: muted),
         ],
         const SizedBox(height: 24),
         FilledButton(onPressed: _busy ? null : () => context.push('/join'), child: Text(l.invited)),

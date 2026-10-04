@@ -76,7 +76,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       try {
         await ref.read(frameApiProvider(f)).updateMe(trimmed);
       } on ApiException {
-        failed.add(ref.read(frameViewProvider(f)).value?.name ?? l.unknownFrame);
+        failed.add(ref.read(frameViewProvider(f)).value?.name ?? l.unknownAlbum);
       }
       ref.invalidate(frameViewProvider(f));
       ref.invalidate(memberNamesProvider(f));
@@ -104,7 +104,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   Future<void> _deleteAccount(List<FrameAddress> frames) async {
     final l = AppLocalizations.of(context);
     final views = {for (final f in frames) f: await ref.read(frameViewProvider(f).future)};
-    String nameOf(FrameAddress f) => views[f]?.name ?? l.unknownFrame;
+    String nameOf(FrameAddress f) => views[f]?.name ?? l.unknownAlbum;
     final owned = [for (final f in frames) if (views[f]?.summary?.isMine ?? views[f]?.cached?.isMine ?? false) f];
     final joined = [for (final f in frames) if (!owned.contains(f)) f];
     if (!mounted) return;
@@ -197,7 +197,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             for (final f in frames)
               ListTile(
                 leading: const Icon(Icons.photo_outlined),
-                title: Text(ref.watch(frameViewProvider(f)).value?.name ?? l.unknownFrame),
+                title: Text(ref.watch(frameViewProvider(f)).value?.name ?? l.unknownAlbum),
                 subtitle: devMode ? Text(f.ref) : null,
               ),
             ListTile(

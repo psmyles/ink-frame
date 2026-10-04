@@ -69,10 +69,12 @@ Future<void> findAndPair(WidgetTester tester) async {
 }
 
 Future<void> joinWifi(WidgetTester tester, String ssid, String password) async {
+  await tester.ensureVisible(find.text(ssid));
   await tester.tap(find.text(ssid));
   await tester.pump();
   await tester.enterText(find.widgetWithText(TextField, 'Wi-Fi password'), password);
   await tester.pump();
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Connect'));
   await tester.tap(find.widgetWithText(FilledButton, 'Connect'));
   await run(tester);
 }
@@ -110,7 +112,7 @@ void main() {
     expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Connect')).onPressed, isNull);
 
     await joinWifi(tester, 'Home', 'correct horse');
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
     final sent = hw.provisions.single;
     expect((sent.ssid, sent.password), ('Home', 'correct horse'));
     expect(sent.apiBaseUrl, '${kitchen.url}/functions/v1');
@@ -130,7 +132,7 @@ void main() {
     await open(tester, FakeBluetooth([hw]), api: api);
     await findAndPair(tester);
     await joinWifi(tester, 'Home', 'correct horse');
-    expect(find.text('Connecting Kitchen'), findsOneWidget);
+    expect(find.text('Connecting the frame to Kitchen'), findsOneWidget);
     expect(find.text('Joining Home'), findsOneWidget);
     expect(find.text('Linking to Kitchen'), findsOneWidget);
     expect(find.text('Getting photos'), findsOneWidget);
@@ -145,7 +147,7 @@ void main() {
     await open(tester, FakeBluetooth([hw]), api: api);
     await findAndPair(tester);
     await joinWifi(tester, 'Home', 'correct horse');
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
   });
 
   testWidgets('a wrong code says so; trying again asks again', (tester) async {
@@ -173,8 +175,79 @@ void main() {
     await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Connect'));
     await run(tester);
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
     expect(hw.provisions, hasLength(2));
+  });
+
+  group('the memory card', () {
+    const mb = 1024 * 1024, gb = 1024 * mb;
+    FakeHardware withCard(FakeFrameApi api, SdCard sd) => hardware(api)..sd = sd;
+
+    testWidgets('its size and other files; erasing it first when asked', (tester) async {
+      final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+      final hw = withCard(api, const SdCard(SdState.ok, totalBytes: 32 * gb, freeBytes: 30 * gb, otherBytes: 10 * mb));
+      await open(tester, FakeBluetooth([hw]), api: api);
+      await findAndPair(tester);
+      expect(find.text('32 GB card, 30 GB free'), findsOneWidget);
+      expect(find.text('10 MB of other files on it stay, unless you erase it.'), findsOneWidget);
+      final box = find.widgetWithText(CheckboxListTile, 'Erase the memory card first');
+      expect(tester.widget<CheckboxListTile>(box).value, isFalse);
+      await tester.ensureVisible(box);
+      await tester.tap(box);
+      await tester.pump();
+      await joinWifi(tester, 'Home', 'correct horse');
+      expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
+      expect(hw.provisions.single.eraseSd, isTrue);
+      expect(hw.erased, 1);
+    });
+
+    testWidgets('a card it cannot read is erased unless you say not to', (tester) async {
+      final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+      final hw = withCard(api, const SdCard(SdState.unreadable));
+      await open(tester, FakeBluetooth([hw]), api: api);
+      await findAndPair(tester);
+      expect(find.textContaining("The frame can't read its memory card."), findsOneWidget);
+      expect(tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value, isTrue);
+      await joinWifi(tester, 'Home', 'correct horse');
+      expect(hw.erased, 1);
+    });
+
+    testWidgets('no card: says so, nothing to erase', (tester) async {
+      final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+      final hw = withCard(api, const SdCard(SdState.missing));
+      await open(tester, FakeBluetooth([hw]), api: api);
+      await findAndPair(tester);
+      expect(find.textContaining("There's no memory card in the frame."), findsOneWidget);
+      expect(find.byType(CheckboxListTile), findsNothing);
+      await joinWifi(tester, 'Home', 'correct horse');
+      expect(hw.provisions.single.eraseSd, isFalse);
+    });
+
+    testWidgets("erasing fails: back to Wi-Fi with what to do", (tester) async {
+      final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+      final hw = withCard(api, const SdCard(SdState.unreadable))..eraseFails = true;
+      await open(tester, FakeBluetooth([hw]), api: api);
+      await findAndPair(tester);
+      await joinWifi(tester, 'Home', 'correct horse');
+      expect(find.textContaining("couldn't erase its memory card"), findsOneWidget);
+      expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
+    });
+
+    testWidgets("the frame's photos won't all fit: says so before connecting", (tester) async {
+      final api = FakeFrameApi(
+          frame: frameJson(connected: false), members: [priya], usage: sampleUsage(bytes: 312 * mb));
+      final hw = withCard(api, const SdCard(SdState.ok, totalBytes: 256 * mb, freeBytes: 100 * mb));
+      await open(tester, FakeBluetooth([hw]), api: api);
+      await findAndPair(tester);
+      expect(find.textContaining("Kitchen's photos (312 MB) won't all fit"), findsOneWidget);
+    });
+
+    testWidgets('older firmware that says nothing about its card: nothing shown', (tester) async {
+      final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+      await open(tester, FakeBluetooth([hardware(api)]), api: api);
+      await findAndPair(tester);
+      expect(find.text('Memory card'), findsNothing);
+    });
   });
 
   testWidgets('an open network, and one the frame cannot see', (tester) async {
@@ -195,7 +268,7 @@ void main() {
     expect(find.widgetWithText(TextField, 'Wi-Fi password'), findsNothing);
     await tester.tap(find.widgetWithText(FilledButton, 'Connect'));
     await run(tester);
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
     expect(hw.provisions.last.password, '');
   });
 
@@ -207,7 +280,7 @@ void main() {
     await joinWifi(tester, 'Home', 'correct horse');
     expect(api.tokens, hasLength(2));
     expect(hw.provisions.map((p) => p.pairingToken), api.tokens);
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
   });
 
   testWidgets('a different model: switch the frame (photos go), then carry on', (tester) async {
@@ -215,7 +288,7 @@ void main() {
     final hw = hardware(api, modelId: 'other-7-3');
     await open(tester, FakeBluetooth([hw]), api: api);
     await findAndPair(tester);
-    expect(find.text('This frame is a Test panel 7.3", but Kitchen is set up for a reTerminal E1002 7.3".'), findsOneWidget);
+    expect(find.text('This frame is a Test panel 7.3", but Kitchen is made for a reTerminal E1002 7.3".'), findsOneWidget);
     expect(find.textContaining('All 48 photos will be removed'), findsOneWidget);
 
     await tester.tap(find.text('Switch'));
@@ -223,7 +296,7 @@ void main() {
     expect(api.calls, contains('model other-7-3'));
     expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
     await joinWifi(tester, 'Home', 'correct horse');
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
   });
 
   testWidgets('hardware still linked to another frame', (tester) async {
@@ -231,7 +304,7 @@ void main() {
     final hw = hardware(api, frameId: 'someone-elses');
     await open(tester, FakeBluetooth([hw]), api: api);
     await findAndPair(tester);
-    expect(find.textContaining('still linked to another Ink Frame'), findsOneWidget);
+    expect(find.textContaining('still linked to another album'), findsOneWidget);
     expect(find.text('Start again'), findsOneWidget);
     expect(hw.connected, isFalse);
   });
@@ -240,7 +313,7 @@ void main() {
     final api = FakeFrameApi(frame: frameJson(), members: [priya]);
     final hw = hardware(api, frameId: 'f');
     await open(tester, FakeBluetooth([hw]), api: api);
-    expect(find.textContaining('stops showing photos once this one is connected'), findsOneWidget);
+    expect(find.textContaining('stops once this one is connected'), findsOneWidget);
     await findAndPair(tester);
     expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
   });
@@ -314,7 +387,7 @@ void main() {
 
     api.claimed('sim-0001');
     await run(tester, const Duration(seconds: 4));
-    expect(find.text('Kitchen is connected'), findsOneWidget);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.text('open'), findsOneWidget);

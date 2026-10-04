@@ -57,7 +57,7 @@ class MessageReader {
 
 /// The `info` characteristic.
 class FrameInfo {
-  const FrameInfo({required this.hwId, required this.modelId, required this.fwVersion, this.frameId});
+  const FrameInfo({required this.hwId, required this.modelId, required this.fwVersion, this.frameId, this.sd});
 
   final String hwId;
   final String modelId;
@@ -66,14 +66,49 @@ class FrameInfo {
   /// The frame this hardware is linked to, or null.
   final String? frameId;
 
+  /// The memory card; null from firmware that doesn't say (and pretend frames).
+  final SdCard? sd;
+
   factory FrameInfo.fromJson(Map<String, dynamic> j) => FrameInfo(
         hwId: j['hw_id'] as String,
         modelId: j['model_id'] as String,
         fwVersion: j['fw_version'] as String? ?? '',
         frameId: j['frame_id'] as String?,
+        sd: SdCard.fromJson(j['sd']),
       );
 
-  Map<String, Object?> toJson() => {'hw_id': hwId, 'model_id': modelId, 'fw_version': fwVersion, 'frame_id': frameId};
+  Map<String, Object?> toJson() =>
+      {'hw_id': hwId, 'model_id': modelId, 'fw_version': fwVersion, 'frame_id': frameId, if (sd != null) 'sd': sd!.toJson()};
+}
+
+enum SdState { ok, missing, unreadable }
+
+/// The frame's memory card (`info.sd`): `unreadable` is one it can't read (not FAT, e.g.
+/// exFAT as larger cards come, or damaged), which erasing fixes. Sizes only when `ok`.
+class SdCard {
+  const SdCard(this.state, {this.totalBytes = 0, this.freeBytes = 0, this.cacheBytes = 0, this.otherBytes = 0});
+
+  final SdState state;
+  final int totalBytes, freeBytes, cacheBytes, otherBytes;
+
+  static SdCard? fromJson(Object? j) {
+    if (j is! Map<String, dynamic>) return null;
+    final state = SdState.values.where((s) => s.name == j['state']).firstOrNull;
+    if (state == null) return null;
+    int n(String k) => (j[k] as num?)?.toInt() ?? 0;
+    return SdCard(state,
+        totalBytes: n('total_bytes'), freeBytes: n('free_bytes'), cacheBytes: n('cache_bytes'), otherBytes: n('other_bytes'));
+  }
+
+  Map<String, Object?> toJson() => {
+        'state': state.name,
+        if (state == SdState.ok) ...{
+          'total_bytes': totalBytes,
+          'free_bytes': freeBytes,
+          'cache_bytes': cacheBytes,
+          'other_bytes': otherBytes,
+        },
+      };
 }
 
 /// A network the frame can see (`wifi_scan`).
@@ -95,25 +130,40 @@ class WifiNetwork {
 
 /// What the app writes to `provision`.
 class Provision {
-  const Provision({required this.ssid, required this.password, required this.apiBaseUrl, required this.pairingToken});
+  const Provision({
+    required this.ssid,
+    required this.password,
+    required this.apiBaseUrl,
+    required this.pairingToken,
+    this.eraseSd = false,
+  });
 
   final String ssid;
   final String password;
   final String apiBaseUrl;
   final String pairingToken;
 
-  Map<String, Object?> toJson() =>
-      {'ssid': ssid, 'password': password, 'api_base_url': apiBaseUrl, 'pairing_token': pairingToken};
+  /// Format the memory card first (everything on it is lost).
+  final bool eraseSd;
+
+  Map<String, Object?> toJson() => {
+        'ssid': ssid,
+        'password': password,
+        'api_base_url': apiBaseUrl,
+        'pairing_token': pairingToken,
+        if (eraseSd) 'erase_sd': true,
+      };
 
   factory Provision.fromJson(Map<String, dynamic> j) => Provision(
         ssid: j['ssid'] as String,
         password: j['password'] as String,
         apiBaseUrl: j['api_base_url'] as String,
         pairingToken: j['pairing_token'] as String,
+        eraseSd: j['erase_sd'] as bool? ?? false,
       );
 }
 
-enum LinkState { wifiConnecting, wifiFailed, claiming, claimed, syncing, ready, error }
+enum LinkState { erasing, wifiConnecting, wifiFailed, claiming, claimed, syncing, ready, error }
 
 /// A `status` notification.
 class LinkStatus {
@@ -132,6 +182,7 @@ class LinkStatus {
   final String? frameId;
 
   static const _states = {
+    'erasing': LinkState.erasing,
     'wifi_connecting': LinkState.wifiConnecting,
     'wifi_failed': LinkState.wifiFailed,
     'claiming': LinkState.claiming,

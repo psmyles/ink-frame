@@ -50,7 +50,7 @@ class FrameCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          v.name ?? l.unknownFrame,
+          v.name ?? l.unknownAlbum,
           style: (dense ? theme.textTheme.titleMedium : theme.textTheme.titleLarge)?.copyWith(fontWeight: FontWeight.w600),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

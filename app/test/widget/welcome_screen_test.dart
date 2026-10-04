@@ -95,8 +95,8 @@ void main() {
   testWidgets('no frames: set up a frame or join with an invite, with the same sign-in', (tester) async {
     await pump(tester, server: FakeDirectoryServer(), signIn: FakeSignIn('bob'));
     await continueWithGoogle(tester);
-    expect(find.text('No frames yet'), findsOneWidget);
-    expect(find.textContaining('There are no frames on this account yet.'), findsOneWidget);
+    expect(find.text('No albums yet'), findsOneWidget);
+    expect(find.textContaining('There are no albums on this account yet.'), findsOneWidget);
     expect(find.text('Set up a frame'), findsOneWidget);
     expect(container.read(lastCredentialProvider.notifier).fresh, isA<IdTokenCredential>());
 
@@ -109,7 +109,7 @@ void main() {
     final server = FakeDirectoryServer()..accounts['alice'] = [kitchen];
     await pump(tester, server: server, repo: FakeRepo(MemoryStore(), notOn: [kitchen]));
     await continueWithGoogle(tester);
-    expect(find.text('No frames yet'), findsOneWidget);
+    expect(find.text('No albums yet'), findsOneWidget);
     expect(server.accounts['alice'], isEmpty);
   });
 
@@ -117,7 +117,7 @@ void main() {
     final server = FakeDirectoryServer()..offline = true;
     await pump(tester, server: server);
     await continueWithGoogle(tester);
-    expect(find.text("Can't look for your frames right now. Check your internet connection and try again."), findsOneWidget);
+    expect(find.text("Can't look for your albums right now. Check your internet connection and try again."), findsOneWidget);
     expect(find.text("I've been invited"), findsOneWidget);
     expect(find.text('Set up a frame'), findsOneWidget);
 
@@ -133,7 +133,7 @@ void main() {
     final server = FakeDirectoryServer()..accounts['alice'] = [kitchen];
     await pump(tester, server: server, repo: FakeRepo(MemoryStore(), error: const ApiException(ApiException.asleep, '')));
     await continueWithGoogle(tester);
-    expect(find.textContaining('This frame is asleep'), findsOneWidget);
+    expect(find.textContaining('This album is asleep'), findsOneWidget);
     expect(find.text('Set up a frame'), findsOneWidget);
   });
 
@@ -161,8 +161,8 @@ void main() {
     final server = FakeDirectoryServer();
     await pump(tester, server: server, directory: FrameDirectory(MemoryStore(), httpClient: server.client, baseUrl: ''));
     await continueWithGoogle(tester);
-    expect(find.text('No frames yet'), findsOneWidget);
-    expect(find.textContaining('There are no frames on this account'), findsNothing);
+    expect(find.text('No albums yet'), findsOneWidget);
+    expect(find.textContaining('There are no albums on this account'), findsNothing);
     expect(server.calls, isEmpty);
   });
 

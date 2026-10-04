@@ -9,20 +9,20 @@
   "tryAgain": "Try again",
   "cancel": "Cancel",
   "back": "Back",
-  "joinTitle": "Join a frame",
+  "joinTitle": "Join an album",
   "signInTitle": "Sign in",
   "pasteLinkLabel": "Invite link",
   "pasteLinkHint": "https://…/join#…",
   "paste": "Paste",
-  "joinLinkHelp": "Paste the link you were sent. A code on its own isn't enough, because the app also needs the frame's address.",
+  "joinLinkHelp": "Paste the whole link you were sent. The code on its own isn't enough.",
   "signInLinkHelp": "Paste the link from \"Use on another device\" on your other phone or computer, or any invite link.",
   "invalidLink": "That doesn't look like an Ink Frame link. Copy the whole link and try again.",
-  "signInExplain": "Your account is only used to recognise you, and to find your frames when you sign in on a new device.",
-  "findingFrames": "Looking for your frames…",
-  "noFramesOnAccount": "There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.",
+  "signInExplain": "Your account is only used to recognise you, and to find your albums when you sign in on a new phone or computer.",
+  "findingAlbums": "Looking for your albums…",
+  "noAlbumsOnAccount": "There are no albums on this account yet. Set up a frame to start your own album, or join one with the invite you were sent. If you used a different account before, try that one.",
   "differentAccount": "Use a different account",
-  "findOffline": "Can't look for your frames right now. Check your internet connection and try again.",
-  "findFailed": "Couldn't look for your frames. Try again, or use a link or QR code.",
+  "findOffline": "Can't look for your albums right now. Check your internet connection and try again.",
+  "findFailed": "Couldn't look for your albums. Try again, or use a link or QR code.",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
   "appleHint": "Use Google if you also want to use Ink Frame on Android or a computer.",
@@ -36,22 +36,22 @@
   "join": "Join",
   "inviteInvalid": "This invite has expired or was already used. Ask for a new one.",
   "somethingWrong": "Something went wrong. Try again.",
-  "offline": "Can't reach the frame. Check your internet connection.",
+  "offline": "Can't reach the album. Check your internet connection.",
   "firstTip": "Add photos with the + button. The frame checks for new photos once a day, or press its green button to check now.",
   "gotIt": "Got it",
-  "noFramesOnLink": "You're not on any of the frames in that link any more.",
-  "skippedFrames": "{count, plural, =1{You're no longer on one frame from that link, so it was skipped.} other{You're no longer on {count} frames from that link, so they were skipped.}}",
-  "@skippedFrames": {
+  "noAlbumsOnLink": "You're not in any of the albums in that link any more.",
+  "skippedAlbums": "{count, plural, =1{You're no longer in one album from that link, so it was skipped.} other{You're no longer in {count} albums from that link, so they were skipped.}}",
+  "@skippedAlbums": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "noFramesYet": "No frames yet",
-  "loadingFrames": "Loading your frames…",
+  "noAlbumsYet": "No albums yet",
+  "loadingAlbums": "Loading your albums…",
   "loading": "Loading…",
-  "noFramesBody": "Set up your own frame, or join one with the invite link you were sent.",
+  "noAlbumsBody": "Set up a frame to start your own album, or join one with the invite link you were sent.",
   "setUpBy": "Set up by {name}",
   "@setUpBy": {
     "placeholders": {
@@ -60,9 +60,9 @@
       }
     }
   },
-  "frames": "Frames",
+  "albums": "Albums",
   "setUpOrJoin": "Set up or join",
-  "chooseFrame": "Choose a frame",
+  "chooseAlbum": "Choose an album",
   "statusUpToDate": "Up to date · last checked {ago}",
   "@statusUpToDate": {
     "placeholders": {
@@ -71,7 +71,7 @@
       }
     }
   },
-  "statusChangesWaiting": "Changes waiting · next check around {time}",
+  "statusChangesWaiting": "The frame gets the changes around {time}",
   "@statusChangesWaiting": {
     "placeholders": {
       "time": {
@@ -79,10 +79,10 @@
       }
     }
   },
-  "statusChangesWaitingSoon": "Changes waiting · next check soon",
+  "statusChangesWaitingSoon": "The frame gets the changes soon",
   "statusFirstCheck": "Connected · waiting for its first check",
-  "statusNotConnected": "Not connected yet",
-  "statusNotCheckedIn": "Hasn't checked in since {when}. Check the frame's Wi-Fi and battery.",
+  "statusNotConnected": "No frame connected yet",
+  "statusNotCheckedIn": "The frame hasn't checked in since {when}. Check its Wi-Fi and battery.",
   "@statusNotCheckedIn": {
     "placeholders": {
       "when": {
@@ -124,18 +124,18 @@
       }
     }
   },
-  "asleepOwner": "{frame}'s photo storage is asleep because it wasn't used for a while. The frame keeps showing its photos.",
+  "asleepOwner": "{album}'s photo storage is asleep because it wasn't used for a while. The frame keeps showing its photos.",
   "@asleepOwner": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
   },
-  "asleepOther": "{frame} is asleep because it wasn't used for a while. Ask {owner} to open Ink Frame to wake it up. The frame keeps showing its photos.",
+  "asleepOther": "{album} is asleep because it wasn't used for a while. Ask {owner} to open Ink Frame to wake it up. The frame keeps showing its photos.",
   "@asleepOther": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       },
       "owner": {
@@ -144,25 +144,25 @@
     }
   },
   "asleepShort": "Asleep",
-  "asleepJoin": "This frame is asleep because it wasn't used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.",
+  "asleepJoin": "This album is asleep because it wasn't used for a while. Ask the person who set it up to open Ink Frame to wake it up, then try again.",
   "theOwner": "the person who set it up",
-  "removedFromFrame": "You're no longer on this frame.",
+  "removedFromAlbum": "You're no longer in this album.",
   "removeFromDevice": "Remove from this device",
-  "frameGone": "{frame} no longer exists: its photo storage was deleted.",
-  "@frameGone": {
+  "albumGone": "{album} no longer exists: its photo storage was deleted.",
+  "@albumGone": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
   },
-  "frameGoneShort": "No longer exists",
-  "frameGoneJoin": "This frame no longer exists: its photo storage was deleted.",
-  "signedOutOfFrame": "You were signed out of this frame.",
+  "albumGoneShort": "No longer exists",
+  "albumGoneJoin": "This album no longer exists: its photo storage was deleted.",
+  "signedOutOfAlbum": "You were signed out of this album.",
   "signInAgain": "Sign in again",
-  "unknownFrame": "A frame",
+  "unknownAlbum": "An album",
   "noPhotosYet": "No photos yet",
-  "setupExplain": "Your frame's photos are kept in your own free Supabase account, and you'll be the frame's owner. A free account can run 2 frames. Nobody else, including us, can see the photos.",
+  "setupExplain": "Each frame has its own album: its photos and the people you share them with. The album is kept in your own free Supabase account, and you'll be its owner. A free account can run 2 albums. Nobody else, including us, can see the photos.",
   "setupConnectTitle": "Connect your Supabase account",
   "connectSupabase": "Connect Supabase",
   "connectSupabaseHint": "Opens Supabase in your browser. No account yet? You can make a free one there.",
@@ -173,8 +173,8 @@
   "setupModelTitle": "Which frame do you have?",
   "modelSize": "{width} × {height}",
   "@modelSize": {"placeholders": {"width": {"type": "int"}, "height": {"type": "int"}}},
-  "setupNameTitle": "Name it",
-  "frameNameHint": "Kitchen, Grandma's…",
+  "setupNameTitle": "Name the album",
+  "albumNameHint": "Kitchen, Grandma's…",
   "setUpNamed": "Set up {name}",
   "@setUpNamed": {"placeholders": {"name": {"type": "String"}}},
   "settingUp": "Setting up {name}",
@@ -183,59 +183,59 @@
   "stageStorageHint": "Usually under a minute",
   "stageSignIn": "Turning on sign-in",
   "stageOwner": "Signing you in",
-  "ownerSignInHint": "Sign in with the account you use Ink Frame with. You'll be the frame's owner.",
+  "ownerSignInHint": "Sign in with the account you use Ink Frame with. You'll be the album's owner.",
   "setupStopped": "Setting up {name} stopped before it finished.",
   "@setupStopped": {"placeholders": {"name": {"type": "String"}}},
   "continueSetup": "Continue",
   "cancelSetup": "Cancel setup",
   "cancelSetupConfirm": "Cancel setting up {name}? What was made in your Supabase account is deleted.",
   "@cancelSetupConfirm": {"placeholders": {"name": {"type": "String"}}},
-  "setupLimit": "Your free Supabase account already runs 2 projects. Someone else in the family can set up this frame with their own free account, or you can delete a project you don't need.",
+  "setupLimit": "Your free Supabase account already runs 2 projects, the most a free account can. Someone else in the family can set up this frame with their own free account, or you can delete a project you don't need in Supabase.",
   "openSupabase": "Open Supabase",
   "setupReconnect": "Your Supabase account needs connecting again.",
   "setupOffline": "Can't reach Supabase. Check your internet connection.",
-  "setupSignInFailed": "Couldn't sign you in to the new frame. Try again.",
+  "setupSignInFailed": "Couldn't sign you in to the new album. Try again.",
   "sectionOwner": "Owner tools",
   "supabaseAccount": "Supabase account",
-  "supabaseNotHere": "Not connected on this device. Connect it to update, wake up or delete the frame.",
+  "supabaseNotHere": "Not connected on this device. Connect it here to update, wake up or delete the album.",
   "connect": "Connect",
-  "updateReady": "An update for {frame} is ready",
-  "@updateReady": {"placeholders": {"frame": {"type": "String"}}},
+  "updateReady": "An update for {album} is ready",
+  "@updateReady": {"placeholders": {"album": {"type": "String"}}},
   "updateHint": "Takes a few seconds",
   "update": "Update",
-  "updatingFrame": "Updating {frame}…",
-  "@updatingFrame": {"placeholders": {"frame": {"type": "String"}}},
-  "updated": "{frame} is up to date",
-  "@updated": {"placeholders": {"frame": {"type": "String"}}},
-  "updateFailed": "Couldn't update {frame}. Try again.",
-  "@updateFailed": {"placeholders": {"frame": {"type": "String"}}},
-  "deleteFrame": "Delete this frame",
-  "deleteFrameConfirm": "Delete {frame}? All its photos and everyone's access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it's reset.",
-  "@deleteFrameConfirm": {"placeholders": {"frame": {"type": "String"}}},
+  "updatingAlbum": "Updating {album}…",
+  "@updatingAlbum": {"placeholders": {"album": {"type": "String"}}},
+  "updated": "{album} is up to date",
+  "@updated": {"placeholders": {"album": {"type": "String"}}},
+  "updateFailed": "Couldn't update {album}. Try again.",
+  "@updateFailed": {"placeholders": {"album": {"type": "String"}}},
+  "deleteAlbum": "Delete this album",
+  "deleteAlbumConfirm": "Delete {album}? All its photos and everyone's access go, and its storage in your Supabase account is deleted. The frame keeps showing its last photos until it's reset.",
+  "@deleteAlbumConfirm": {"placeholders": {"album": {"type": "String"}}},
   "typeToConfirm": "Type {word} to confirm",
   "@typeToConfirm": {"placeholders": {"word": {"type": "String"}}},
-  "deletingFrame": "Deleting {frame}…",
-  "@deletingFrame": {"placeholders": {"frame": {"type": "String"}}},
-  "deleteFrameFailed": "Couldn't delete {frame}. Try again.",
-  "@deleteFrameFailed": {"placeholders": {"frame": {"type": "String"}}},
-  "wrongSupabaseAccount": "This Supabase account can't reach {frame}. Connect the account it was set up with.",
-  "@wrongSupabaseAccount": {"placeholders": {"frame": {"type": "String"}}},
+  "deletingAlbum": "Deleting {album}…",
+  "@deletingAlbum": {"placeholders": {"album": {"type": "String"}}},
+  "deleteAlbumFailed": "Couldn't delete {album}. Try again.",
+  "@deleteAlbumFailed": {"placeholders": {"album": {"type": "String"}}},
+  "wrongSupabaseAccount": "This Supabase account can't reach {album}. Connect the account it was set up with.",
+  "@wrongSupabaseAccount": {"placeholders": {"album": {"type": "String"}}},
   "wakeUp": "Wake up",
-  "wakingUp": "Waking up {frame}… This takes about 3 minutes.",
-  "@wakingUp": {"placeholders": {"frame": {"type": "String"}}},
-  "wakeUpFailed": "Couldn't wake up {frame}. Try again.",
-  "@wakeUpFailed": {"placeholders": {"frame": {"type": "String"}}},
+  "wakingUp": "Waking up {album}… This takes about 3 minutes.",
+  "@wakingUp": {"placeholders": {"album": {"type": "String"}}},
+  "wakeUpFailed": "Couldn't wake up {album}. Try again.",
+  "@wakeUpFailed": {"placeholders": {"album": {"type": "String"}}},
   "changeModel": "Change",
-  "changeModelConfirm": "{count, plural, =0{Switch {frame} to the {model}?} =1{Switch {frame} to the {model}? Its photo will be removed, because it was made for the {old} screen.} other{Switch {frame} to the {model}? All {count} photos will be removed, because they were made for the {old} screen.}}",
-  "@changeModelConfirm": {"placeholders": {"count": {"type": "int"}, "frame": {"type": "String"}, "model": {"type": "String"}, "old": {"type": "String"}}},
+  "changeModelConfirm": "{count, plural, =0{Switch {album} to the {model}?} =1{Switch {album} to the {model}? Its photo will be removed, because it was made for the {old} screen.} other{Switch {album} to the {model}? All {count} photos will be removed, because they were made for the {old} screen.}}",
+  "@changeModelConfirm": {"placeholders": {"count": {"type": "int"}, "album": {"type": "String"}, "model": {"type": "String"}, "old": {"type": "String"}}},
   "switchModel": "Switch",
-  "frameReady": "{name} is ready",
-  "@frameReady": {"placeholders": {"name": {"type": "String"}}},
-  "frameReadyBody": "Connect the frame now, or add photos first: it gets them once it's connected.",
+  "albumReady": "{name} is ready",
+  "@albumReady": {"placeholders": {"name": {"type": "String"}}},
+  "albumReadyBody": "Connect the frame now, or add photos first: it gets them once it's connected.",
   "account": "Account",
-  "onThisDevice": "Frames on this device",
+  "onThisDevice": "Albums on this device",
   "signOut": "Sign out",
-  "signOutConfirm": "Sign out of every frame on this device? You can sign in again with a link from another device or an invite.",
+  "signOutConfirm": "Sign out on this device? Your albums come back when you sign in again with the same account.",
   "version": "Version {v}",
   "@version": {
     "placeholders": {
@@ -311,10 +311,10 @@
     }
   },
   "openingPhotos": "Opening photos…",
-  "dropHere": "Drop photos to add them to {frame}",
+  "dropHere": "Drop photos to add them to {album}",
   "@dropHere": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
@@ -334,18 +334,18 @@
       }
     }
   },
-  "alreadyOnFrame": "{count, plural, =1{1 photo was already on the frame.} other{{count} photos were already on the frame.}}",
-  "@alreadyOnFrame": {
+  "alreadyInAlbum": "{count, plural, =1{1 photo was already in the album.} other{{count} photos were already in the album.}}",
+  "@alreadyInAlbum": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "storageFull": "{frame}'s storage is full. Delete some photos to add more.",
+  "storageFull": "{album}'s storage is full. Delete some photos to add more.",
   "@storageFull": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
@@ -372,7 +372,7 @@
     }
   },
   "delete": "Delete",
-  "deleteConfirm": "{count, plural, =1{Delete this photo from the frame?} other{Delete {count} photos from the frame?}}",
+  "deleteConfirm": "{count, plural, =1{Delete this photo from the album?} other{Delete {count} photos from the album?}}",
   "@deleteConfirm": {
     "placeholders": {
       "count": {
@@ -380,7 +380,7 @@
       }
     }
   },
-  "cantDeleteOthers": "You can only delete your own photos. The frame's owner can delete any.",
+  "cantDeleteOthers": "You can only delete your own photos. The album's owner can delete any.",
   "noReEdit": "To change the crop or look, delete the photo and add it again.",
   "reorder": "Change order",
   "reorderHint": "Drag photos to change the order the frame shows them in.",
@@ -411,13 +411,61 @@
   "settings": "Settings",
   "people": "People",
   "storage": "Storage",
-  "frameName": "Name",
-  "renameTitle": "Rename the frame",
+  "memoryCard": "Memory card",
+  "cardUsage": "{used} of {total} used · its photos take {photos}",
+  "@cardUsage": {
+    "placeholders": {
+      "used": {"type": "String"},
+      "total": {"type": "String"},
+      "photos": {"type": "String"}
+    }
+  },
+  "cardMissing": "No memory card, or the frame can't read it. Put in a microSD card, or erase it when you connect the frame.",
+  "cardMissingShort": "No memory card",
+  "cardMissingConnect": "There's no memory card in the frame. It needs one to keep photos: put a microSD card in, then connect again.",
+  "cardUnreadableConnect": "The frame can't read its memory card. It may be set up for a camera or computer, or be damaged. Erasing it makes it work here.",
+  "cardSize": "{total} card, {free} free",
+  "@cardSize": {
+    "placeholders": {
+      "total": {"type": "String"},
+      "free": {"type": "String"}
+    }
+  },
+  "cardOtherFiles": "{other} of other files on it stay, unless you erase it.",
+  "@cardOtherFiles": {
+    "placeholders": {
+      "other": {"type": "String"}
+    }
+  },
+  "cardTooSmallConnect": "{album}'s photos ({photos}) won't all fit: there's room for {room}.",
+  "@cardTooSmallConnect": {
+    "placeholders": {
+      "album": {"type": "String"},
+      "photos": {"type": "String"},
+      "room": {"type": "String"}
+    }
+  },
+  "eraseCard": "Erase the memory card first",
+  "eraseCardHint": "Deletes everything on it and sets it up for the frame.",
+  "stageErasing": "Erasing the memory card",
+  "sdFailed": "The frame couldn't erase its memory card. Check it's pushed in properly, or try another card.",
+  "cardTooSmall": "{album}'s photos don't all fit on the frame's memory card ({short} too much). Remove some photos, or put a bigger card in the frame.",
+  "@cardTooSmall": {
+    "placeholders": {
+      "album": {"type": "String"},
+      "short": {"type": "String"}
+    }
+  },
+  "albumName": "Name",
+  "sectionAlbum": "Album",
+  "renameTitle": "Rename the album",
   "save": "Save",
-  "sectionPhotos": "Photos",
+  "sectionPhotos": "Showing photos",
   "sectionChecking": "Checking for new photos",
   "sectionBattery": "Battery",
   "sectionHardware": "The frame",
+  "frameNamed": "Frame {id}",
+  "@frameNamed": {"placeholders": {"id": {"type": "String"}}},
   "changePhotoEvery": "Change photo every",
   "order": "Order",
   "orderShuffle": "Shuffle",
@@ -451,7 +499,7 @@
     }
   },
   "hardwareConnectedNoVersion": "Connected",
-  "hardwareNotConnected": "Not connected yet",
+  "hardwareNotConnected": "No frame connected yet",
   "batteryNow": "Battery now: {value} %",
   "@batteryNow": {
     "placeholders": {
@@ -500,10 +548,10 @@
   "onePerson": "1 person",
   "upToTen": "Up to 10 people",
   "expiresIn": "Expires in",
-  "inviteShareText": "Join {frame} on Ink Frame to add photos: {link}",
+  "inviteShareText": "Join {album} on Ink Frame to add photos: {link}",
   "@inviteShareText": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       },
       "link": {
@@ -535,27 +583,27 @@
       }
     }
   },
-  "revoke": "Revoke",
+  "cancelInvite": "Cancel invite",
   "justYou": "Just you so far",
   "ownerBadge": "Owner",
   "youBadge": "You",
   "removePerson": "Remove",
-  "removePersonConfirm": "Remove {name} from {frame}? Their photos stay; you can delete them.",
+  "removePersonConfirm": "Remove {name} from {album}? Their photos stay; you can delete them.",
   "@removePersonConfirm": {
     "placeholders": {
       "name": {
         "type": "String"
       },
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
   },
-  "leaveFrame": "Leave this frame",
-  "leaveFrameConfirm": "Leave {frame}? You'll stop seeing its photos. Photos you added stay.",
-  "@leaveFrameConfirm": {
+  "leaveAlbum": "Leave this album",
+  "leaveAlbumConfirm": "Leave {album}? You'll stop seeing its photos. Photos you added stay.",
+  "@leaveAlbumConfirm": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       }
     }
@@ -580,12 +628,12 @@
       }
     }
   },
-  "storageNote": "The frame's own downloads aren't counted here.",
+  "storageNote": "This is the album's online storage. The copies the frame keeps on its memory card aren't counted.",
   "storageByPerson": "By person",
-  "storageGettingFull": "{frame}'s storage is getting full ({value} %).",
+  "storageGettingFull": "{album}'s storage is getting full ({value} %).",
   "@storageGettingFull": {
     "placeholders": {
-      "frame": {
+      "album": {
         "type": "String"
       },
       "value": {
@@ -595,29 +643,29 @@
   },
   "seeStorage": "See storage",
   "yourName": "Your name",
-  "yourNameHint": "What the others see, on every frame you're on.",
+  "yourNameHint": "What the others see, in every album you're in.",
   "nameUpdated": "Name updated",
-  "nameUpdateFailed": "Couldn't update your name on {frames}.",
+  "nameUpdateFailed": "Couldn't update your name in {albums}.",
   "@nameUpdateFailed": {
     "placeholders": {
-      "frames": {
+      "albums": {
         "type": "String"
       }
     }
   },
   "anotherDevice": "Use on another device",
-  "anotherDeviceExplain": "On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don't, choose “I've been invited” there and scan this.",
+  "anotherDeviceExplain": "On your other phone or computer, sign in with the same account: your albums come back by themselves. If they don't, choose “I've been invited” there and scan this.",
   "deleteAccount": "Delete my account",
-  "deleteAccountBody": "You'll leave these frames and your account on them is deleted:",
+  "deleteAccountBody": "You'll leave these albums and your account in them is deleted:",
   "deletePhotosToo": "Also delete my photos",
-  "deleteOwnedBody": "These frames you set up are deleted, with all their photos and everyone's access, and their storage in your Supabase account:",
+  "deleteOwnedBody": "These albums you set up are deleted, with all their photos and everyone's access, and their storage in your Supabase account:",
   "typeDelete": "Type DELETE to confirm",
   "deleteWord": "DELETE",
   "deleteAccountButton": "Delete account",
-  "deleteFailed": "Couldn't delete your account on {frames}. Try again.",
+  "deleteFailed": "Couldn't delete your account in {albums}. Try again.",
   "@deleteFailed": {
     "placeholders": {
-      "frames": {
+      "albums": {
         "type": "String"
       }
     }
@@ -630,8 +678,8 @@
   "connectFrameTitle": "Connect the frame",
   "connectReadyTitle": "Get the frame ready",
   "connectReadyBody": "Hold the green button on the frame for 3 seconds, until it shows a 6-digit code. A new frame shows the code when it's switched on.",
-  "connectReplaces": "The frame connected to {name} now stops showing photos once this one is connected. The photos stay.",
-  "@connectReplaces": {"placeholders": {"name": {"type": "String"}}},
+  "connectReplaces": "The frame now showing {album} stops once this one is connected. The photos stay in the album.",
+  "@connectReplaces": {"placeholders": {"album": {"type": "String"}}},
   "findFrame": "Find the frame",
   "openSettings": "Open settings",
   "connectWithCode": "Connect with a code (developer)",
@@ -662,10 +710,10 @@
   "pairingTitle": "Connecting to the frame…",
   "pairingHint": "When asked, type the 6-digit code shown on the frame.",
   "startAgain": "Start again",
-  "modelMismatch": "This frame is a {device}, but {frame} is set up for a {model}.",
-  "@modelMismatch": {"placeholders": {"device": {"type": "String"}, "frame": {"type": "String"}, "model": {"type": "String"}}},
+  "modelMismatch": "This frame is a {device}, but {album} is made for a {model}.",
+  "@modelMismatch": {"placeholders": {"device": {"type": "String"}, "album": {"type": "String"}, "model": {"type": "String"}}},
   "wifiTitle": "Which Wi-Fi should the frame use?",
-  "wifiHint": "The frame needs a 2.4 GHz network.",
+  "wifiHint": "The frame needs a 2.4 GHz network. If your Wi-Fi has two names, pick the one without “5G”.",
   "otherNetwork": "Other network…",
   "wifiScanning": "Looking for networks…",
   "scanAgain": "Look again",
@@ -674,14 +722,14 @@
   "showPassword": "Show password",
   "hidePassword": "Hide password",
   "connectAction": "Connect",
-  "connectingNamed": "Connecting {name}",
+  "connectingNamed": "Connecting the frame to {name}",
   "@connectingNamed": {"placeholders": {"name": {"type": "String"}}},
   "stageJoinWifi": "Joining {ssid}",
   "@stageJoinWifi": {"placeholders": {"ssid": {"type": "String"}}},
   "stageLinking": "Linking to {name}",
   "@stageLinking": {"placeholders": {"name": {"type": "String"}}},
   "stageGettingPhotos": "Getting photos",
-  "frameConnected": "{name} is connected",
+  "frameConnected": "The frame is connected to {name}",
   "@frameConnected": {"placeholders": {"name": {"type": "String"}}},
   "frameConnectedBody": "It shows a photo in a moment. Photos you add appear at its next check, or press its green button to check now.",
   "bluetoothOff": "Turn on Bluetooth on this device, then try again.",
@@ -693,7 +741,7 @@
   "noFrameTipButton": "No code? Hold its green button for 3 seconds.",
   "wrongCode": "The code didn't match. Check the frame's screen and try again.",
   "pairingCancelled": "Connecting was cancelled.",
-  "linkedElsewhere": "This frame is still linked to another Ink Frame. Hold its green button for 10 seconds to reset it, then start again.",
+  "linkedElsewhere": "This frame is still linked to another album. Hold its green button for 10 seconds to reset it, then start again.",
   "wifiWrongPassword": "Couldn't join {ssid}: the password didn't work.",
   "@wifiWrongPassword": {"placeholders": {"ssid": {"type": "String"}}},
   "wifiNotFound": "The frame couldn't find {ssid}. It needs a 2.4 GHz network, close enough to the router.",
@@ -710,20 +758,20 @@
   "copy": "Copy",
   "waitingForFrame": "Waiting for the frame…",
   "newCode": "New code",
-  "connectNewHardware": "Connect new hardware",
+  "connectDifferentFrame": "Connect a different frame",
   "disconnectFrame": "Disconnect",
-  "disconnectConfirm": "Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {name}, ready for new hardware.",
-  "@disconnectConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "disconnectConfirm": "Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {album}, ready for another frame.",
+  "@disconnectConfirm": {"placeholders": {"album": {"type": "String"}}},
   "disconnected": "Disconnected. The frame clears itself at its next check.",
-  "moreFrames": "{count, plural, =1{1 more frame is on your account} other{{count} more frames are on your account}}",
-  "@moreFrames": {"placeholders": {"count": {"type": "int"}}},
-  "moreFramesBody": "{count, plural, =1{It was added on another device. Sign in again to see it here too.} other{They were added on another device. Sign in again to see them here too.}}",
-  "@moreFramesBody": {"placeholders": {"count": {"type": "int"}}},
+  "moreAlbums": "{count, plural, =1{1 more album is on your account} other{{count} more albums are on your account}}",
+  "@moreAlbums": {"placeholders": {"count": {"type": "int"}}},
+  "moreAlbumsBody": "{count, plural, =1{It was added on another device. Sign in again to see it here too.} other{They were added on another device. Sign in again to see them here too.}}",
+  "@moreAlbumsBody": {"placeholders": {"count": {"type": "int"}}},
   "addToDevice": "Add to this device",
   "notNow": "Not now",
-  "moreFramesElsewhere": "Your account uses Sign in with Apple, which this device doesn't have. Use Account → Use on another device on your iPhone or Mac instead.",
-  "moreFramesFailed": "Couldn't add them. Check your internet connection and try again.",
-  "batteryLowTitle": "{name}'s battery is low",
+  "moreAlbumsElsewhere": "Your account uses Sign in with Apple, which this device doesn't have. Use Account → Use on another device on your iPhone or Mac instead.",
+  "moreAlbumsFailed": "Couldn't add them. Check your internet connection and try again.",
+  "batteryLowTitle": "{name}: the frame's battery is low",
   "@batteryLowTitle": {"placeholders": {"name": {"type": "String"}}},
   "batteryLowBody": "{pct} % left. Charge it soon so it keeps showing new photos.",
   "@batteryLowBody": {"placeholders": {"pct": {"type": "int"}}},
@@ -732,8 +780,8 @@
   "notifyLowBatteryHint": "On this phone.",
   "notifyBlocked": "Notifications are off for Ink Frame on this phone. Allow them in the phone's settings.",
   "notifyWarningOff": "Turn on the low battery warning first.",
-  "notifyNeedsUpdateOwner": "Needs the frame update in Owner tools first.",
-  "notifyNeedsUpdate": "Needs {owner} to update the frame first.",
+  "notifyNeedsUpdateOwner": "Update the album in Owner tools first.",
+  "notifyNeedsUpdate": "Ask {owner} to update the album first.",
   "@notifyNeedsUpdate": {"placeholders": {"owner": {"type": "String"}}},
   "connectedNotifyNote": "This phone will tell you when its battery is low.",
   "checkBatteriesNow": "Check batteries now",

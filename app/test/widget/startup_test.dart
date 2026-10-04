@@ -47,19 +47,19 @@ Future<Map<String, String>> kitchenOnDevice() async {
 }
 
 void main() {
-  testWidgets('signed in: "Loading your frames…", never "no frames" or sign-in buttons', (tester) async {
+  testWidgets('signed in: "Loading your albums…", never "no frames" or sign-in buttons', (tester) async {
     await start(tester, SlowStore()..values.addAll(await kitchenOnDevice()));
-    expect(find.text('No frames yet'), findsNothing);
+    expect(find.text('No albums yet'), findsNothing);
     expect(find.text('Continue with Google'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Loading your frames…'), findsOneWidget);
+    expect(find.text('Loading your albums…'), findsOneWidget);
     expect(find.text('Continue with Google'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Kitchen'), findsOneWidget);
-    expect(find.text('Loading your frames…'), findsNothing);
+    expect(find.text('Loading your albums…'), findsNothing);
     await tester.pump(const Duration(seconds: 2)); // the slow store's last reads
   });
 
@@ -68,7 +68,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Kitchen'), findsOneWidget);
-    expect(find.text('Loading your frames…'), findsNothing);
+    expect(find.text('Loading your albums…'), findsNothing);
   });
 
   testWidgets('no frames on this device: Welcome, which starts with signing in', (tester) async {

@@ -79,6 +79,54 @@ class Frame {
 
   bool get isPaired => config['device_secret'] != null && config['api_base_url'] != null;
 
+  // ── The memory card (pretend; docs/pairing.md `info.sd`, openapi.yaml /sync) ──
+
+  /// `ok`, `missing` or `unreadable` (config `sd`).
+  String get cardState => config['sd'] as String? ?? 'ok';
+  int get _cardTotal => config['sd_total_bytes'] as int? ?? 8 * 1024 * 1024 * 1024;
+  int get _otherBytes => config['sd_other_bytes'] as int? ?? 0;
+
+  Future<int> cacheBytes() async {
+    var n = 0;
+    for (final c in await readManifest()) {
+      if (await _cachedFileOk(c)) n += c.bytes;
+    }
+    return n;
+  }
+
+  /// `info.sd`: the card's state and, when readable, its sizes.
+  Future<Map<String, Object?>> sdInfo() async {
+    if (cardState != 'ok') return {'state': cardState};
+    final cache = await cacheBytes();
+    return {
+      'state': 'ok',
+      'total_bytes': _cardTotal,
+      'free_bytes': max(0, _cardTotal - cache - _otherBytes),
+      'cache_bytes': cache,
+      'other_bytes': _otherBytes,
+    };
+  }
+
+  /// Pretends a different card: [state], and optionally its size and other files.
+  Future<void> setCard(String state, {int? totalBytes, int? otherBytes}) async {
+    config['sd'] = state;
+    if (totalBytes != null) config['sd_total_bytes'] = totalBytes;
+    if (otherBytes != null) config['sd_other_bytes'] = otherBytes;
+    await save();
+  }
+
+  /// `erase_sd`: formats the card (false if there is none).
+  Future<bool> eraseCard() async {
+    if (cardState == 'missing') return false;
+    await _wipeCache();
+    config
+      ..['sd'] = 'ok'
+      ..['sd_other_bytes'] = 0
+      ..remove('manifest_version');
+    await save();
+    return true;
+  }
+
   Future<void> load() async {
     await cacheDir.create(recursive: true);
     if (await _configFile.exists()) {
@@ -125,14 +173,17 @@ class Frame {
   /// when its cache can't be trusted.
   Future<SyncReport> sync({bool force = false}) async {
     if (!isPaired) throw StateError('Not paired. Run `claim` first.');
-    final cached = await readManifest();
+    final cardOk = cardState == 'ok';
+    final cached = cardOk ? await readManifest() : <CachedImage>[];
     final localIds = [
       for (final c in cached)
         if (await _cachedFileOk(c)) c.id,
     ];
-    final int since = force || cached.isEmpty && config['manifest_version'] == null
+    // Like the firmware: no card, no list to put anywhere.
+    final int since = cardOk && (force || cached.isEmpty && config['manifest_version'] == null)
         ? 0
         : (config['manifest_version'] as int? ?? 0);
+    final sd = await sdInfo();
 
     final Map<String, dynamic> body;
     try {
@@ -141,7 +192,9 @@ class Frame {
         'fw_version': fwVersion,
         'battery_pct': config['battery_pct'] as int? ?? 100,
         'rssi': -50,
-        'sd_free_bytes': null,
+        'sd_total_bytes': cardOk ? sd['total_bytes'] : 0,
+        if (cardOk) 'sd_free_bytes': sd['free_bytes'],
+        if (cardOk) 'cache_bytes': sd['cache_bytes'],
         'local_ids': localIds,
       }, bearer: config['device_secret'] as String);
     } on ApiException catch (e) {
@@ -152,9 +205,10 @@ class Frame {
     config['settings'] = body['settings'];
     config['last_sync_at'] = DateTime.now().toUtc().toIso8601String();
     final version = body['manifest_version'] as int;
-    final images = body['images'] as List<dynamic>?;
+    final images = cardOk ? body['images'] as List<dynamic>? : null;
     if (images == null) {
-      config['manifest_version'] = version;
+      // Unchanged, or a list with nowhere to put it (no card): only the first is applied.
+      if (body['images'] == null) config['manifest_version'] = version;
       await save();
       return SyncReport(manifestVersion: version, manifestChanged: false, total: cached.length);
     }

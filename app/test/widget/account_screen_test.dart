@@ -167,7 +167,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Delete my account'), 100);
     await tester.tap(find.text('Delete my account'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('These frames you set up are deleted'), findsOneWidget);
+    expect(find.textContaining('These albums you set up are deleted'), findsOneWidget);
     expect(find.text("• Grandma's"), findsOneWidget);
     expect(find.text('• Kitchen'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'DELETE');

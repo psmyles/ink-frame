@@ -28,6 +28,8 @@ pairing prompt with the default settings; see below.)
   pretend frame tests everything except the pairing itself, which needs the firmware
   (4b). The 6 digits in the window are for show.
 - It reports the reTerminal E1002 (`reterminal-e1002`), the only model for now.
+- **Memory card** pretends an OK card (8 GB), no card, or one it can't read, to try what
+  the app says at the Wi-Fi step; "Erase the memory card first" pretends to format it.
 - **Check now** is the green button (sync, then show the newest photo); **Pair again**
   is holding it 3 s; **Reset** is holding it 10 s (new `hw_id`, forgets the frame).
 - State (frame_sim's `config.json` and cache) lives in the app's support folder.

@@ -16,6 +16,7 @@ class FakeHardware {
     this.frameId,
     this.networks = const [WifiNetwork('Home', rssi: -48), WifiNetwork('Neighbour', rssi: -80), WifiNetwork('Cafe', rssi: -60, secure: false)],
     this.passwords = const {'Home': 'correct horse', 'Cafe': ''},
+    this.sd,
     Claim? claim,
   }) : claim = claim ?? ((_, _) async => null);
 
@@ -25,6 +26,13 @@ class FakeHardware {
   final List<WifiNetwork> networks;
   final Map<String, String> passwords;
   final Claim claim;
+
+  /// The memory card `info` reports (null: not reported, like older firmware).
+  SdCard? sd;
+
+  /// Erasing the card fails (`sd_failed`).
+  var eraseFails = false;
+  var erased = 0;
 
   /// The next pairing attempt fails like this (then works).
   LinkFailure? failNextPair;
@@ -41,7 +49,7 @@ class FakeHardware {
   var connected = false;
 
   String get hwId => 'e1002-24ec4a1b$suffix'.toLowerCase();
-  FrameInfo get info => FrameInfo(hwId: hwId, modelId: modelId, fwVersion: '1.0.0', frameId: frameId);
+  FrameInfo get info => FrameInfo(hwId: hwId, modelId: modelId, fwVersion: '1.0.0', frameId: frameId, sd: sd);
   FoundFrame get found => FoundFrame('dev-$suffix', '${Pairing.namePrefix}$suffix', rssi: -50);
 }
 
@@ -123,6 +131,15 @@ class _FakeLink implements PairingLink {
       return hw.silentAfter != s.state;
     }
 
+    if (p.eraseSd) {
+      if (!await say(const LinkStatus(LinkState.erasing))) return;
+      if (hw.eraseFails || hw.sd == null || hw.sd!.state == SdState.missing) {
+        await say(const LinkStatus(LinkState.error, code: 'sd_failed'));
+        return;
+      }
+      hw.erased++;
+      hw.sd = SdCard(SdState.ok, totalBytes: hw.sd!.totalBytes == 0 ? 1 << 30 : hw.sd!.totalBytes, freeBytes: 1 << 30);
+    }
     if (!await say(const LinkStatus(LinkState.wifiConnecting))) return;
     final password = hw.passwords[p.ssid];
     if (password == null) {

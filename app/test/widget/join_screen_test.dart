@@ -103,7 +103,7 @@ Future<void> pump(
 void main() {
   testWidgets('an invite starts with the link', (tester) async {
     await pump(tester, server: FakeDirectoryServer());
-    expect(find.text('Join a frame'), findsOneWidget);
+    expect(find.text('Join an album'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Invite link'), findsOneWidget);
     expect(find.text('Continue with Google'), findsNothing);
   });

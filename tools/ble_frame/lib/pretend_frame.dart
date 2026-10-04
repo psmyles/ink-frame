@@ -64,6 +64,7 @@ class PretendFrame extends ChangeNotifier {
 
   Future<void> init() async {
     await frame.load();
+    await _refreshCard();
     _subs
       ..add(UniversalBlePeripheral.connectionStateStream.listen((e) {
         central = e.connected ? e.deviceId : null;
@@ -145,6 +146,7 @@ class PretendFrame extends ChangeNotifier {
     if (!frame.isPaired) return;
     await _run(() async {
       final r = await frame.sync();
+      await _refreshCard();
       _say('Checked: ${r.total} photos (+${r.added.length} -${r.removed.length})');
       await _showNext(newest: r.added.isNotEmpty ? r.added.last : null);
     });
@@ -167,6 +169,22 @@ class PretendFrame extends ChangeNotifier {
 
   int get battery => frame.config['battery_pct'] as int? ?? 100;
 
+  /// `info.sd`, kept ready because GATT reads answer straight away.
+  Map<String, Object?> sd = const {'state': 'ok'};
+  String get cardState => frame.cardState;
+
+  Future<void> _refreshCard() async {
+    sd = await frame.sdInfo();
+    notifyListeners();
+  }
+
+  /// Pretends a different memory card (to try what the app says about it).
+  Future<void> setCard(String state) async {
+    await frame.setCard(state);
+    _say('Memory card: $state');
+    await _refreshCard();
+  }
+
   /// What it reports at its next check (to try the low-battery notification).
   Future<void> setBattery(int pct) async {
     frame.config['battery_pct'] = pct;
@@ -183,6 +201,7 @@ class PretendFrame extends ChangeNotifier {
       'model_id': modelId,
       'fw_version': sim.fwVersion,
       'frame_id': frame.isPaired ? frame.config['frame_id'] : null,
+      'sd': sd,
     }));
     if (offset == 0) _say('Phone read info (paired)');
     return PeripheralReadRequestResult(value: Uint8List.sublistView(info, min(offset, info.length)));
@@ -233,7 +252,14 @@ class PretendFrame extends ChangeNotifier {
   Future<void> _provision(Map<String, dynamic> m) async {
     final ssid = m['ssid'] as String? ?? '';
     final base = (m['api_base_url'] as String? ?? '').replaceAll(RegExp(r'/+$'), '');
-    _say('Provision: Wi-Fi "$ssid", $base');
+    _say('Provision: Wi-Fi "$ssid", $base${m['erase_sd'] == true ? ', erase the card' : ''}');
+    if (m['erase_sd'] == true) {
+      await _status({'state': 'erasing'});
+      await Future<void>.delayed(const Duration(seconds: 2));
+      if (!await frame.eraseCard()) return _status({'state': 'error', 'code': 'sd_failed'});
+      showing = null;
+      await _refreshCard();
+    }
     await _status({'state': 'wifi_connecting'});
     await Future<void>.delayed(const Duration(milliseconds: 1500));
     if (ssid == 'Far away' || ssid.isEmpty) return _status({'state': 'wifi_failed', 'reason': 'not_found'});
@@ -270,6 +296,7 @@ class PretendFrame extends ChangeNotifier {
     } catch (e) {
       _say('First check failed ($e); the frame retries later');
     }
+    await _refreshCard();
     await _status({'state': 'ready'});
     await _stopAdvertising();
     await _showNext();
@@ -337,7 +364,7 @@ class PretendFrame extends ChangeNotifier {
     try {
       await body();
     } on sim.ApiException catch (e) {
-      _say(e.status == 410 ? 'This frame was removed. Hold 3 s to set it up again.' : 'Error: $e');
+      _say(e.status == 410 ? 'Not connected to an album. Hold 3 s, then connect it in the app.' : 'Error: $e');
       if (e.status == 410) showing = null;
     } catch (e) {
       _say('Error: $e');

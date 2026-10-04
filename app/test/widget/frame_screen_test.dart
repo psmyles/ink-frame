@@ -103,14 +103,14 @@ Future<void> pump(WidgetTester tester,
 void main() {
   testWidgets('not connected yet: the owner gets Connect the frame, others don\'t', (tester) async {
     await pump(tester, me: priya, connected: false);
-    expect(find.text('Not connected yet'), findsOneWidget);
+    expect(find.text('No frame connected yet'), findsOneWidget);
     expect(find.text('Connect the frame'), findsOneWidget);
     expect(find.textContaining('press the green button'), findsNothing);
   });
 
   testWidgets('not connected yet, as someone else: no Connect the frame', (tester) async {
     await pump(tester, me: alice, connected: false);
-    expect(find.text('Not connected yet'), findsOneWidget);
+    expect(find.text('No frame connected yet'), findsOneWidget);
     expect(find.text('Connect the frame'), findsNothing);
   });
 
@@ -124,7 +124,7 @@ void main() {
 
     await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
     await tester.pumpAndSettle();
-    expect(find.text('Delete 3 photos from the frame?'), findsOneWidget);
+    expect(find.text('Delete 3 photos from the album?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -159,7 +159,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.byTooltip('Delete'));
     await tester.pumpAndSettle();
-    expect(find.text('Delete this photo from the frame?'), findsOneWidget);
+    expect(find.text('Delete this photo from the album?'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
     expect(fake.deleted, ['a2']);

@@ -52,6 +52,17 @@ class FramePage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(children: [
                   Text('Model ${frame.modelId}'),
+                  const SizedBox(width: 16),
+                  const Text('Memory card '),
+                  DropdownButton<String>(
+                    value: frame.cardState,
+                    items: const [
+                      DropdownMenuItem(value: 'ok', child: Text('OK')),
+                      DropdownMenuItem(value: 'missing', child: Text('No card')),
+                      DropdownMenuItem(value: 'unreadable', child: Text("Can't read it")),
+                    ],
+                    onChanged: (v) => v == null ? null : frame.setCard(v),
+                  ),
                   const Spacer(),
                   const Text('Require pairing'),
                   Switch(

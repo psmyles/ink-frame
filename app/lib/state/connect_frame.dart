@@ -29,6 +29,7 @@ enum ConnectProblem {
   modelMismatch,
   linkedElsewhere,
   wifiFailed,
+  sdFailed,
   unreachable,
   offline,
   lost,
@@ -44,6 +45,7 @@ class ConnectState {
     this.networks = const [],
     this.scanningWifi = false,
     this.ssid,
+    this.eraseSd = false,
     this.progress,
     this.busy = false,
     this.problem,
@@ -69,6 +71,9 @@ class ConnectState {
   /// The network being joined (or that failed).
   final String? ssid;
 
+  /// The memory card is erased first (finishing shows that step).
+  final bool eraseSd;
+
   /// The last `status` while finishing.
   final LinkState? progress;
 
@@ -91,6 +96,7 @@ class ConnectState {
     List<WifiNetwork>? networks,
     bool? scanningWifi,
     String? ssid,
+    bool? eraseSd,
     LinkState? progress,
     bool clearProgress = false,
     bool? busy,
@@ -103,6 +109,7 @@ class ConnectState {
         networks: networks ?? this.networks,
         scanningWifi: scanningWifi ?? this.scanningWifi,
         ssid: ssid ?? this.ssid,
+        eraseSd: eraseSd ?? this.eraseSd,
         progress: clearProgress ? null : progress ?? this.progress,
         busy: busy ?? this.busy,
         problem: problem,
@@ -119,6 +126,7 @@ class ConnectState {
         networks: networks,
         scanningWifi: scanningWifi,
         ssid: ssid,
+        eraseSd: eraseSd,
         progress: progress,
         busy: false,
         problem: problem,
@@ -138,6 +146,9 @@ class ConnectFrame extends Notifier<ConnectState> {
   /// How long the frame may stay silent while joining Wi-Fi and claiming, and while
   /// getting its first photos.
   static const quietLimit = Duration(seconds: 45);
+
+  /// Formatting a large card takes up to a minute or so.
+  static const eraseLimit = Duration(minutes: 3);
   static const syncLimit = Duration(minutes: 3);
 
   /// Finding gives up after this. Once a frame is found, the ones seen within
@@ -154,6 +165,7 @@ class ConnectFrame extends Notifier<ConnectState> {
   PairingLink? _link;
   FoundFrame? _target;
   String? _password;
+  var _eraseSd = false;
   var _tokenRetried = false;
 
   @override
@@ -334,8 +346,9 @@ class ConnectFrame extends Notifier<ConnectState> {
 
   // ── Finish ──
 
-  /// Sends [ssid], [password], the API address and a fresh pairing token.
-  Future<void> join(String ssid, String password) async {
+  /// Sends [ssid], [password], the API address and a fresh pairing token; with
+  /// [eraseSd], the frame formats its memory card first.
+  Future<void> join(String ssid, String password, {bool eraseSd = false}) async {
     final link = _link;
     if (link == null) {
       _emit(state.withProblem(ConnectProblem.lost));
@@ -344,8 +357,11 @@ class ConnectFrame extends Notifier<ConnectState> {
     unawaited(_wifi?.cancel());
     _scanTimer?.cancel();
     _password = password;
+    _eraseSd = eraseSd;
     _tokenRetried = false;
-    _emit(state.copyWith(step: ConnectStep.finishing, ssid: ssid, scanningWifi: false, clearProgress: true).withProblem(null));
+    _emit(state
+        .copyWith(step: ConnectStep.finishing, ssid: ssid, eraseSd: eraseSd, scanningWifi: false, clearProgress: true)
+        .withProblem(null));
     _status ??= link.status.listen(_onStatus);
     await _send(link, ssid, password);
   }
@@ -358,8 +374,9 @@ class ConnectFrame extends Notifier<ConnectState> {
         password: password,
         apiBaseUrl: '${address.url}/functions/v1',
         pairingToken: token.token,
+        eraseSd: _eraseSd,
       ));
-      _watch(quietLimit);
+      _watch(_eraseSd ? eraseLimit : quietLimit);
     } on ApiException catch (e) {
       _emit(state.copyWith(step: ConnectStep.wifi).withProblem(
         e.code == ApiException.offline ? ConnectProblem.offline : ConnectProblem.failed,
@@ -373,7 +390,12 @@ class ConnectFrame extends Notifier<ConnectState> {
   void _onStatus(LinkStatus s) {
     if (state.step != ConnectStep.finishing) return;
     switch (s.state) {
+      case LinkState.erasing:
+        _watch(eraseLimit);
+        _emit(state.copyWith(progress: s.state));
       case LinkState.wifiConnecting || LinkState.claiming || LinkState.claimed:
+        // Erased already: a provision sent again (a new pairing token) doesn't erase again.
+        _eraseSd = false;
         _watch(quietLimit);
         _emit(state.copyWith(progress: s.state));
       case LinkState.syncing:
@@ -405,7 +427,11 @@ class ConnectFrame extends Notifier<ConnectState> {
                 .withProblem(ConnectProblem.linkedElsewhere, detail: detail));
           default:
             _emit(state.copyWith(step: ConnectStep.wifi, clearProgress: true).withProblem(
-              s.code == 'unreachable' ? ConnectProblem.unreachable : ConnectProblem.failed,
+              switch (s.code) {
+                'unreachable' => ConnectProblem.unreachable,
+                'sd_failed' => ConnectProblem.sdFailed,
+                _ => ConnectProblem.failed,
+              },
               detail: detail,
             ));
         }

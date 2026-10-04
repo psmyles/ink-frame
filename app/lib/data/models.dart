@@ -22,6 +22,9 @@ class Frame {
     this.quietEnd,
     this.lowBatteryPct = 20,
     this.hwId,
+    this.sdTotalBytes,
+    this.sdFreeBytes,
+    this.cacheBytes,
   });
 
   final String id;
@@ -48,6 +51,33 @@ class Frame {
   /// The connected hardware's id (`public.frame` only; app-api leaves it out).
   final String? hwId;
 
+  /// The memory card at the hardware's last check: its size (`0` = no card, or one the
+  /// frame can't read), free space, and what the frame's photos take. Null when not
+  /// reported (not connected, older firmware).
+  final int? sdTotalBytes, sdFreeBytes, cacheBytes;
+
+  /// The frame keeps this much of its card free (openapi.yaml, `/device-api/sync`).
+  static const cardReserveBytes = 8 * 1024 * 1024;
+
+  /// The 4 characters the hardware shows on its setup screen and in its Bluetooth name
+  /// (docs/pairing.md): the last 4 of [hwId], upper case.
+  String? get hwSuffix => hwId == null || hwId!.length < 4 ? null : hwId!.substring(hwId!.length - 4).toUpperCase();
+
+  bool get noCard => connected && sdTotalBytes == 0;
+
+  /// Room for the frame's photos on its card: free space plus what they take now (the
+  /// frame mirrors the photos exactly), less what it keeps free. Null if not known.
+  int? get photoRoomBytes {
+    if (!connected || (sdTotalBytes ?? 0) == 0 || sdFreeBytes == null || cacheBytes == null) return null;
+    return (sdFreeBytes! + cacheBytes! - cardReserveBytes).clamp(0, sdTotalBytes!);
+  }
+
+  /// How much too big [photoBytes] (every photo on the frame) is for the card, or 0.
+  int cardShortBy(int photoBytes) {
+    final room = photoRoomBytes;
+    return room == null || photoBytes <= room ? 0 : photoBytes - room;
+  }
+
   bool get inOrder => displayOrder == 'sequential';
   bool get hasQuietHours => quietStart != null && quietEnd != null;
 
@@ -70,6 +100,9 @@ class Frame {
         // A project from before the battery warning (0005) has no column: the default.
         lowBatteryPct: j.containsKey('low_battery_pct') ? j['low_battery_pct'] as int? : 20,
         hwId: j['hw_id'] as String?,
+        sdTotalBytes: (j['sd_total_bytes'] as num?)?.toInt(),
+        sdFreeBytes: (j['sd_free_bytes'] as num?)?.toInt(),
+        cacheBytes: (j['cache_bytes'] as num?)?.toInt(),
       );
 
   /// `22:00` from the API, `22:00:00` from the table.

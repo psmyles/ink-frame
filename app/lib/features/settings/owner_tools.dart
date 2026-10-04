@@ -54,7 +54,7 @@ class OwnerTools extends ConsumerWidget {
           ),
         ListTile(
           leading: Icon(Icons.delete_forever_outlined, color: theme.colorScheme.error),
-          title: Text(l.deleteFrame, style: TextStyle(color: theme.colorScheme.error)),
+          title: Text(l.deleteAlbum, style: TextStyle(color: theme.colorScheme.error)),
           onTap: () => _delete(context, ref),
         ),
       ],
@@ -64,7 +64,7 @@ class OwnerTools extends ConsumerWidget {
   Future<void> _update(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final ok = await withProgress(context, l.updatingFrame(frameName), () async {
+    final ok = await withProgress(context, l.updatingAlbum(frameName), () async {
       await (await ref.read(provisionerProvider.future)).update(address.ref);
     });
     ref.invalidate(frameUpdateProvider(address));
@@ -85,11 +85,11 @@ class OwnerTools extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     final navigator = Navigator.of(context);
-    final error = await withProgress(context, l.deletingFrame(frameName), () async {
+    final error = await withProgress(context, l.deletingAlbum(frameName), () async {
       await (await ref.read(provisionerProvider.future)).deleteFrame(address.ref);
     });
     if (error != null) {
-      messenger.showSnackBar(SnackBar(content: Text(_failure(l, error, l.deleteFrameFailed(frameName)))));
+      messenger.showSnackBar(SnackBar(content: Text(_failure(l, error, l.deleteAlbumFailed(frameName)))));
       return;
     }
     unawaited(ref.read(frameDirectoryProvider).remove([address]));
@@ -198,12 +198,12 @@ class _DeleteFrameDialogState extends State<_DeleteFrameDialog> {
     final theme = Theme.of(context);
     final matches = _typed.text.trim().toLowerCase() == widget.frameName.trim().toLowerCase();
     return AlertDialog(
-      title: Text(l.deleteFrame),
+      title: Text(l.deleteAlbum),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l.deleteFrameConfirm(widget.frameName)),
+          Text(l.deleteAlbumConfirm(widget.frameName)),
           const SizedBox(height: 16),
           TextField(
             controller: _typed,

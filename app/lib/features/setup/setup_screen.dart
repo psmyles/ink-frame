@@ -235,7 +235,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 controller: _name,
                 maxLength: 40,
                 textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: l.frameName, hintText: l.frameNameHint),
+                decoration: InputDecoration(labelText: l.albumName, hintText: l.albumNameHint),
                 onChanged: (_) => setState(() {}),
               ),
               ListTile(
@@ -386,9 +386,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         const SizedBox(height: 24),
         Icon(Icons.check_circle, size: 56, color: theme.colorScheme.primary),
         const SizedBox(height: 16),
-        Text(l.frameReady(name), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
+        Text(l.albumReady(name), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
-        Text(l.frameReadyBody, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+        Text(l.albumReadyBody, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 24),
         FilledButton(
           onPressed: () {

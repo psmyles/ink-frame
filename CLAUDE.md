@@ -11,7 +11,7 @@ Ink Frame: a Flutter companion app, a per-family Supabase backend, and ESP32-S3 
 - **Never commit secrets.** The Supabase access token, keys and passwords go in `.env.local` files (gitignored) or in session environment variables (`SUPABASE_ACCESS_TOKEN`).
 - `reference/` is read-only. It is the spec the new code is ported from (see `reference/README.md`).
 - `shared/api/openapi.yaml` is the contract for `device-api` and `app-api`, `shared/api/directory.yaml` for the directory, `docs/pairing.md` + `shared/pairing.json` for Bluetooth pairing. Change the contract first, then the code on both sides.
-- **One Supabase project = one frame.** User-facing words: frame, owner, people, "checks for new photos", "connect the frame"; never space, project, admin or sync (PLAN.md §2).
+- **One Supabase project = one frame** (in code: the `frame` table, `Frame`, the API). User-facing words: **album** for the photos, people and storage, **frame** only for the hardware; owner, people, "checks for new photos", "connect the frame"; never space, project, admin, sync, hardware, or "device" for the frame (PLAN.md §2).
 
 ## Layout
 See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `backend/supabase/` (migrations, Edge Functions, tests), `app/` (Flutter), `firmware/` (PlatformIO), `tools/` (golden vectors, frame simulator, dev scripts), `central/` (firmware feed), `docs/`.
@@ -35,6 +35,7 @@ The dev project (`ink-frame`, `vrhsxzedzhvujnirsuhg`) was deleted on 2026-10-04,
 - `deno run --allow-read --allow-net --allow-env tools/dev/auth-providers.ts [--check]`: turn on Google/Apple sign-in on the dev project with the client IDs in `shared/oauth-clients.json` (provision.ts uses the same file).
 - `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists). `--owner-login` (needs `--allow-write`) lets you sign in as its owner in developer mode; the password goes into `backend/.env.local` as `DEV_OWNER_PASSWORD`, never to the terminal.
 - `cd app && ICON=1 flutter test test/tool/app_icon_test.dart && dart run flutter_launcher_icons`: redraw the app icon from `FrameMark` and regenerate every platform's icons.
+- `cd firmware && pio run -t upload` / `pio test -e native`: build and flash the firmware (E1002 on USB-C) / its unit tests. `firmware/tools/console.py` (PlatformIO's Python) talks to the frame's serial console; `SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts setup --ssid <wifi>` links it to a test album on a throwaway project (the user types the Wi-Fi password). More in `firmware/README.md`.
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `cd tools/ble_frame && flutter run -d macos` (or an Android device): a pretend frame over real Bluetooth (docs/pairing.md) for trying Connect the frame from the app on another device; frame_sim does the claiming. `flutter test` there checks its UUIDs.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.

@@ -36,7 +36,7 @@ void main() {
     expect(find.text('Owner'), findsOneWidget);
     expect(find.text('You'), findsOneWidget);
     expect(find.text('Remove'), findsNWidgets(2)); // not on the owner
-    expect(find.text('Leave this frame'), findsNothing);
+    expect(find.text('Leave this album'), findsNothing);
 
     await tester.tap(find.text('Remove').first);
     await tester.pumpAndSettle();
@@ -52,14 +52,14 @@ void main() {
     expect(find.text('Just you so far'), findsOneWidget);
   });
 
-  testWidgets('active invites can be revoked', (tester) async {
+  testWidgets('active invites can be cancelled', (tester) async {
     final api = await open(tester, me: priya, invites: [
       Invite(id: 'i1', expiresAt: DateTime(2026, 10, 10), maxUses: 1, uses: 0),
       Invite(id: 'i2', expiresAt: DateTime(2026, 10, 30), maxUses: 10, uses: 3),
     ]);
     expect(find.text('For 1 person · expires Oct 10'), findsOneWidget);
     expect(find.text('3 of 10 joined · expires Oct 30'), findsOneWidget);
-    await tester.tap(find.text('Revoke').first);
+    await tester.tap(find.text('Cancel invite').first);
     await tester.pumpAndSettle();
     expect(api.calls, ['revoke i1']);
     expect(find.text('For 1 person · expires Oct 10'), findsNothing);
@@ -104,7 +104,7 @@ void main() {
     final api = await open(tester, me: alice, store: store, directory: directory);
     expect(find.text('Invite someone'), findsNothing);
     expect(find.text('Remove'), findsNothing);
-    await tester.tap(find.text('Leave this frame'));
+    await tester.tap(find.text('Leave this album'));
     await tester.pumpAndSettle();
     expect(find.textContaining("Leave Kitchen? You'll stop seeing its photos."), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Leave'));

@@ -181,4 +181,32 @@ void main() {
       last = next;
     }
   });
+
+  test('reports its memory card: size, free space and what its photos take', () async {
+    await frame.setCard('ok', totalBytes: 1000, otherBytes: 100);
+    server.put('a', 'AAAA');
+    await frame.sync();
+    await frame.sync();
+    final body = server.syncBodies.last;
+    expect(body['sd_total_bytes'], 1000);
+    expect(body['cache_bytes'], 4);
+    expect(body['sd_free_bytes'], 1000 - 4 - 100);
+  });
+
+  test('no card: reports 0, keeps nothing, and asks for the list again once one is back', () async {
+    server.put('a', 'AAAA');
+    await frame.setCard('missing');
+    await frame.sync();
+    expect(server.syncBodies.last['sd_total_bytes'], 0);
+    expect(server.syncBodies.last.containsKey('cache_bytes'), isFalse);
+    expect(await cachedFiles(), isEmpty);
+    expect(await frame.eraseCard(), isFalse, reason: 'nothing to erase');
+
+    await frame.setCard('unreadable');
+    expect((await frame.sdInfo())['state'], 'unreadable');
+    expect(await frame.eraseCard(), isTrue);
+    final r = await frame.sync();
+    expect(server.syncBodies.last['manifest_version'], 0);
+    expect(r.added, ['a']);
+  });
 }

@@ -40,9 +40,9 @@ App side: `app/lib/ble/` (built in 3f). Firmware side: `src/ble/provisioning.*` 
 | Name | UUID suffix | Properties | Content |
 |---|---|---|---|
 | service | `42a40001-…` | primary | |
-| `info` | `42a40002-…` | read | `{"hw_id","model_id","fw_version","frame_id"}` |
+| `info` | `42a40002-…` | read | `{"hw_id","model_id","fw_version","frame_id","sd"}` |
 | `wifi_scan` | `42a40003-…` | write, notify | write `{"scan":true}`; one notification per network, then `{"done":true}` |
-| `provision` | `42a40004-…` | write | `{"ssid","password","api_base_url","pairing_token"}` |
+| `provision` | `42a40004-…` | write | `{"ssid","password","api_base_url","pairing_token","erase_sd"?}` |
 | `status` | `42a40005-…` | notify | `{"state", …}`, below |
 
 ### Messages
@@ -63,10 +63,20 @@ it themselves) and works with whatever it gets.
 ### `info`
 
 ```json
-{"hw_id":"e1002-24ec4a1b2c3d","model_id":"reterminal-e1002","fw_version":"1.0.0","frame_id":null}
+{"hw_id":"e1002-24ec4a1b2c3d","model_id":"reterminal-e1002","fw_version":"1.0.0","frame_id":null,
+ "sd":{"state":"ok","total_bytes":7948206080,"free_bytes":5133828096,"cache_bytes":0,"other_bytes":2814377984}}
 ```
 
 `frame_id` is the frame this hardware is linked to (from its last claim), or `null`.
+
+`sd` is the memory card (one line in the real message; wrapped here):
+- `state`: `ok`; `missing` (no card); or `unreadable` (the frame can't read it: not FAT16/
+  FAT32, for example exFAT or NTFS as larger cards come, or damaged). Only `ok` has the
+  sizes.
+- `total_bytes`, `free_bytes`; `cache_bytes`: the frame's own photos (its cache, kept if
+  this hardware reconnects to the same frame); `other_bytes`: everything else on the card,
+  which the frame never touches unless it's erased.
+- Absent from older firmware and pretend frames: the app then says nothing about the card.
 The app reads `info` first (this read triggers pairing), then:
 - `model_id` ≠ the frame's model → "This is a … but Kitchen is set up for a …" (app-flow
   §6.2), before any Wi-Fi.
@@ -88,8 +98,14 @@ SSID once (its strongest), at most 20:
 ### `provision`
 
 ```json
-{"ssid":"Home","password":"…","api_base_url":"https://<ref>.supabase.co/functions/v1","pairing_token":"01J9…"}
+{"ssid":"Home","password":"…","api_base_url":"https://<ref>.supabase.co/functions/v1","pairing_token":"01J9…","erase_sd":true}
 ```
+
+`erase_sd` (optional, default false): the frame **formats the memory card as FAT32**
+(everything on it is lost) before joining Wi-Fi, reporting `erasing`, then re-reads it.
+Formatting also makes an `unreadable` card usable, and uses the whole card whatever its
+size (FAT32 on cards over 32 GB, which come as exFAT). If it fails, or there's no card,
+`status` is `error` `sd_failed` and nothing else happens.
 
 `password` is `""` for an open network. `api_base_url` is the frame's project URL +
 `/functions/v1`; the frame calls `{api_base_url}/device-api/claim` and `/sync`. The app
@@ -103,6 +119,7 @@ PAIRING and connected, ready for another `provision` (the app sends a corrected 
 
 | `state` | Extra fields | Meaning | App shows |
 |---|---|---|---|
+| `erasing` | | formatting the memory card (`erase_sd`; a few seconds) | Erasing the memory card |
 | `wifi_connecting` | | joining the network (15 s timeout) | Joining Wi-Fi |
 | `wifi_failed` | `reason`: `auth` / `not_found` / `other` | couldn't join | back to the Wi-Fi step, with the reason |
 | `claiming` | | `POST /claim` | Linking to Kitchen |
@@ -121,6 +138,7 @@ PAIRING and connected, ready for another `provision` (the app sends a corrected 
 - `unreachable`: on Wi-Fi but the API can't be reached (no internet, DNS, TLS).
 - `server`: `/claim` failed some other way.
 - `bad_request`: a message the frame couldn't read.
+- `sd_failed`: `erase_sd` couldn't format the card (or there is none).
 
 After `ready` the frame disconnects within a few seconds. A disconnect after `claimed`
 counts as done (the frame is linked; it gets its photos on its own); a disconnect before

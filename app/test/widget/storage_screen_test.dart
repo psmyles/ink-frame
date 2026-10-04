@@ -29,7 +29,7 @@ void main() {
     expect(find.text('40 photos · 300 MB'), findsOneWidget);
     expect(find.text('Alice'), findsOneWidget);
     expect(find.text('8 photos · 12 MB'), findsOneWidget);
-    expect(find.text("The frame's own downloads aren't counted here."), findsOneWidget);
+    expect(find.text("This is the album's online storage. The copies the frame keeps on its memory card aren't counted."), findsOneWidget);
   });
 
   testWidgets('the Frame screen says when storage is getting full', (tester) async {

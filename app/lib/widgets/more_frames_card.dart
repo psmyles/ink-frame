@@ -25,7 +25,7 @@ class _MoreFramesCardState extends ConsumerState<MoreFramesCard> {
     final service = ref.read(signInServiceProvider);
     final method = await ref.read(frameDirectoryProvider).provider() == 'apple' ? SignInMethod.apple : SignInMethod.google;
     if (!service.methods(devMode: false).contains(method)) {
-      messenger.showSnackBar(SnackBar(content: Text(l.moreFramesElsewhere)));
+      messenger.showSnackBar(SnackBar(content: Text(l.moreAlbumsElsewhere)));
       return;
     }
     setState(() => _busy = true);
@@ -37,7 +37,7 @@ class _MoreFramesCardState extends ConsumerState<MoreFramesCard> {
     } on SignInCancelled {
       // Stay put.
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.moreFramesFailed)));
+      messenger.showSnackBar(SnackBar(content: Text(l.moreAlbumsFailed)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -59,7 +59,7 @@ class _MoreFramesCardState extends ConsumerState<MoreFramesCard> {
             Row(children: [
               Icon(Icons.devices_outlined, color: theme.colorScheme.primary),
               const SizedBox(width: 12),
-              Expanded(child: Text(l.moreFrames(more.length), style: theme.textTheme.titleSmall)),
+              Expanded(child: Text(l.moreAlbums(more.length), style: theme.textTheme.titleSmall)),
               IconButton(
                 tooltip: l.notNow,
                 icon: const Icon(Icons.close),
@@ -68,7 +68,7 @@ class _MoreFramesCardState extends ConsumerState<MoreFramesCard> {
             ]),
             Padding(
               padding: const EdgeInsets.only(left: 36, right: 8),
-              child: Text(l.moreFramesBody(more.length), style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+              child: Text(l.moreAlbumsBody(more.length), style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             ),
             const SizedBox(height: 12),
             Padding(

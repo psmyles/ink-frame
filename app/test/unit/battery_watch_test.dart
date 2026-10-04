@@ -177,7 +177,7 @@ void main() {
     server.frame['battery_pct'] = 15;
     final notifications = FakeNotifications();
     await checkBatteries(watch, notifications);
-    expect(notifications.shown, ["Kitchen's battery is low | 15 % left. Charge it soon so it keeps showing new photos."]);
+    expect(notifications.shown, ["Kitchen: the frame's battery is low | 15 % left. Charge it soon so it keeps showing new photos."]);
   });
 
   test('desktops have no background checks', () async {

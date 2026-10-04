@@ -8,6 +8,7 @@
 //
 // Global: --state <dir> (default .frame_sim) holds config.json and the cache.
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
@@ -30,6 +31,11 @@ Future<void> main(List<String> argv) async {
     ..addOption('out', help: 'Where to copy the image (default <state>/current.png).')
     ..addFlag('prev', negatable: false, help: 'Previous image (sequential order).');
   parser.addCommand('reset');
+  parser.addCommand('card')
+    ..addOption('state', allowed: ['ok', 'missing', 'unreadable'], help: 'Pretend this memory card.')
+    ..addOption('total', help: 'Its size in bytes (default 8 GiB).')
+    ..addOption('other', help: 'Bytes of other files on it (default 0).');
+  parser.addCommand('erase');
 
   final ArgResults args;
   try {
@@ -104,10 +110,22 @@ Future<void> main(List<String> argv) async {
       case 'reset':
         if (await frame.dir.exists()) await frame.dir.delete(recursive: true);
         stdout.writeln('factory reset: removed ${frame.dir.path}');
+      case 'card':
+        final c = cmd;
+        if (c.option('state') != null || c.option('total') != null || c.option('other') != null) {
+          await frame.setCard(
+            c.option('state') ?? frame.cardState,
+            totalBytes: int.tryParse(c.option('total') ?? ''),
+            otherBytes: int.tryParse(c.option('other') ?? ''),
+          );
+        }
+        stdout.writeln(const JsonEncoder.withIndent('  ').convert(await frame.sdInfo()));
+      case 'erase':
+        stdout.writeln(await frame.eraseCard() ? 'memory card erased' : 'no memory card to erase');
     }
   } on ApiException catch (e) {
     if (e.status == 410) {
-      stderr.writeln('This frame was removed. Hold the green button for 3 s to set it up again. (cache wiped)');
+      stderr.writeln('Not connected to an album. Hold the green button for 3 s, then connect it in the Ink Frame app. (cache wiped)');
     } else {
       stderr.writeln('error: $e');
     }
