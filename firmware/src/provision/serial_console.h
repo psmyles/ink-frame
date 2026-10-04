@@ -8,6 +8,9 @@
 //   {"cmd":"sync"}                       → a check for new photos
 //   {"cmd":"erase_sd"}                   → formats the memory card
 //   {"cmd":"reset"}                      → factory reset
+//   {"cmd":"show","bytes":N}             → "ready", then N raw bytes of a PNG, drawn as is
+//                                          (no battery bar; the photo list is untouched)
+//   {"cmd":"sleep","minutes":M}          → deep sleep, keeping what's on the screen
 //   {"cmd":"run"}                        → leave the console, carry on as usual
 #pragma once
 #include <Arduino.h>

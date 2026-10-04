@@ -7,8 +7,8 @@ namespace display {
 
 // Decodes a PNG from the card into the PSRAM frame buffer (the card must be mounted).
 bool decodePhoto(const char* path);
-// Draws the decoded photo, with the battery bar along the bottom and, after a failed
-// check, a small red mark at its left end.
+// Draws the decoded photo, with the battery bar along the bottom (none if batteryPct is
+// negative) and, after a failed check, a small red mark at its left end.
 void showPhoto(int batteryPct, bool checkFailed);
 
 // The frame's own screens. Each is drawn only if it isn't already showing.

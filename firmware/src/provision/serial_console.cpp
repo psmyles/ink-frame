@@ -1,10 +1,12 @@
 #include "serial_console.h"
 
 #include <ArduinoJson.h>
+#include <SD.h>
 
 #include "display/display.h"
 #include "net/sync.h"
 #include "net/wifi.h"
+#include "power/power.h"
 #include "provision/provisioning.h"
 #include "storage/cache.h"
 #include "storage/sd_card.h"
@@ -49,6 +51,52 @@ static bool readLine(String& line, uint32_t deadline) {
     delay(5);
   }
   return false;
+}
+
+// A PNG from the computer, straight onto the screen (tools/calibration): the frame's
+// palette colours are drawn as they are, anything else as the nearest of them.
+static void show(size_t bytes) {
+  JsonDocument d;
+  uint8_t* buf = bytes > 0 && bytes <= 4 * 1024 * 1024 ? static_cast<uint8_t*>(ps_malloc(bytes)) : nullptr;
+  if (!buf || card::state() != CardState::ok) {
+    free(buf);
+    d["shown"] = false;
+    d["error"] = buf ? "no_card" : "bad_size";
+    reply(d);
+    return;
+  }
+  JsonDocument ready;
+  ready["ready"] = true;
+  reply(ready);
+  size_t got = 0;
+  uint32_t last = millis();
+  while (got < bytes && millis() - last < 5000) {
+    const size_t n = Serial.read(buf + got, bytes - got);
+    if (n > 0) {
+      got += n;
+      last = millis();
+    } else {
+      delay(1);
+    }
+  }
+  bool ok = false;
+  if (got == bytes) {
+    static const char* kPath = "/show.png";
+    File f = SD.open(kPath, FILE_WRITE);
+    ok = f && f.write(buf, bytes) == bytes;
+    if (f) f.close();
+    ok = ok && display::decodePhoto(kPath);
+    SD.remove(kPath);
+  }
+  free(buf);
+  if (ok) {
+    card::unmount();  // the display has the bus to itself while it refreshes
+    display::showPhoto(-1, false);
+    card::mount();
+  }
+  d["shown"] = ok;
+  if (!ok) d["error"] = got == bytes ? "bad_png" : "timeout";
+  reply(d);
 }
 
 void factoryReset(Config& cfg) {
@@ -116,6 +164,13 @@ static Outcome handle(Config& cfg, String line, int batteryPct) {
     d["reset"] = true;
     reply(d);
     return Outcome::reset;
+  } else if (cmd == "show") {
+    show(req["bytes"] | 0);
+  } else if (cmd == "sleep") {
+    JsonDocument d;
+    d["sleeping"] = true;
+    reply(d);
+    power::deepSleep(max(1, req["minutes"] | 30) * 60);
   } else if (cmd == "run") {
     return Outcome::run;
   } else {

@@ -8,6 +8,8 @@ PlatformIO's Python, which has pyserial (README.md):
   console.py provision --ssid Home --api-base-url https://<ref>.supabase.co/functions/v1 \\
       --pairing-token <token> [--erase-sd]          Wi-Fi password from WIFI_PASSWORD, or asked
   console.py sync [--full] | wifi_scan | erase_sd | reset
+  console.py show image.png [--minutes 30]          draw a PNG as it is (calibration), then
+                                                    sleep that long keeping it on screen
   console.py log [seconds]                          just the logs, after a reset
 """
 import argparse
@@ -28,6 +30,7 @@ def open_port(port):
     s.dtr = False  # IO0 high: boot the firmware, not the ROM loader
     s.rts = False
     s.open()
+    s.reset_output_buffer()  # anything left from an interrupted transfer
     s.rts = True  # EN low: reset
     time.sleep(0.1)
     s.rts = False
@@ -62,6 +65,34 @@ def run(port, command, finished, timeout, show_logs):
     return 1
 
 
+def show(port, path, minutes, show_logs):
+    data = open(path, "rb").read()
+    s = open_port(port)
+    state = "boot"
+    for line in lines(s, time.time() + 120):
+        if line.startswith("@ "):
+            reply = json.loads(line[2:])
+            if state == "sent" and reply.get("ready"):
+                s.write(data)  # the frame reads exactly len(data) raw bytes
+                state = "data"
+                print(f"sending {len(data)} bytes…", file=sys.stderr)
+            elif "shown" in reply:
+                print(json.dumps(reply))
+                if not reply["shown"]:
+                    s.write(b'{"cmd":"run"}\n')
+                    return 1
+                s.write((json.dumps({"cmd": "sleep", "minutes": minutes}) + "\n").encode())
+                print(f"on the screen; the frame sleeps {minutes} min (a button wakes it)", file=sys.stderr)
+                return 0
+        elif show_logs or state == "boot":
+            print(f"  {line}", file=sys.stderr)
+        if state == "boot" and line.startswith("Ink Frame "):
+            s.write((json.dumps({"cmd": "show", "bytes": len(data)}) + "\n").encode())
+            state = "sent"
+    print("timed out" if state != "boot" else "the frame didn't start (power switch on?)", file=sys.stderr)
+    return 1
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--port", default=os.environ.get("INKFRAME_PORT", "/dev/cu.usbserial-110"))
@@ -78,6 +109,9 @@ def main():
     pp.add_argument("--api-base-url", required=True)
     pp.add_argument("--pairing-token", required=True)
     pp.add_argument("--erase-sd", action="store_true")
+    shp = sub.add_parser("show")
+    shp.add_argument("image")
+    shp.add_argument("--minutes", type=int, default=30)
     lp = sub.add_parser("log")
     lp.add_argument("seconds", nargs="?", type=float, default=20)
     a = p.parse_args()
@@ -87,6 +121,8 @@ def main():
         for line in lines(s, time.time() + a.seconds):
             print(line)
         return 0
+    if a.cmd == "show":
+        return show(a.port, a.image, a.minutes, a.logs)
     if a.cmd == "provision":
         password = os.environ.get("WIFI_PASSWORD")
         if password is None:

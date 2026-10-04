@@ -67,8 +67,8 @@ Future<void> loadFonts() async {
 final pal = Palette.fromJson({
   'id': 'spectra6',
   'colors': [
-    for (final (n, c, d) in [('black', '#1F2226', '#000000'), ('white', '#B9C7C9', '#ffffff'), ('blue', '#233F8E', '#0000ff'),
-      ('green', '#35563A', '#00ff00'), ('red', '#62201E', '#ff0000'), ('yellow', '#C1BB1E', '#ffff00')])
+    for (final (n, c, d) in [('black', '#29222D', '#000000'), ('white', '#C5CDCB', '#ffffff'), ('blue', '#224D98', '#0000ff'),
+      ('green', '#486F5B', '#00ff00'), ('red', '#76231F', '#ff0000'), ('yellow', '#D5BD14', '#ffff00')])
       {'name': n, 'color': c, 'deviceColor': d},
   ],
 });

@@ -60,3 +60,6 @@ dist/
 
 # frame_sim state (holds a device secret)
 .frame_sim/
+
+# Calibration patterns and renders (regenerate with tools/calibration/make_patterns.py)
+tools/calibration/patterns/

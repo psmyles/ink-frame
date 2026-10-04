@@ -33,32 +33,32 @@
       "colors": [
         {
           "name": "black",
-          "color": "#1F2226",
+          "color": "#29222D",
           "deviceColor": "#000000"
         },
         {
           "name": "white",
-          "color": "#B9C7C9",
+          "color": "#C5CDCB",
           "deviceColor": "#ffffff"
         },
         {
           "name": "blue",
-          "color": "#233F8E",
+          "color": "#224D98",
           "deviceColor": "#0000ff"
         },
         {
           "name": "green",
-          "color": "#35563A",
+          "color": "#486F5B",
           "deviceColor": "#00ff00"
         },
         {
           "name": "red",
-          "color": "#62201E",
+          "color": "#76231F",
           "deviceColor": "#ff0000"
         },
         {
           "name": "yellow",
-          "color": "#C1BB1E",
+          "color": "#D5BD14",
           "deviceColor": "#ffff00"
         }
       ]

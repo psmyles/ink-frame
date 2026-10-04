@@ -120,6 +120,20 @@ bool decodePhoto(const char* path) {
     pngClose(nullptr);
     return false;
   }
+  // PNGdec keeps two rows in a fixed buffer (PNG_MAX_BUFFERED_PIXELS) but checks only one
+  // against it: refuse anything larger than the screen or with rows too wide for it
+  // (a 16-bit one, say) rather than let it overwrite memory.
+  static const uint8_t kChannels[] = {1, 0, 3, 1, 2, 0, 4};  // by PNG colour type
+  const int type = s_png.getPixelType();
+  const int channels = type >= 0 && type <= 6 ? kChannels[type] : 0;
+  const int w = s_png.getWidth(), h = s_png.getHeight();
+  const int pitch = (w * channels * s_png.getBpp() + 7) / 8;
+  if (channels == 0 || w > SCREEN_WIDTH || h > SCREEN_HEIGHT || (pitch + 1) * 2 > PNG_MAX_BUFFERED_PIXELS) {
+    LOGF("display: %s is %dx%d, type %d, %d bits: not drawn\n", path, w, h, type, s_png.getBpp());
+    s_png.close();
+    pngClose(nullptr);
+    return false;
+  }
   rc = s_png.decode(nullptr, 0);
   s_png.close();
   if (rc != PNG_SUCCESS) LOGF("display: can't decode %s (%d)\n", path, rc);
@@ -140,8 +154,10 @@ void showPhoto(int batteryPct, bool checkFailed) {
       }
     }
     // Battery bar: the bottom row, green for the charge left, red for the rest.
-    const int green = (SCREEN_WIDTH * batteryPct) / 100;
-    for (int x = 0; x < SCREEN_WIDTH; x++) epd.drawPixel(x, SCREEN_HEIGHT - 1, x < green ? GxEPD_GREEN : GxEPD_RED);
+    if (batteryPct >= 0) {
+      const int green = (SCREEN_WIDTH * batteryPct) / 100;
+      for (int x = 0; x < SCREEN_WIDTH; x++) epd.drawPixel(x, SCREEN_HEIGHT - 1, x < green ? GxEPD_GREEN : GxEPD_RED);
+    }
     if (checkFailed) epd.fillRect(0, SCREEN_HEIGHT - 4, 24, 4, GxEPD_RED);
   } while (epd.nextPage());
   LOGLN("display: photo shown");

@@ -39,6 +39,7 @@ $PY tools/console.py wifi_scan     # networks it can see (2.4 GHz)
 $PY tools/console.py provision --ssid Home --api-base-url https://<ref>.supabase.co/functions/v1 --pairing-token <token> [--erase-sd]
 $PY tools/console.py sync [--full] | erase_sd | reset
 $PY tools/console.py log 30        # just the logs, for 30 s after a reset
+$PY tools/console.py show picture.png [--minutes 30]   # draw an 800×480 PNG as it is, then sleep (tools/calibration)
 ```
 
 `provision` asks for the Wi-Fi password (or reads `WIFI_PASSWORD`). For a pairing token:

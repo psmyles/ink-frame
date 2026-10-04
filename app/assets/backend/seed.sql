@@ -3,7 +3,7 @@
 
 insert into public.palettes (id, name, colors) values
   ('default', 'Default (B&W)', '[{"name":"black","color":"#000000","deviceColor":"#000000"},{"name":"white","color":"#e6e6e6","deviceColor":"#ffffff"}]'::jsonb),
-  ('spectra6', 'Spectra 6', '[{"name":"black","color":"#1F2226","deviceColor":"#000000"},{"name":"white","color":"#B9C7C9","deviceColor":"#ffffff"},{"name":"blue","color":"#233F8E","deviceColor":"#0000ff"},{"name":"green","color":"#35563A","deviceColor":"#00ff00"},{"name":"red","color":"#62201E","deviceColor":"#ff0000"},{"name":"yellow","color":"#C1BB1E","deviceColor":"#ffff00"}]'::jsonb),
+  ('spectra6', 'Spectra 6', '[{"name":"black","color":"#29222D","deviceColor":"#000000"},{"name":"white","color":"#C5CDCB","deviceColor":"#ffffff"},{"name":"blue","color":"#224D98","deviceColor":"#0000ff"},{"name":"green","color":"#486F5B","deviceColor":"#00ff00"},{"name":"red","color":"#76231F","deviceColor":"#ff0000"},{"name":"yellow","color":"#D5BD14","deviceColor":"#ffff00"}]'::jsonb),
   ('gallery', 'Gallery / AcEP 7c', '[{"name":"black","color":"#191E21","deviceColor":"#000000"},{"name":"white","color":"#F1F1F1","deviceColor":"#ffffff"},{"name":"blue","color":"#31318F","deviceColor":"#0000ff"},{"name":"green","color":"#53A428","deviceColor":"#00ff00"},{"name":"red","color":"#D20E13","deviceColor":"#ff0000"},{"name":"orange","color":"#B85E1C","deviceColor":"#ff8000"},{"name":"yellow","color":"#F3CF11","deviceColor":"#ffff00"}]'::jsonb)
 on conflict (id) do update set name = excluded.name, colors = excluded.colors;
 

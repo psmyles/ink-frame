@@ -27,12 +27,12 @@ final guysie = pal('spectra6-guysie', [
   ('yellow', [158, 152, 18], [255, 255, 0]),
 ]);
 final ours = pal('spectra6-presets', [
-  ('black', [0x1F, 0x22, 0x26], [0, 0, 0]),
-  ('white', [0xB9, 0xC7, 0xC9], [255, 255, 255]),
-  ('blue', [0x23, 0x3F, 0x8E], [0, 0, 255]),
-  ('green', [0x35, 0x56, 0x3A], [0, 255, 0]),
-  ('red', [0x62, 0x20, 0x1E], [255, 0, 0]),
-  ('yellow', [0xC1, 0xBB, 0x1E], [255, 255, 0]),
+  ('black', [0x29, 0x22, 0x2D], [0, 0, 0]),
+  ('white', [0xC5, 0xCD, 0xCB], [255, 255, 255]),
+  ('blue', [0x22, 0x4D, 0x98], [0, 0, 255]),
+  ('green', [0x48, 0x6F, 0x5B], [0, 255, 0]),
+  ('red', [0x76, 0x23, 0x1F], [255, 0, 0]),
+  ('yellow', [0xD5, 0xBD, 0x14], [255, 255, 0]),
 ]);
 
 typedef Method = Uint8List Function(Uint8List rgba, int w, int h, Palette p);

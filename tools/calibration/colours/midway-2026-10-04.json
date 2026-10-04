@@ -1,0 +1,9 @@
+{
+  "$comment": "Halfway (in OKLab) between shared/presets.json and photo-2026-10-04.json: the user judged the frame to sit between the two on a split ColorChecker (the phone exaggerates saturation). In shared/presets.json since 2026-10-04.",
+  "white": "#C5CDCB",
+  "black": "#29222D",
+  "red": "#76231F",
+  "yellow": "#D5BD14",
+  "green": "#486F5B",
+  "blue": "#224D98"
+}

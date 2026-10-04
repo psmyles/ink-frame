@@ -1,0 +1,9 @@
+{
+  "$comment": "The user's E1002, measured from a phone photo of 1-inks.png (Galaxy A55, room light), each ink relative to the screen white next to it, scaled so the frame's white plastic is pure white. Phone cameras add saturation, so the truth is probably between these and shared/presets.json.",
+  "white": "#D1D3CD",
+  "black": "#322234",
+  "red": "#8A2520",
+  "yellow": "#E9BF00",
+  "green": "#5D897D",
+  "blue": "#205AA2"
+}

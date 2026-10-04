@@ -85,6 +85,7 @@ static bool showNext(const Config& cfg, bool previous, int battery) {
 }
 
 void setup() {
+  Serial.setRxBufferSize(4096);  // room for the console's `show` transfers
   Serial.begin(115200);
   pinMode(GREEN_BUTTON, INPUT_PULLUP);
   pinMode(WHITE_BUTTON_RIGHT, INPUT_PULLUP);
