@@ -4,8 +4,8 @@ For the Seeed reTerminal E1002 (ESP32-S3, 7.3" Spectra 6 e-paper, microSD). Plan
 PLAN.md §9; the server side: `shared/api/openapi.yaml` (`device-api`); pairing:
 `docs/pairing.md`.
 
-Phase 4a: the frame shows photos, checks for new ones and follows its settings. It's set
-up over USB with a serial console; Bluetooth comes in 4b, updates over the air in 4c.
+The frame shows photos, checks for new ones and follows its settings (4a), and is set up
+from the app over Bluetooth (4b; docs/pairing.md). Updates over the air come in 4c.
 
 ## Build, flash, test
 
@@ -18,9 +18,18 @@ pio device monitor           # logs (115200)
 pio test -e native           # unit tests on the computer (schedule, photo list)
 ```
 
-## Set it up over USB (4a)
+## Set it up
 
-Opening the serial port resets the frame, which then listens for a command for 1.5 s.
+From the app: **Connect the frame**. A new frame (or one whose green button was held for
+3 s) shows its name, its 4 characters and a 6-digit code, and advertises over Bluetooth
+for 10 minutes; the phone asks for the code. A frame still linked to another album is
+refused until a factory reset (green button 10 s).
+
+### Over USB (developer builds)
+
+The serial console is compiled in while `INKFRAME_CONSOLE` is 1 (the default here; release
+builds will set it to 0, 4c). In setup it runs alongside Bluetooth. Opening the serial
+port resets the frame, which then listens for a command for 1.5 s.
 `tools/console.py` does that. Run it with PlatformIO's Python, which has pyserial:
 
 ```sh
@@ -48,7 +57,8 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
   hold 10 s for a factory reset (Wi-Fi, link and photo cache cleared).
 - **White buttons:** the next photo (left: the previous one, when in order).
 - **Bottom row:** the battery bar; a short red mark at its left end after a failed check.
-- **Screens:** set up (the frame's name and its 4 characters, large), Ready (no photos
+- **Screens:** set up (the frame's name, its 4 characters and the Bluetooth code, large;
+  without the code once setup times out), Ready (no photos
   yet), not connected to an album (its album was deleted, or the frame was disconnected), no memory card, can't read the memory card.
 
 ## Layout (`src/`)
@@ -63,7 +73,8 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
 | `net/` | Wi-Fi and NTP, HTTPS with the built-in CA bundle, the sync and mirror |
 | `config/` | what's kept in flash (NVS) |
 | `power/` | battery, wake reason, deep sleep |
-| `provision/` | provisioning (transport-independent; 4b adds Bluetooth) and the serial console |
+| `ble/` | Bluetooth for Connect the frame (NimBLE: advertising, LE Secure Connections with the code on screen, the four characteristics) |
+| `provision/` | provisioning steps (shared by Bluetooth and the console), the setup loop (`pairing_mode`), the serial console |
 
 ## The memory card
 

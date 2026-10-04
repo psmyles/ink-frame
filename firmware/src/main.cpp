@@ -13,6 +13,7 @@
 #include "net/sync.h"
 #include "net/wifi.h"
 #include "power/power.h"
+#include "provision/pairing_mode.h"
 #include "provision/provisioning.h"
 #include "provision/serial_console.h"
 #include "storage/cache.h"
@@ -26,7 +27,11 @@ RTC_DATA_ATTR static uint8_t rtcFailures = 0;
 RTC_DATA_ATTR static int32_t rtcSequentialIndex = -1;
 RTC_DATA_ATTR static char rtcLastId[40] = {0};
 
-static const uint32_t kSetupMinutes = 10;
+#ifndef INKFRAME_CONSOLE
+#define INKFRAME_CONSOLE 1  // the serial console (developer builds; README.md)
+#endif
+
+static const uint32_t kConsoleIdleMs = 10 * 60000;
 static const uint32_t kLongSleep = 7 * schedule::kDay;  // until a button
 
 static schedule::Now now() {
@@ -41,13 +46,10 @@ static int64_t nextSyncAt(const Config& cfg) {
   return cfg.lastSyncAt + cfg.settings.schedule.syncIntervalS;
 }
 
-// Setup (PAIRING): the screen with the frame's name, the console for 10 minutes, then
-// sleep until the green button. Returns once linked.
+// Setup (PAIRING): Bluetooth with a code on the screen; sleeps until the green button if
+// nobody connects the frame. Returns once linked, its photos just checked.
 static void setupMode(Config& cfg, int battery) {
-  LOGF("setup: %s\n", provisioning::name().c_str());
-  display::showSetup(provisioning::suffix(), provisioning::name());
-  const auto out = console::run(cfg, kSetupMinutes * 60000, kSetupMinutes * 60000, battery);
-  if (out != console::Outcome::provisioned) power::deepSleep(kLongSleep);
+  if (!pairing::run(cfg, battery)) power::deepSleep(kLongSleep);
   rtcFailures = 0;
   rtcNextImageAt = 0;
   display::forgetShown();
@@ -92,7 +94,7 @@ void setup() {
 
   Config cfg = nvs::load();
   const power::Wake wake = power::wakeReason();
-  bool forced = false, wantSetup = false, previous = false;
+  bool forced = false, wantSetup = false, previous = false, justLinked = false;
 
   // Green button: short press = check now; 3 s = set up again; 10 s = factory reset.
   if (wake == power::Wake::green || (wake == power::Wake::powerOn && digitalRead(GREEN_BUTTON) == LOW)) {
@@ -114,18 +116,20 @@ void setup() {
   card::mount();
   if (cfg.linked() && wifi::timeKnown()) setenv("TZ", cfg.settings.tzPosix.c_str(), 1), tzset();
 
+#if INKFRAME_CONSOLE
   // A computer on the USB port (it resets the frame when it opens the port) gets a
   // moment to send a console command.
   if (wake == power::Wake::powerOn) {
-    const auto out = console::run(cfg, 1500, kSetupMinutes * 60000, battery);
+    const auto out = console::run(cfg, 1500, kConsoleIdleMs, battery);
     if (out == console::Outcome::provisioned) {
       rtcFailures = 0;
       rtcNextImageAt = 0;
-      forced = true;
+      justLinked = true;
     } else if (out == console::Outcome::reset) {
       wantSetup = true;
     }
   }
+#endif
 
   if (!cfg.linked()) {
     // Removed in the app (its screen stays up): only a button sets it up again.
@@ -134,7 +138,8 @@ void setup() {
   }
   if (wantSetup) {
     setupMode(cfg, battery);
-    forced = true;
+    justLinked = true;  // linking checked for photos already
+    forced = false;
   }
 
   // ── Check for new photos ──
@@ -160,7 +165,7 @@ void setup() {
 
   // ── Show ──
   const schedule::Settings& s = cfg.settings.schedule;
-  const bool userWake = forced || wake == power::Wake::white;
+  const bool userWake = forced || justLinked || wake == power::Wake::white;
   if (card::state() != CardState::ok) {
     card::state() == CardState::missing ? display::showNoCard() : display::showCardUnreadable();
   } else {

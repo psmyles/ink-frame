@@ -4,13 +4,17 @@ How the app connects a frame (app-flow §6, PLAN.md §9.5): over Bluetooth LE it
 the frame the Wi-Fi details, the frame's API address and a one-time pairing token; the
 frame joins Wi-Fi and claims its place with `POST /device-api/claim`
 (shared/api/openapi.yaml). UUIDs and limits: [shared/pairing.json](../shared/pairing.json).
-App side: `app/lib/ble/` (built in 3f). Firmware side: `src/ble/provisioning.*` (4b).
+App side: `app/lib/ble/` (built in 3f). Firmware side (4b): `firmware/src/ble/ble_link.*` (Bluetooth),
+`src/provision/pairing_mode.*` (the setup loop) and `src/provision/provisioning.*` (the steps,
+shared with the serial console in developer builds).
 
 ## Advertising
 
 - In **PAIRING** (first boot, or green button held 3 s) the frame makes a random
-  6-digit **passkey**, shows it on screen with its name, and advertises for 10 minutes,
-  then sleeps.
+  6-digit **passkey**, shows it on screen with its name, and advertises for 10 minutes
+  (kept up while the app is connected, at most 30), then sleeps. Before sleeping it
+  redraws the screen without the code ("Asleep to save battery. Press the green button
+  to set it up."), since the code is no longer valid.
 - Name `InkFrame-XXXX`, where `XXXX` is the last 4 hex digits of its `hw_id`, upper
   case, also shown on screen (large, next to the passkey). The app always asks you to
   match it before connecting, even when it finds only one frame, so a neighbour's frame
@@ -25,7 +29,9 @@ App side: `app/lib/ble/` (built in 3f). Firmware side: `src/ble/provisioning.*` 
   OS asks for the passkey shown on the frame. Every characteristic needs an encrypted,
   authenticated (MITM) link, so the first read triggers pairing; the Wi-Fi password and
   the pairing token are never sent in plain text.
-- The frame **doesn't keep bonds**: each PAIRING session needs its new code. The app
+- The frame **doesn't keep bonds**: each PAIRING session needs its new code (it bonds
+  for the session, which phones expect, and deletes every bond when PAIRING starts and
+  ends). The app
   removes the OS's bond when it's done (Android, Windows, Linux; Apple platforms can't),
   so the next pairing asks for the new code instead of failing on old keys.
 - The app pairs by **reading `info`**: the encrypted read makes Android, iOS and macOS

@@ -68,10 +68,15 @@ Future<void> findAndPair(WidgetTester tester) async {
   await run(tester);
 }
 
-Future<void> joinWifi(WidgetTester tester, String ssid, String password) async {
+/// Picks a network from the list (the others go away until "Choose another network").
+Future<void> pickWifi(WidgetTester tester, String ssid) async {
   await tester.ensureVisible(find.text(ssid));
   await tester.tap(find.text(ssid));
   await tester.pump();
+}
+
+Future<void> joinWifi(WidgetTester tester, String ssid, String password) async {
+  await pickWifi(tester, ssid);
   await tester.enterText(find.widgetWithText(TextField, 'Wi-Fi password'), password);
   await tester.pump();
   await tester.ensureVisible(find.widgetWithText(FilledButton, 'Connect'));
@@ -109,7 +114,7 @@ void main() {
     expect(names.take(5), ['Connected to InkFrame-1A2B', 'Home', 'Cafe', 'Neighbour', 'Other network…']);
     expect(find.text('Looking for networks…'), findsNothing, reason: 'the scan finished');
     expect(find.text('Look again'), findsOneWidget);
-    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Connect')).onPressed, isNull);
+    expect(find.widgetWithText(FilledButton, 'Connect'), findsNothing, reason: 'until a network is picked');
 
     await joinWifi(tester, 'Home', 'correct horse');
     expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
@@ -188,6 +193,7 @@ void main() {
       final hw = withCard(api, const SdCard(SdState.ok, totalBytes: 32 * gb, freeBytes: 30 * gb, otherBytes: 10 * mb));
       await open(tester, FakeBluetooth([hw]), api: api);
       await findAndPair(tester);
+      await pickWifi(tester, 'Home');
       expect(find.text('32 GB card, 30 GB free'), findsOneWidget);
       expect(find.text('10 MB of other files on it stay, unless you erase it.'), findsOneWidget);
       final box = find.widgetWithText(CheckboxListTile, 'Erase the memory card first');
@@ -206,6 +212,7 @@ void main() {
       final hw = withCard(api, const SdCard(SdState.unreadable));
       await open(tester, FakeBluetooth([hw]), api: api);
       await findAndPair(tester);
+      await pickWifi(tester, 'Home');
       expect(find.textContaining("The frame can't read its memory card."), findsOneWidget);
       expect(tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value, isTrue);
       await joinWifi(tester, 'Home', 'correct horse');
@@ -217,6 +224,7 @@ void main() {
       final hw = withCard(api, const SdCard(SdState.missing));
       await open(tester, FakeBluetooth([hw]), api: api);
       await findAndPair(tester);
+      await pickWifi(tester, 'Home');
       expect(find.textContaining("There's no memory card in the frame."), findsOneWidget);
       expect(find.byType(CheckboxListTile), findsNothing);
       await joinWifi(tester, 'Home', 'correct horse');
@@ -239,6 +247,7 @@ void main() {
       final hw = withCard(api, const SdCard(SdState.ok, totalBytes: 256 * mb, freeBytes: 100 * mb));
       await open(tester, FakeBluetooth([hw]), api: api);
       await findAndPair(tester);
+      await pickWifi(tester, 'Home');
       expect(find.textContaining("Kitchen's photos (312 MB) won't all fit"), findsOneWidget);
     });
 
@@ -246,8 +255,34 @@ void main() {
       final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
       await open(tester, FakeBluetooth([hardware(api)]), api: api);
       await findAndPair(tester);
+      await pickWifi(tester, 'Home');
       expect(find.text('Memory card'), findsNothing);
     });
+  });
+
+  testWidgets('a picked network hides the others, so its password and Connect are in view', (tester) async {
+    final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+    final hw = hardware(api)..sd = const SdCard(SdState.unreadable);
+    await open(tester, FakeBluetooth([hw]), api: api);
+    await findAndPair(tester);
+    await pickWifi(tester, 'Cafe');
+    expect(find.text('Home'), findsNothing);
+    expect(find.text('Other network…'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Wi-Fi password'), findsNothing, reason: 'Cafe is open');
+
+    await tester.tap(find.text('Choose another network'));
+    await tester.pump();
+    expect(find.text('Cafe'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+
+    // Enter in the password field connects like the button, erasing included.
+    await pickWifi(tester, 'Home');
+    await tester.enterText(find.widgetWithText(TextField, 'Wi-Fi password'), 'correct horse');
+    await tester.pump();
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await run(tester);
+    expect(find.text('The frame is connected to Kitchen'), findsOneWidget);
+    expect(hw.provisions.single.eraseSd, isTrue);
   });
 
   testWidgets('an open network, and one the frame cannot see', (tester) async {
@@ -263,6 +298,8 @@ void main() {
     await run(tester);
     expect(find.textContaining("The frame couldn't find Upstairs"), findsOneWidget);
 
+    await tester.tap(find.text('Choose another network'));
+    await tester.pump();
     await tester.tap(find.text('Cafe'));
     await tester.pump();
     expect(find.widgetWithText(TextField, 'Wi-Fi password'), findsNothing);

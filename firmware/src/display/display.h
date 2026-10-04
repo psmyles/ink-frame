@@ -12,7 +12,10 @@ bool decodePhoto(const char* path);
 void showPhoto(int batteryPct, bool checkFailed);
 
 // The frame's own screens. Each is drawn only if it isn't already showing.
-void showSetup(const String& suffix, const String& name);
+// Setup (PAIRING): the name, its 4 characters and the Bluetooth code, large.
+void showSetup(const String& suffix, const String& name, uint32_t passkey);
+// After setup timed out: no code (it's no longer valid), how to start again.
+void showSetupAsleep(const String& suffix, const String& name);
 void showReady();
 void showRemoved();
 void showNoCard();

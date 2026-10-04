@@ -2068,6 +2068,12 @@ abstract class AppLocalizations {
   /// **'Other network…'**
   String get otherNetwork;
 
+  /// No description provided for @chooseAnotherNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another network'**
+  String get chooseAnotherNetwork;
+
   /// No description provided for @wifiScanning.
   ///
   /// In en, this message translates to:

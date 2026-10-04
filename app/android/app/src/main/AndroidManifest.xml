@@ -44,11 +44,13 @@
             </intent-filter>
         </activity>
         <!-- inkframe://supabase-oauth?… : the Supabase consent page's answer (via
-             central/site/oauth), caught by flutter_web_auth_2 during "Connect Supabase" -->
+             central/site/oauth) during "Connect Supabase", for flutter_web_auth_2. Ours, not
+             the plugin's CallbackActivity, so the browser tab closes (OAuthCallbackActivity.kt) -->
         <activity
-            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:name=".OAuthCallbackActivity"
             android:exported="true"
-            android:taskAffinity="">
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>

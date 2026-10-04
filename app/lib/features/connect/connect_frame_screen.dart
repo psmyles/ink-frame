@@ -217,12 +217,44 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
     ];
   }
 
+  /// The networks the frame sees until one is picked; then only that one (with "Choose
+  /// another network"), so its password, the memory card and Connect stay in view
+  /// however long the list was.
   List<Widget> _wifi(ConnectState s) {
     final theme = Theme.of(context);
     final picked = _picked;
+    final chosen = _other || picked != null;
     final ssid = _other ? _ssid.text.trim() : picked?.ssid ?? '';
     final needsPassword = _other || (picked?.secure ?? false);
     final ready = ssid.isNotEmpty && (!needsPassword || _other || _password.text.length >= 8);
+    void join() => _flow.join(ssid, needsPassword ? _password.text : '', eraseSd: _eraseChosen(s));
+    // The photos' total, for the memory card section once a network is picked.
+    ref.watch(usageProvider(widget.address));
+
+    Widget network(WifiNetwork n, {required bool selected}) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(switch (n.bars) {
+            3 => Icons.wifi,
+            2 => Icons.wifi_2_bar,
+            _ => Icons.wifi_1_bar,
+          }),
+          title: Text(n.ssid),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (n.secure) Icon(Icons.lock_outline, size: 18, color: theme.colorScheme.onSurfaceVariant),
+            if (selected) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.check, color: theme.colorScheme.primary),
+            ],
+          ]),
+          selected: selected,
+          onTap: selected
+              ? null
+              : () => setState(() {
+                    _picked = n;
+                    _other = false;
+                  }),
+        );
+
     return [
       if (s.target case final t?) ...[
         ChecklistRow(title: l.connectedTo(t.label), state: CheckState.done),
@@ -233,79 +265,71 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
       Text(l.wifiHint),
       ..._problem(s, ''),
       const SizedBox(height: 12),
-      for (final n in s.networks)
+      if (!chosen) ...[
+        for (final n in s.networks) network(n, selected: false),
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: Icon(switch (n.bars) {
-            3 => Icons.wifi,
-            2 => Icons.wifi_2_bar,
-            _ => Icons.wifi_1_bar,
-          }),
-          title: Text(n.ssid),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            if (n.secure) Icon(Icons.lock_outline, size: 18, color: theme.colorScheme.onSurfaceVariant),
-            if (!_other && picked?.ssid == n.ssid) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.check, color: theme.colorScheme.primary),
-            ],
-          ]),
-          selected: !_other && picked?.ssid == n.ssid,
-          onTap: () => setState(() {
-            _picked = n;
-            _other = false;
-          }),
+          leading: const Icon(Icons.add),
+          title: Text(l.otherNetwork),
+          onTap: () => setState(() => _other = true),
         ),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.add),
-        title: Text(l.otherNetwork),
-        selected: _other,
-        onTap: () => setState(() => _other = true),
-      ),
-      if (s.scanningWifi) ...[
-        const SizedBox(height: 8),
-        const LinearProgressIndicator(),
-        const SizedBox(height: 8),
-        Text(l.wifiScanning, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-      ] else
+        if (s.scanningWifi) ...[
+          const SizedBox(height: 8),
+          const LinearProgressIndicator(),
+          const SizedBox(height: 8),
+          Text(l.wifiScanning, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+        ] else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(onPressed: _flow.scanWifi, icon: const Icon(Icons.refresh), label: Text(l.scanAgain)),
+          ),
+      ] else ...[
+        if (picked != null && !_other)
+          network(picked, selected: true)
+        else
+          TextField(
+            controller: _ssid,
+            autofocus: true,
+            autocorrect: false,
+            decoration: InputDecoration(labelText: l.networkName),
+            onChanged: (_) => setState(() {}),
+          ),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton.icon(onPressed: _flow.scanWifi, icon: const Icon(Icons.refresh), label: Text(l.scanAgain)),
-        ),
-      if (_other) ...[
-        const SizedBox(height: 8),
-        TextField(
-          controller: _ssid,
-          autocorrect: false,
-          decoration: InputDecoration(labelText: l.networkName),
-          onChanged: (_) => setState(() {}),
-        ),
-      ],
-      if (needsPassword) ...[
-        const SizedBox(height: 12),
-        TextField(
-          controller: _password,
-          obscureText: !_showPassword,
-          autocorrect: false,
-          enableSuggestions: false,
-          decoration: InputDecoration(
-            labelText: l.wifiPassword,
-            suffixIcon: IconButton(
-              tooltip: _showPassword ? l.hidePassword : l.showPassword,
-              icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: () => setState(() => _showPassword = !_showPassword),
-            ),
+          child: TextButton.icon(
+            onPressed: () => setState(() {
+              _picked = null;
+              _other = false;
+              _password.clear();
+            }),
+            icon: const Icon(Icons.swap_horiz),
+            label: Text(l.chooseAnotherNetwork),
           ),
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => ready ? _flow.join(ssid, _password.text) : null,
         ),
+        if (needsPassword) ...[
+          const SizedBox(height: 4),
+          TextField(
+            controller: _password,
+            autofocus: !_other,
+            obscureText: !_showPassword,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: l.wifiPassword,
+              suffixIcon: IconButton(
+                tooltip: _showPassword ? l.hidePassword : l.showPassword,
+                icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+              ),
+            ),
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => ready ? join() : null,
+          ),
+        ],
+        ..._card(s),
+        const SizedBox(height: 24),
+        FilledButton(onPressed: ready ? join : null, child: Text(l.connectAction)),
       ],
-      ..._card(s),
-      const SizedBox(height: 24),
-      FilledButton(
-        onPressed: ready ? () => _flow.join(ssid, needsPassword ? _password.text : '', eraseSd: _eraseChosen(s)) : null,
-        child: Text(l.connectAction),
-      ),
     ];
   }
 

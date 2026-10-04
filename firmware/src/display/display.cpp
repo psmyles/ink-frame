@@ -149,14 +149,22 @@ void showPhoto(int batteryPct, bool checkFailed) {
 
 // ── Screens ─────────────────────────────────────────────────────────────────────
 
-static void centered(const char* text, int y, const GFXfont* font, uint16_t colour = GxEPD_BLACK) {
+// Text centred on x = cx (the screen's middle by default), baseline at y.
+static void centered(const char* text, int y, const GFXfont* font, uint16_t colour = GxEPD_BLACK,
+                     int cx = SCREEN_WIDTH / 2) {
   epd.setFont(font);
   epd.setTextColor(colour);
   int16_t x1, y1;
   uint16_t w, h;
   epd.getTextBounds(text, 0, y, &x1, &y1, &w, &h);
-  epd.setCursor((SCREEN_WIDTH - static_cast<int>(w)) / 2 - x1, y);
+  epd.setCursor(cx - static_cast<int>(w) / 2 - x1, y);
   epd.print(text);
+}
+
+// A framed box, like the app's "Is this your frame?" (app-flow §6.1).
+static void box(int x, int y, int w, int h) {
+  epd.drawRoundRect(x, y, w, h, 12, GxEPD_BLACK);
+  epd.drawRoundRect(x + 1, y + 1, w - 2, h - 2, 11, GxEPD_BLACK);
 }
 
 // A title, up to three lines of text, and an optional big word (the frame's XXXX).
@@ -171,9 +179,7 @@ static void screen(const char* title, const char* big, const char* l1, const cha
     centered(title, y, &FreeSansBold18pt7b);
     y += 40;
     if (big) {
-      // Framed, like the app's "Is this your frame?" (app-flow §6.1).
-      epd.drawRoundRect(SCREEN_WIDTH / 2 - 120, y + 2, 240, 84, 12, GxEPD_BLACK);
-      epd.drawRoundRect(SCREEN_WIDTH / 2 - 119, y + 3, 238, 82, 11, GxEPD_BLACK);
+      box(SCREEN_WIDTH / 2 - 120, y + 2, 240, 84);
       centered(big, y + 62, &FreeSansBold24pt7b);
       y += 130;
     } else {
@@ -187,10 +193,33 @@ static void screen(const char* title, const char* big, const char* l1, const cha
   } while (epd.nextPage());
 }
 
-void showSetup(const String& suffix, const String& name) {
-  if (already(kSetup, hash(suffix))) return;
-  screen(name.c_str(), suffix.c_str(), "Ready to be set up.", "Open the Ink Frame app and choose Set up a frame,",
-         "or Connect the frame in an album you already have.");
+void showSetup(const String& suffix, const String& name, uint32_t passkey) {
+  char code[8];
+  snprintf(code, sizeof code, "%03u %03u", static_cast<unsigned>(passkey / 1000), static_cast<unsigned>(passkey % 1000));
+  if (already(kSetup, hash(suffix + code))) return;
+  begin();
+  epd.setFullWindow();
+  epd.firstPage();
+  do {
+    epd.fillScreen(GxEPD_WHITE);
+    centered(name.c_str(), 80, &FreeSansBold18pt7b);
+    // The 4 characters the app asks you to match, and the code your phone asks for.
+    const int w1 = 220, w2 = 300, gap = 40, x1 = (SCREEN_WIDTH - w1 - gap - w2) / 2, x2 = x1 + w1 + gap;
+    box(x1, 115, w1, 90);
+    box(x2, 115, w2, 90);
+    centered(suffix.c_str(), 178, &FreeSansBold24pt7b, GxEPD_BLACK, x1 + w1 / 2);
+    centered(code, 178, &FreeSansBold24pt7b, GxEPD_BLACK, x2 + w2 / 2);
+    centered("This frame", 240, &FreeSans12pt7b, GxEPD_BLACK, x1 + w1 / 2);
+    centered("Code", 240, &FreeSans12pt7b, GxEPD_BLACK, x2 + w2 / 2);
+    centered("Open the Ink Frame app and choose Set up a frame,", 310, &FreeSans12pt7b);
+    centered("or Connect the frame in an album you already have.", 346, &FreeSans12pt7b);
+    centered("Your phone asks for the code.", 382, &FreeSans12pt7b);
+  } while (epd.nextPage());
+}
+
+void showSetupAsleep(const String& suffix, const String& name) {
+  if (already(kSetup, hash(suffix + "asleep"))) return;
+  screen(name.c_str(), suffix.c_str(), "Asleep to save battery.", "Press the green button to set it up.");
 }
 
 void showReady() {

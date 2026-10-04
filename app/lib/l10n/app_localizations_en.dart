@@ -1257,6 +1257,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otherNetwork => 'Other network…';
 
   @override
+  String get chooseAnotherNetwork => 'Choose another network';
+
+  @override
   String get wifiScanning => 'Looking for networks…';
 
   @override

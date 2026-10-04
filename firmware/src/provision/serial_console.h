@@ -1,5 +1,6 @@
-// The serial console (Phase 4a; Bluetooth replaces it for provisioning in 4b). One JSON
-// object per line in, replies as "@ <json>" lines between the logs. Commands:
+// The serial console: developer builds only (INKFRAME_CONSOLE; Bluetooth is how a frame
+// is set up, PLAN.md §16). One JSON object per line in, replies as "@ <json>" lines
+// between the logs. Commands:
 //   {"cmd":"info"}                       → info (docs/pairing.md)
 //   {"cmd":"wifi_scan"}                  → one line per network, then {"done":true}
 //   {"cmd":"provision", "ssid":…, "password":…, "api_base_url":…, "pairing_token":…,
@@ -15,11 +16,17 @@
 
 namespace console {
 
-enum class Outcome : uint8_t { none, provisioned, leave, reset };
+// none: nothing arrived; leave: a command was handled; run: "run" (carry on as usual);
+// provisioned: linked; reset: factory reset.
+enum class Outcome : uint8_t { none, leave, run, provisioned, reset };
 
 // Waits up to waitMs for a first command; once one arrives, keeps going until "run",
 // a successful provision, or idleMs without a command.
 Outcome run(Config& cfg, uint32_t waitMs, uint32_t idleMs, int batteryPct);
+
+// For a loop that also does other work (setup mode): reads what has arrived without
+// waiting, and handles a command once its line is complete.
+Outcome poll(Config& cfg, int batteryPct);
 
 // Clears the link, Wi-Fi, settings and the photo cache (the green button held 10 s).
 void factoryReset(Config& cfg);

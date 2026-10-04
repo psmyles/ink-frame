@@ -715,6 +715,7 @@
   "wifiTitle": "Which Wi-Fi should the frame use?",
   "wifiHint": "The frame needs a 2.4 GHz network. If your Wi-Fi has two names, pick the one without “5G”.",
   "otherNetwork": "Other network…",
+  "chooseAnotherNetwork": "Choose another network",
   "wifiScanning": "Looking for networks…",
   "scanAgain": "Look again",
   "networkName": "Network name",
