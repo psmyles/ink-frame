@@ -910,6 +910,18 @@ abstract class AppLocalizations {
   /// **'Add photos'**
   String get addPhotos;
 
+  /// No description provided for @addSharedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the photos to which album?'**
+  String get addSharedTo;
+
+  /// No description provided for @shareNeedsAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'To add photos, set up or join an album first. Then share them again.'**
+  String get shareNeedsAlbum;
+
   /// No description provided for @noPhotosBody.
   ///
   /// In en, this message translates to:

@@ -244,14 +244,7 @@ class _PreviewCard extends StatelessWidget {
               opacity: 0.6,
               child: CustomPaint(painter: _CropPainter(item.image, session.cropOf(item))),
             ),
-          if (look == null)
-            Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3)),
-                const SizedBox(height: 6),
-                Text(l.preparing, style: theme.textTheme.labelMedium),
-              ]),
-            ),
+          if (look == null) Center(child: Text(l.preparing, style: theme.textTheme.labelMedium)),
           Positioned(
             top: 6,
             right: 6,

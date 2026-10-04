@@ -9,8 +9,8 @@ import '../../imaging/resize.dart';
 
 /// The frame-shaped window that is also the crop (app-flow §3.3): drag to move
 /// the photo, pinch or scroll to zoom. At rest it shows [preview], the frame
-/// look; while moving it shows the photo itself with the parts that will be cut
-/// off dimmed around the window.
+/// look; while moving it shows the photo itself. The parts that will be cut off
+/// always show dimmed around the window, so it's clear there's more photo there.
 class FrameCanvas extends StatefulWidget {
   const FrameCanvas({
     super.key,
@@ -41,7 +41,7 @@ class FrameCanvas extends StatefulWidget {
   final bool showOriginal;
   final String? originalLabel, preparingLabel, updatingLabel;
 
-  /// Space around the window where the cut-off parts show while moving.
+  /// Space around the window where the cut-off parts show.
   static const margin = EdgeInsets.symmetric(horizontal: 12, vertical: 28);
 
   @override
@@ -150,7 +150,6 @@ class _FrameCanvasState extends State<FrameCanvas> {
                     preview: showPhoto ? null : widget.preview,
                     crop: widget.crop,
                     window: _window,
-                    showContext: _moving,
                     dim: theme.colorScheme.surface.withValues(alpha: 0.72),
                     outline: theme.colorScheme.outlineVariant,
                   ),
@@ -160,7 +159,7 @@ class _FrameCanvasState extends State<FrameCanvas> {
                 Positioned(
                   left: _window.left + 8,
                   top: _window.top + 8,
-                  child: _Pill(label: label, busy: !widget.showOriginal),
+                  child: _Pill(label: label),
                 ),
             ]),
           ),
@@ -172,10 +171,9 @@ class _FrameCanvasState extends State<FrameCanvas> {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.busy});
+  const _Pill({required this.label});
 
   final String label;
-  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -187,13 +185,7 @@ class _Pill extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (busy) ...[
-            const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
-            const SizedBox(width: 8),
-          ],
-          Text(label, style: theme.textTheme.labelMedium),
-        ]),
+        child: Text(label, style: theme.textTheme.labelMedium),
       ),
     );
   }
@@ -205,7 +197,6 @@ class _CanvasPainter extends CustomPainter {
     required this.preview,
     required this.crop,
     required this.window,
-    required this.showContext,
     required this.dim,
     required this.outline,
   });
@@ -214,7 +205,6 @@ class _CanvasPainter extends CustomPainter {
   final ui.Image? preview;
   final CropRect crop;
   final Rect window;
-  final bool showContext;
   final Color dim, outline;
 
   @override
@@ -223,19 +213,16 @@ class _CanvasPainter extends CustomPainter {
     final bounds = Offset.zero & size;
     canvas.save();
     canvas.clipRect(bounds);
-    if (showContext) {
-      // The whole photo, placed so the crop lands on the window, then dim outside it.
-      final s = window.width / crop.w;
-      final dst = Rect.fromLTWH(window.left - crop.x * s, window.top - crop.y * s, image.width * s, image.height * s);
-      canvas.drawImageRect(image, Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), dst, paint);
-      canvas.drawPath(
-        Path.combine(PathOperation.difference, Path()..addRect(bounds), Path()..addRect(window)),
-        Paint()..color = dim,
-      );
-    } else if (preview case final p?) {
+    // The whole photo, placed so the crop lands on the window, dimmed outside it.
+    final s = window.width / crop.w;
+    final dst = Rect.fromLTWH(window.left - crop.x * s, window.top - crop.y * s, image.width * s, image.height * s);
+    canvas.drawImageRect(image, Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), dst, paint);
+    canvas.drawPath(
+      Path.combine(PathOperation.difference, Path()..addRect(bounds), Path()..addRect(window)),
+      Paint()..color = dim,
+    );
+    if (preview case final p?) {
       canvas.drawImageRect(p, Rect.fromLTWH(0, 0, p.width.toDouble(), p.height.toDouble()), window, paint);
-    } else {
-      canvas.drawImageRect(image, Rect.fromLTWH(crop.x, crop.y, crop.w, crop.h), window, paint);
     }
     canvas.drawRect(window, Paint()
       ..style = PaintingStyle.stroke
@@ -250,7 +237,6 @@ class _CanvasPainter extends CustomPainter {
       old.preview != preview ||
       old.crop != crop ||
       old.window != window ||
-      old.showContext != showContext ||
       old.dim != dim ||
       old.outline != outline;
 }

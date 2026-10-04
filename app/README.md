@@ -24,6 +24,12 @@ deno run --allow-read --allow-net --allow-env ../tools/dev/dev-frame.ts --remove
 Then in the app: **I've been invited** → paste the link → sign in with any email and
 password (a new dev user is created) → your name.
 
+On iPhone the app comes with a share extension (`ios/ShareExtension/`, "Share → Ink Frame").
+It and the app share the app group `group.com.psmyles.inkframe`. With automatic signing,
+the first build for a device registers the extension's ID
+(`com.psmyles.inkframe.ShareExtension`) and the group in the team. Opening the project in
+Xcode and building once does the same.
+
 ## Build configuration (`--dart-define`)
 
 | Name | Use |

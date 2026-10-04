@@ -171,6 +171,7 @@ Home (every album you're in)
 ### 3.2 Add photos: pick
 - Mobile: `image_picker` multi-select. Desktop: file dialog or drag-drop. Formats: JPEG, PNG, WebP, HEIC (iOS/macOS only).
 - The target is the album you're in. (Sending one photo to several albums, processed for each one's model: later.)
+- **Share from another app** (phones): Photos, Gallery, Files or a browser → Share → **Ink Frame** (up to 30 photos on iPhone). The app opens on the album and goes straight to Prepare; with several albums it first asks **"Add the photos to which album?"**; with none it says to set up or join an album first. Android: `ShareActivity` hands the photos to the app's own task, which copies them into an inbox folder. iPhone: a share extension copies them into a folder shared with the app (app group `group.com.psmyles.inkframe`) and opens the app; if it can't, it says "Open Ink Frame to finish adding the photos", and the app picks them up when it next comes to the front.
 
 ### 3.3 Prepare (overview, then edit one photo)
 Reworked 2026-10-02 after trying it on desktop: the old single screen hid how to crop, and Adjust opened behind the photo strip.
@@ -216,7 +217,7 @@ Reworked 2026-10-02 after trying it on desktop: the old single screen hid how to
 │ [ ✓✓ Use for all ]  [ ⟲ Start over ]      │
 └──────────────────────────────────────────┘
 ```
-- **The preview is the crop.** The frame-shaped window shows the frame look; dragging it moves the photo, and pinch (touch), scroll or trackpad pinch (computers) zooms. While moving, it shows the photo itself with the parts that will be cut off dimmed around the window; about a third of a second after it stops, the frame look comes back. Aspect locked to the frame's model; centre crop by default; rotate in 90° steps.
+- **The preview is the crop.** The frame-shaped window shows the frame look; dragging it moves the photo, and pinch (touch), scroll or trackpad pinch (computers) zooms. The parts that will be cut off always show dimmed around the window, so it's clear there's more photo. While moving, the window shows the photo itself; about a third of a second after it stops, the frame look comes back. Aspect locked to the frame's model; centre crop by default; rotate in 90° steps.
 - **View original** shows the photo instead of the frame look while held (its tooltip says so).
 - **No waiting on changes, no Apply button:** a slider change shows its frame look a moment later (the previous look stays up with "Updating…" meanwhile, never flashing back to the photo). After the crop moves, a quick look uses Automatic's previous settings, and the tuned look follows once the photo has been still for half a second.
 - **Layout:** the canvas never scrolls away. Narrow windows: canvas on top, controls scroll below it. Wide or landscape windows: canvas on the left, controls in a side panel (the hint and buttons stay under the canvas when there's height for them).
@@ -233,7 +234,7 @@ Reworked 2026-10-02 after trying it on desktop: the old single screen hid how to
 Chosen by measurement (`app/test/imaging/fidelity_bench_test.dart`, 12 real photos) against opendithering's Auto-tune, which the user asked for as the default; the details and numbers are in PLAN.md §8.3.
 
 ### 3.4 Processing and upload
-Per photo: crop → resize → dither → indexed PNG → sha256 → `request-upload` → PUT → `finalize` (PLAN.md §8.3). The grid shows **placeholder tiles with progress** at the end of the grid.
+Per photo: crop → resize → dither → indexed PNG → sha256 → `request-upload` → PUT → `finalize` (PLAN.md §8.3). The grid shows **placeholder tiles** at the end of the grid, saying **Waiting…**, **Preparing…** or **Uploading…** (words only: a photo is one ~50 KB file, so there's no real progress to show).
 
 ### 3.5 Upload errors (D3)
 - Failed tiles show **Retry** / **Remove**. "Retry all" in a banner when several fail.
@@ -403,8 +404,8 @@ Both go through the contract first (CLAUDE.md rule).
 | Home | skeleton cards | "No albums yet" | offline banner; per-card asleep / not checked in |
 | Album (grid) | skeleton tiles | "No photos yet" | load failed + retry; removed from the album → back to Home with a note |
 | Photo viewer | progressive image | – | image failed to load |
-| Prepare | preview spinner | – | unreadable file ("Couldn't open this photo") |
-| Upload queue | progress tiles | – | per-tile retry; storage full; duplicate toast |
+| Prepare | "Preparing…" on the photo | – | unreadable file ("Couldn't open this photo") |
+| Upload queue | tiles saying Waiting… / Preparing… / Uploading… | – | per-tile retry; storage full; duplicate toast |
 | Settings | skeleton rows | – | save failed (field reverts, toast) |
 | People / invites | skeleton | "Just you so far" + Invite | – |
 | Storage | skeleton | – | – |
@@ -422,7 +423,7 @@ Both go through the contract first (CLAUDE.md rule).
 
 ## 11. Components
 
-`FrameCard`, `StatusLine` (+ `CheckHint`), `PhotoTile` (states: ready / uploading with progress / failed), `PhotoGrid` (selection, reorder), `CropEditor`, `EinkPreview`, `LookPresets` + `DitherAdvanced`, `UploadBanner`, `ModelPicker`, `ChecklistProgress` (setup, connect, wake up), `InviteSheet` (QR, share, copy), `PersonRow`, `UsageBar`, `SettingRow` variants (picker, segmented, toggle, time range, time zone search), `Banner` (asleep / update / storage / offline), `EmptyState`, `ErrorState`, `ConfirmDialog` (incl. typed confirmation), `SidebarLayout` (desktop two-pane).
+`FrameCard`, `StatusLine` (+ `CheckHint`), `PhotoTile` (states: ready / waiting, preparing or uploading / failed), `PhotoGrid` (selection, reorder), `CropEditor`, `EinkPreview`, `LookPresets` + `DitherAdvanced`, `UploadBanner`, `ModelPicker`, `ChecklistProgress` (setup, connect, wake up), `InviteSheet` (QR, share, copy), `PersonRow`, `UsageBar`, `SettingRow` variants (picker, segmented, toggle, time range, time zone search), `Banner` (asleep / update / storage / offline), `EmptyState`, `ErrorState`, `ConfirmDialog` (incl. typed confirmation), `SidebarLayout` (desktop two-pane).
 
 ---
 

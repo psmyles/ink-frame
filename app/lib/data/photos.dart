@@ -65,26 +65,17 @@ class PhotosRepository {
   Future<Uint8List> displayBytes(FrameImage image, Palette palette) async =>
       recolorPng(await download(image), palette.deviceColors, palette.colors);
 
-  /// request-upload → PUT → finalize. [onProgress] gets 0–1 while the bytes are sent.
+  /// request-upload → PUT → finalize.
   /// Throws [ApiException] (e.g. `duplicate_image`, `quota_exceeded`).
-  Future<FrameImage> upload(Uint8List png, String sha256, int width, int height,
-      {void Function(double)? onProgress}) async {
+  Future<FrameImage> upload(Uint8List png, String sha256, int width, int height) async {
     final r = await conn.callApi('POST', '/images/request-upload',
         body: {'sha256': sha256, 'bytes': png.length, 'width': width, 'height': height}) as Map<String, dynamic>;
     final imageId = r['image_id'] as String;
 
     await conn.guard(() async {
-      final req = http.StreamedRequest('PUT', Uri.parse(r['upload_url'] as String))
-        ..headers['Content-Type'] = 'image/png'
-        ..contentLength = png.length;
-      final sending = _http.send(req);
-      const chunk = 16 * 1024;
-      for (var i = 0; i < png.length; i += chunk) {
-        req.sink.add(Uint8List.sublistView(png, i, i + chunk > png.length ? png.length : i + chunk));
-        onProgress?.call((i + chunk).clamp(0, png.length) / png.length);
-      }
-      unawaited(req.sink.close());
-      final res = await http.Response.fromStream(await sending.timeout(const Duration(seconds: 120)));
+      final res = await _http
+          .put(Uri.parse(r['upload_url'] as String), headers: {'Content-Type': 'image/png'}, body: png)
+          .timeout(const Duration(seconds: 120));
       if (res.statusCode >= 300) throw ApiException('upload_failed', 'Upload failed (${res.statusCode}).', status: res.statusCode);
     });
 

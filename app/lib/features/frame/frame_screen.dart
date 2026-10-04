@@ -132,6 +132,14 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
     final selecting = _selected.isNotEmpty;
     final list = images.value ?? const <FrameImage>[];
 
+    // Photos shared from another app (app.dart), once the album has loaded.
+    if (summary != null && ref.watch(incomingPhotosProvider)?.ref == _a.ref) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final photos = ref.read(incomingPhotosProvider.notifier).takeFor(_a.ref);
+        if (photos != null && mounted) _addPhotos(photos);
+      });
+    }
+
     ref.listen(uploadQueueProvider(_a), (_, _) {
       final q = ref.read(uploadQueueProvider(_a).notifier);
       if (q.duplicates > 0) {

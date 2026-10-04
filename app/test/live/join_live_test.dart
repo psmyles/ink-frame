@@ -121,9 +121,7 @@ void main() {
         PhotoJob(rgba: rgba, width: 1000, height: 600, outWidth: 800, outHeight: 480, palette: palette),
         zopfliIterations: 1,
       );
-      var progress = 0.0;
-      final image = await photos.upload(p.png, p.sha256, p.width, p.height, onProgress: (v) => progress = v);
-      expect(progress, 1.0);
+      final image = await photos.upload(p.png, p.sha256, p.width, p.height);
       expect(image.uploadedBy, conn.userId);
       ids.add(image.id);
 

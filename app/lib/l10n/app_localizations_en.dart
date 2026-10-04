@@ -529,6 +529,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addPhotos => 'Add photos';
 
   @override
+  String get addSharedTo => 'Add the photos to which album?';
+
+  @override
+  String get shareNeedsAlbum =>
+      'To add photos, set up or join an album first. Then share them again.';
+
+  @override
   String get noPhotosBody =>
       'Add some and the frame will show them after it next checks.';
 

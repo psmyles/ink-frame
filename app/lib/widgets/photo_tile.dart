@@ -146,25 +146,15 @@ class _UploadTileState extends ConsumerState<UploadTile> {
                     ]),
                   ]),
                 )
-              : Column(mainAxisSize: MainAxisSize.min, children: [
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      value: item.status == UploadStatus.uploading ? item.progress : null,
-                      strokeWidth: 3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    switch (item.status) {
-                      UploadStatus.processing => l.preparing,
-                      UploadStatus.uploading => l.uploading,
-                      _ => l.waiting,
-                    },
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ]),
+              // Words only: a photo is one small file, so there's no progress worth showing.
+              : Text(
+                  switch (item.status) {
+                    UploadStatus.processing => l.preparing,
+                    UploadStatus.uploading => l.uploading,
+                    _ => l.waiting,
+                  },
+                  style: theme.textTheme.bodySmall,
+                ),
         ),
       ]),
     );

@@ -107,21 +107,19 @@ final displayBytesProvider = FutureProvider.family<Uint8List, (FrameAddress, Fra
 enum UploadStatus { waiting, processing, uploading, done, failed }
 
 class UploadItem {
-  const UploadItem(this.id, this.job, {this.status = UploadStatus.waiting, this.progress = 0, this.error, this.preview});
+  const UploadItem(this.id, this.job, {this.status = UploadStatus.waiting, this.error, this.preview});
 
   final int id;
   final PhotoJob job;
   final UploadStatus status;
-  final double progress;
   final ApiException? error;
 
   /// Palette indices once processed (drawn as the placeholder tile).
   final Uint8List? preview;
 
-  UploadItem copyWith({UploadStatus? status, double? progress, ApiException? error, Uint8List? preview, bool clearError = false}) =>
+  UploadItem copyWith({UploadStatus? status, ApiException? error, Uint8List? preview, bool clearError = false}) =>
       UploadItem(id, job,
           status: status ?? this.status,
-          progress: progress ?? this.progress,
           error: clearError ? null : (error ?? this.error),
           preview: preview ?? this.preview);
 }
@@ -148,7 +146,7 @@ class UploadQueue extends Notifier<List<UploadItem>> {
   }
 
   void retry(int id) {
-    _update(id, (i) => i.copyWith(status: UploadStatus.waiting, progress: 0, clearError: true));
+    _update(id, (i) => i.copyWith(status: UploadStatus.waiting, clearError: true));
     _run();
   }
 
@@ -185,7 +183,6 @@ class UploadQueue extends Notifier<List<UploadItem>> {
             prepared.sha256,
             prepared.width,
             prepared.height,
-            onProgress: (p) => _update(item.id, (i) => i.copyWith(progress: p)),
           );
       ref.read(photosProvider(address).notifier).added(image);
       remove(item.id);

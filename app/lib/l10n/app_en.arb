@@ -248,6 +248,8 @@
   "developerModeOn": "Developer mode is on",
   "developerModeBody": "Email and password sign-in on dev projects, and extra details.",
   "addPhotos": "Add photos",
+  "addSharedTo": "Add the photos to which album?",
+  "shareNeedsAlbum": "To add photos, set up or join an album first. Then share them again.",
   "noPhotosBody": "Add some and the frame will show them after it next checks.",
   "prepareTitle": "Prepare",
   "uploadCount": "{count, plural, =1{Upload} other{Upload {count}}}",

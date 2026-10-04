@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +17,7 @@ import '../data/frame_link.dart';
 import '../data/frames_repository.dart';
 import '../data/models.dart';
 import '../data/secure_store.dart';
+import '../data/shared_inbox.dart';
 
 final storeProvider = Provider<KeyValueStore>((ref) => SecureStore());
 
@@ -165,4 +167,34 @@ class LastCredential extends Notifier<Credential?> {
 
   Credential? get fresh =>
       state != null && DateTime.now().difference(_at!) < const Duration(minutes: 50) ? state : null;
+}
+
+/// Photos shared from other apps (null where the platform has no share sheet, and in tests).
+final sharedInboxProvider = Provider<SharedInbox?>((ref) => Platform.isAndroid || Platform.isIOS ? SharedInbox() : null);
+
+/// Shared photos on their way to an album (app.dart); the album's screen takes them
+/// into Prepare once it has loaded.
+class IncomingPhotos {
+  const IncomingPhotos(this.ref, this.photos);
+
+  /// The album's project ref.
+  final String ref;
+  final List<(String, Uint8List)> photos;
+}
+
+final incomingPhotosProvider = NotifierProvider<IncomingPhotosNotifier, IncomingPhotos?>(IncomingPhotosNotifier.new);
+
+class IncomingPhotosNotifier extends Notifier<IncomingPhotos?> {
+  @override
+  IncomingPhotos? build() => null;
+
+  void send(IncomingPhotos photos) => state = photos;
+
+  /// The photos for the album [ref], if they're for it; they're then gone.
+  List<(String, Uint8List)>? takeFor(String ref) {
+    final p = state;
+    if (p == null || p.ref != ref) return null;
+    state = null;
+    return p.photos;
+  }
 }

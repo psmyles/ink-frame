@@ -177,6 +177,24 @@ void main() {
     expect(fake.deleted, ['a1']);
   });
 
+  testWidgets('photos shared from another app: this album opens them, others are left', (tester) async {
+    await pump(tester, me: alice);
+    final container = ProviderScope.containerOf(tester.element(find.byType(FrameScreen)));
+    final incoming = container.read(incomingPhotosProvider.notifier);
+
+    incoming.send(IncomingPhotos('someotheralbum', [('a.jpg', Uint8List(4))]));
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(incomingPhotosProvider), isNotNull);
+
+    incoming.send(IncomingPhotos(kitchen.ref, [('a.jpg', Uint8List(4))]));
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200))); // decoding fails
+    await tester.pump();
+    expect(container.read(incomingPhotosProvider), isNull);
+    expect(find.text("Couldn't open 1 photo."), findsOneWidget);
+  });
+
   testWidgets('empty frame', (tester) async {
     await pump(tester, me: alice, images: []);
     expect(find.text('No photos yet'), findsOneWidget);

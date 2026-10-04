@@ -17,10 +17,9 @@ class FakeRepo implements PhotosRepository {
   ApiException? failWith;
 
   @override
-  Future<FrameImage> upload(Uint8List png, String sha256, int width, int height, {void Function(double)? onProgress}) async {
+  Future<FrameImage> upload(Uint8List png, String sha256, int width, int height) async {
     if (failWith != null) throw failWith!;
     uploads.add((png, sha256, width, height));
-    onProgress?.call(1);
     return FrameImage.fromJson({
       'id': 'img${uploads.length}',
       'uploaded_by': 'me',
