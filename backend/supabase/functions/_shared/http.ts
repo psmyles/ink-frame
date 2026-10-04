@@ -20,6 +20,7 @@ const STATUS: Record<string, number> = {
   unauthenticated: 401,
   invalid_pairing_token: 401,
   invalid_device_secret: 401,
+  invalid_watch_token: 401,
   not_member: 403,
   not_owner: 403,
   not_uploader: 403,

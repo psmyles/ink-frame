@@ -15,6 +15,7 @@ import '../../data/timezones.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
 import '../../state/setup.dart';
+import '../../widgets/checklist_row.dart';
 import '../../widgets/formatting.dart';
 import '../../widgets/sign_in_buttons.dart';
 import '../../widgets/text_prompt.dart';
@@ -275,24 +276,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final plan = s.plan!;
     if (s.finished != null) return _finished(plan.name, s.finished!.ref);
 
-    Widget row(SetupStage stage, String title, {String? hint}) {
-      final done = s.isDone(stage);
-      final running = s.running == stage;
-      final failed = s.failed == stage;
-      final icon = done
-          ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-          : running
-              ? const SizedBox(width: 24, height: 24, child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2.5)))
-              : failed
-                  ? Icon(Icons.error, color: theme.colorScheme.error)
-                  : Icon(Icons.radio_button_unchecked, color: theme.colorScheme.outline);
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: icon,
-        title: Text(title, style: TextStyle(fontWeight: running ? FontWeight.w600 : null)),
-        subtitle: running && hint != null ? Text(hint) : null,
-      );
-    }
+    Widget row(SetupStage stage, String title, {String? hint}) => ChecklistRow(
+          title: title,
+          hint: hint,
+          state: s.isDone(stage)
+              ? CheckState.done
+              : s.running == stage
+                  ? CheckState.running
+                  : s.failed == stage
+                      ? CheckState.failed
+                      : CheckState.waiting,
+        );
 
     final keepEmail = ref.watch(_personalTokenProvider).value ?? false;
     final methods = ref.read(signInServiceProvider).methods(devMode: false);

@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../battery/background.dart';
 import '../../data/api_error.dart';
 import '../../data/frame_link.dart';
 import '../../data/platform_api.dart';
@@ -204,6 +205,16 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               subtitle: Text(l.developerModeBody),
               value: true,
               onChanged: (v) => ref.read(devModeProvider.notifier).set(v),
+            ),
+          if (devMode && ref.watch(batteryWatchProvider).supported)
+            ListTile(
+              leading: const Icon(Icons.battery_alert_outlined),
+              title: Text(l.checkBatteriesNow),
+              subtitle: Text(l.checkBatteriesNowBody),
+              onTap: () async {
+                await checkBatteries(ref.read(batteryWatchProvider), ref.read(notificationsProvider));
+                _snack(l.checkedBatteries);
+              },
             ),
           ListTile(
             leading: const Icon(Icons.info_outline),

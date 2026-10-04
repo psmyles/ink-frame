@@ -74,17 +74,44 @@ class FrameConnection {
   }
 
   /// Restores the saved session (refreshing it if expired). Returns whether signed in.
+  /// Throws [ApiException] (`offline`, `asleep`) when the refresh can't get an
+  /// answer; the saved session is kept for the next try.
   Future<bool> restore() async {
     final saved = await _store.read(_sessionKey);
     if (saved == null) return false;
     try {
       await client.auth.recoverSession(saved);
       return true;
+    } on AuthRetryableFetchException catch (e) {
+      throw _retryable(e);
     } on AuthException {
       await _store.delete(_sessionKey);
       return false;
-    } on SocketException {
-      // Offline: keep the saved session; try again later.
+    } on SocketException catch (e) {
+      throw ApiException(ApiException.offline, e.message);
+    }
+  }
+
+  /// No answer, or a 5xx such as 540 (asleep): auth keeps the session for these.
+  static ApiException _retryable(AuthRetryableFetchException e) => e.statusCode == '540'
+      ? ApiException.fromResponse(540, null)
+      : ApiException(ApiException.offline, e.message);
+
+  /// Whether this frame's project was deleted (by its owner, from Supabase).
+  /// Supabase answers HTTP 410 for a while; after that the address stops existing
+  /// while Supabase itself still answers. Offline or slow counts as not gone.
+  Future<bool> isGone() async {
+    const limit = Duration(seconds: 15);
+    try {
+      final res = await _http.get(Uri.parse('${address.url}/auth/v1/health'), headers: {'apikey': address.key}).timeout(limit);
+      return res.statusCode == 410;
+    } on Exception catch (e) {
+      if (!e.toString().contains('Failed host lookup')) return false;
+    }
+    try {
+      await _http.head(Uri.parse('https://api.supabase.com/')).timeout(limit);
+      return true;
+    } on Exception {
       return false;
     }
   }
@@ -178,13 +205,13 @@ class FrameConnection {
     } on ApiException {
       rethrow;
     } on PostgrestException catch (e) {
-      if (e.code == '540') throw ApiException.fromResponse(540, null);
+      if (e.code == '540' || e.code == '410') throw ApiException.fromResponse(int.parse(e.code!), null);
       if (e.code == 'PGRST301' || e.code == 'PGRST303' || e.code == '401') {
         throw ApiException(ApiException.signedOut, e.message);
       }
       throw ApiException(e.code ?? 'postgrest', e.message);
     } on AuthRetryableFetchException catch (e) {
-      throw ApiException(ApiException.offline, e.message);
+      throw _retryable(e);
     } on AuthException catch (e) {
       if (e.statusCode == '540') throw ApiException.fromResponse(540, null);
       throw ApiException(authCode, e.message);

@@ -200,13 +200,23 @@ class _FrameScreenState extends ConsumerState<FrameScreen> {
         const SingleActivator(LogicalKeyboardKey.delete): () {
           if (summary != null && selecting) _deleteSelected(summary, list);
         },
+        // The Mac's delete key.
+        const SingleActivator(LogicalKeyboardKey.backspace): () {
+          if (summary != null && selecting) _deleteSelected(summary, list);
+        },
+        const SingleActivator(LogicalKeyboardKey.keyA, meta: true): () => setState(() => _selected.addAll(list.map((i) => i.id))),
+        const SingleActivator(LogicalKeyboardKey.keyA, control: true): () => setState(() => _selected.addAll(list.map((i) => i.id))),
       },
       child: Focus(
         autofocus: true,
         child: Scaffold(
           appBar: selecting
               ? AppBar(
-                  leading: IconButton(icon: const Icon(Icons.close), onPressed: () => setState(_selected.clear)),
+                  leading: IconButton(
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(_selected.clear),
+                  ),
                   title: Text(l.selected(_selected.length)),
                   actions: [
                     IconButton(
@@ -415,16 +425,8 @@ class _Banner extends ConsumerWidget {
       ApiException.asleep => (view.cached?.isMine ?? false)
           ? (l.asleepOwner(name), FilledButton(onPressed: () => wakeUpFrame(context, ref, address, name), child: Text(l.wakeUp)))
           : (l.asleepOther(name, view.cached?.ownerName ?? l.theOwner), null),
-      ApiException.notMember => (
-          l.removedFromFrame,
-          OutlinedButton(
-            onPressed: () async {
-              await ref.read(framesProvider.notifier).remove(address);
-              if (context.mounted) context.go('/home');
-            },
-            child: Text(l.removeFromDevice),
-          ),
-        ),
+      ApiException.notMember => (l.removedFromFrame, _removeButton(context, ref, l)),
+      ApiException.gone => (l.frameGone(name), _removeButton(context, ref, l)),
       ApiException.signedOut => (
           l.signedOutOfFrame,
           FilledButton(
@@ -456,4 +458,12 @@ class _Banner extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _removeButton(BuildContext context, WidgetRef ref, AppLocalizations l) => OutlinedButton(
+        onPressed: () async {
+          await ref.read(framesProvider.notifier).drop(address);
+          if (context.mounted) context.go('/home');
+        },
+        child: Text(l.removeFromDevice),
+      );
 }

@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ink_frame/data/frame_link.dart';
@@ -113,6 +112,24 @@ void main() {
     await pump(tester, me: alice, connected: false);
     expect(find.text('Not connected yet'), findsOneWidget);
     expect(find.text('Connect the frame'), findsNothing);
+  });
+
+  testWidgets('keyboard: Cmd/Ctrl+A selects every photo; the Mac delete key asks to delete', (tester) async {
+    await pump(tester, me: priya);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+    expect(find.text('3 selected'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+    await tester.pumpAndSettle();
+    expect(find.text('Delete 3 photos from the frame?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('3 selected'), findsNothing);
   });
 
   testWidgets('grid shows every photo and an add button', (tester) async {

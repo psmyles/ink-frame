@@ -68,6 +68,11 @@ class OwnerTools extends ConsumerWidget {
       await (await ref.read(provisionerProvider.future)).update(address.ref);
     });
     ref.invalidate(frameUpdateProvider(address));
+    if (ok == null) {
+      // New backend features (the low-battery notification's watch tokens) work now.
+      await ref.read(batteryWatchProvider).updated(address);
+      ref.invalidate(frameViewProvider(address));
+    }
     messenger.showSnackBar(SnackBar(content: Text(ok == null ? l.updated(frameName) : _failure(l, ok, l.updateFailed(frameName)))));
   }
 

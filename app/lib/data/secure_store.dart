@@ -16,6 +16,14 @@ class SecureStore implements KeyValueStore {
           mOptions: MacOsOptions(usesDataProtectionKeychain: false),
         );
 
+  /// Readable by the background battery check while the phone is locked (after the
+  /// first unlock since it started). Only for the read-only watch tokens.
+  SecureStore.background()
+      : _storage = const FlutterSecureStorage(
+          iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+          mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+        );
+
   final FlutterSecureStorage _storage;
 
   @override

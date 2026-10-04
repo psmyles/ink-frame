@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../state/more_frames.dart';
 import '../../state/providers.dart';
 import '../../widgets/adaptive_shell.dart';
 import '../../widgets/frame_card.dart';
 import '../../widgets/frame_mark.dart';
 import '../../widgets/loading.dart';
+import '../../widgets/more_frames_card.dart';
 
 /// Every frame you're on, whoever set it up (app-flow D1, §2.2). On a wide window
 /// the sidebar lists them, so this is only the "choose a frame" pane.
@@ -23,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
     if (AdaptiveShell.isWide(context)) return list.hasValue ? _ChooseFrame(text: l.chooseFrame) : Scaffold(body: loading);
 
     final frames = list.value ?? [];
+    final more = ref.watch(moreFramesProvider).value?.isNotEmpty ?? false;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.appTitle),
@@ -41,15 +44,17 @@ class HomeScreen extends ConsumerWidget {
           : frames.isEmpty
           ? const NoFrames()
           : RefreshIndicator(
-              onRefresh: () async => ref.invalidate(frameViewProvider),
+              onRefresh: () async {
+                ref.invalidate(frameViewProvider);
+                ref.invalidate(moreFramesProvider);
+              },
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                itemCount: frames.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) => FrameCard(
-                  frames[i],
-                  onTap: () => context.push('/frame/${frames[i].ref}'),
-                ),
+                itemCount: frames.length + 1,
+                separatorBuilder: (_, i) => SizedBox(height: i == 0 && !more ? 0 : 12),
+                itemBuilder: (context, i) => i == 0
+                    ? const MoreFramesCard()
+                    : FrameCard(frames[i - 1], onTap: () => context.push('/frame/${frames[i - 1].ref}')),
               ),
             ),
     );

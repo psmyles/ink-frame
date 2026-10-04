@@ -5,7 +5,7 @@
 
 import { Hono } from "npm:hono@4.13.8";
 import { z } from "npm:zod@4.6.5";
-import { normalizeCode, randomCode, sha256Hex } from "../_shared/crypto.ts";
+import { base64url, normalizeCode, randomBytes, randomCode, sha256Hex } from "../_shared/crypto.ts";
 import { admin, BUCKET, removeObjects, rpc } from "../_shared/db.ts";
 import { ApiError, bearer, body, check, errorResponse, fail } from "../_shared/http.ts";
 import {
@@ -48,6 +48,18 @@ app.post("/internal/maintenance", async (c) => {
     if (names.length < 500) break;
   }
   return c.json({ deleted_objects: deleted });
+});
+
+// ── Battery checks (watch token, no user; PLAN.md §15) ───────────────────────
+
+const watchToken = async (c: { req: { header: (k: string) => string | undefined } }) =>
+  await sha256Hex(c.req.header("x-watch-token") ?? fail("invalid_watch_token", "Missing watch token."));
+
+app.get("/watch", async (c) => c.json(await rpc("svc_watch_frame", { p_token_hash: await watchToken(c) })));
+
+app.delete("/watch", async (c) => {
+  await rpc("svc_revoke_watch_token", { p_token_hash: await watchToken(c) });
+  return c.body(null, 204);
 });
 
 // ── Everything else: signed-in users ──────────────────────────────────────────
@@ -103,6 +115,12 @@ app.post("/pairing-tokens", async (c) => {
     p_token_hash: await sha256Hex(token),
   });
   return c.json({ pairing_token: token, expires_at: expiresAt }, 201);
+});
+
+app.post("/watch-tokens", async (c) => {
+  const token = base64url(randomBytes(32));
+  await rpc("svc_create_watch_token", { p_user: c.get("user"), p_token_hash: await sha256Hex(token) });
+  return c.json({ watch_token: token }, 201);
 });
 
 app.post("/frame/disconnect", async (c) => {

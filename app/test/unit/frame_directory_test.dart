@@ -40,6 +40,21 @@ void main() {
     expect(await savedToken(), 'tok0');
   });
 
+  test('list: the account\'s frames (with ones added elsewhere); null without a token or connection', () async {
+    expect(await directory.list(), isNull);
+    expect(server.calls, isEmpty);
+
+    server.accounts['alice'] = [kitchen];
+    await directory.signIn(google('alice'));
+    server.accounts['alice']!.add(hallway); // joined on another device
+    expect(await directory.list(), [kitchen, hallway]);
+    expect(server.calls.last, 'GET /frames');
+    expect(await directory.provider(), 'google');
+
+    server.offline = true;
+    expect(await directory.list(), isNull);
+  });
+
   test('a bad ID token is an error', () async {
     await expectLater(
       directory.signIn(google('bad')),

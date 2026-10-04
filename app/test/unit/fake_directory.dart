@@ -34,6 +34,8 @@ class FakeDirectoryServer {
     final account = tokens[req.headers['Authorization']?.replaceFirst('Bearer ', '')];
     if (account == null) return error(401, 'invalid_token');
     switch ('${req.method} $path') {
+      case 'GET /frames':
+        return json(200, {'frames': listOf(account)});
       case 'POST /frames':
         final list = accounts.putIfAbsent(account, () => []);
         final remove = [for (final u in body['remove'] as List? ?? const []) u as String];

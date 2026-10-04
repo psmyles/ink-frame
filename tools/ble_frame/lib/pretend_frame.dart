@@ -165,6 +165,15 @@ class PretendFrame extends ChangeNotifier {
     await startPairing();
   }
 
+  int get battery => frame.config['battery_pct'] as int? ?? 100;
+
+  /// What it reports at its next check (to try the low-battery notification).
+  Future<void> setBattery(int pct) async {
+    frame.config['battery_pct'] = pct;
+    await frame.save();
+    notifyListeners();
+  }
+
   Future<void> setModel(String id) async {
     frame.config['model_id'] = id;
     await frame.save();

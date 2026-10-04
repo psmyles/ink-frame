@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../widgets/frame_mark.dart';
+import '../../widgets/paste_link.dart';
 
 /// First run (app-flow §1.1). Most people are invited, so that's the primary action.
 class WelcomeScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Scaffold(
+    final page = Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -43,6 +44,10 @@ class WelcomeScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+    return PasteLinkShortcut(
+      onLink: (link) => context.push(Uri(path: '/join', queryParameters: {'link': link}).toString()),
+      child: page,
     );
   }
 }

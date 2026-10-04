@@ -17,6 +17,7 @@ Ink Frame: a Flutter companion app, a per-family Supabase backend, and ESP32-S3 
 See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `backend/supabase/` (migrations, Edge Functions, tests), `app/` (Flutter), `firmware/` (PlatformIO), `tools/` (golden vectors, frame simulator, dev scripts), `central/` (firmware feed), `docs/`.
 
 ## Commands
+The dev project (`ink-frame`, `vrhsxzedzhvujnirsuhg`) was deleted on 2026-10-04, so `SUPABASE_PROJECT_REF` in `backend/.env.local` points at nothing. Before a command below that uses "the dev project", make a throwaway one (`provision.ts --name <n> --keep-email --no-frame`), run with `SUPABASE_PROJECT_REF=<its ref>`, and delete it afterwards.
 - `deno run --allow-read --allow-write tools/dev/gen-seed.ts`: regenerate `backend/supabase/seed.sql` after editing `shared/presets.json`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/migrate.ts [--status]`: apply pending migrations and the seed to the dev project (reads `backend/.env.local`).
 - New tables or functions in `public` get no client privileges by default (0002 revokes them); grant `SELECT` explicitly where members need to read.
@@ -33,6 +34,7 @@ See PLAN.md §4. In brief: `shared/` (presets, API contract, test vectors), `bac
 - `cd app && flutter test`: app tests without network (incl. golden parity for `lib/imaging`). `node tools/golden/gen-vectors.mjs`: regenerate `shared/test-vectors/dither.json` from the reference. `deno run --allow-all tools/dev/app-live-test.ts`: the app's data layer against the dev project (it refuses while the dev frame exists; then make a throwaway project with `provision.ts --name <n> --keep-email --no-frame`, run with `SUPABASE_PROJECT_REF=<its ref>`, and delete it). More in `app/README.md`.
 - `deno run --allow-read --allow-net --allow-env tools/dev/auth-providers.ts [--check]`: turn on Google/Apple sign-in on the dev project with the client IDs in `shared/oauth-clients.json` (provision.ts uses the same file).
 - `deno run --allow-read --allow-net --allow-env tools/dev/dev-frame.ts [--invite | --remove]`: a frame on the dev project to join in the app (the backend tests skip while it exists). `--owner-login` (needs `--allow-write`) lets you sign in as its owner in developer mode; the password goes into `backend/.env.local` as `DEV_OWNER_PASSWORD`, never to the terminal.
+- `cd app && ICON=1 flutter test test/tool/app_icon_test.dart && dart run flutter_launcher_icons`: redraw the app icon from `FrameMark` and regenerate every platform's icons.
 - `cd tools/frame_sim && dart test`: frame_sim unit tests. Run the simulator with `dart run bin/frame_sim.dart --help`.
 - `cd tools/ble_frame && flutter run -d macos` (or an Android device): a pretend frame over real Bluetooth (docs/pairing.md) for trying Connect the frame from the app on another device; frame_sim does the claiming. `flutter test` there checks its UUIDs.
 - `deno run --allow-read --allow-net --allow-env tools/dev/provision.ts --name <n> [--keep-email]` / `delete-project.ts --ref <ref> --yes`: throwaway projects in the spare free slot.

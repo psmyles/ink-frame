@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ink Frame frame-project API
-  version: 2.0.0
+  version: 2.1.0
   description: |
     Contract for the two Edge Functions deployed into every frame's Supabase project
     (PLAN.md §7.3, §7.4). **One project holds one frame.** The functions,
@@ -46,6 +46,11 @@ tags:
     description: app-api. The caller's own profile, account and usage.
   - name: internal
     description: app-api. Called by the project's own scheduled jobs, not by clients.
+  - name: watch
+    description: |
+      app-api. A phone's background check for the low-battery notification (PLAN.md §15):
+      a read-only token per device and person, so the check never touches the person's
+      sign-in session (refresh tokens rotate, and reusing an old one signs them out).
 
 paths:
   # ───────────────────────────── device-api ─────────────────────────────
@@ -765,6 +770,64 @@ paths:
           description: '`owner_must_delete_frame`.'
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
+  /app-api/watch-tokens:
+    post:
+      tags: [watch]
+      operationId: createWatchToken
+      summary: A read-only token for this device's battery checks
+      description: |
+        For a member who turned on "Notify me when the battery is low" on this device.
+        The token can only read `GET /app-api/watch`. It is returned only here; the
+        server keeps its SHA-256. A person keeps at most 10 (the oldest go). It stops
+        working when they leave the frame or delete their account.
+      security:
+        - userJwt: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [watch_token]
+                properties:
+                  watch_token: { $ref: '#/components/schemas/WatchToken' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: '`not_member`.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /app-api/watch:
+    get:
+      tags: [watch]
+      operationId: watchFrame
+      summary: The frame's battery and last check, for the low-battery notification
+      security:
+        - watchToken: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
+      responses:
+        '200':
+          description: The frame, as much as the notification needs.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FrameWatch' }
+        '401':
+          description: '`invalid_watch_token`: unknown or revoked (left the frame, account deleted). The app stops checking.'
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    delete:
+      tags: [watch]
+      operationId: revokeWatchToken
+      summary: Stop this device's checks (notification turned off, signed out)
+      security:
+        - watchToken: []
+      parameters:
+        - $ref: '#/components/parameters/ApiKey'
+      responses:
+        '204': { description: Revoked (also when it was already gone). }
+
   /app-api/usage:
     get:
       tags: [account]
@@ -836,6 +899,11 @@ paths:
 
 components:
   securitySchemes:
+    watchToken:
+      type: apiKey
+      in: header
+      name: x-watch-token
+      description: A `watch_token` from `POST /app-api/watch-tokens`. Read-only; not a JWT.
     deviceSecret:
       type: http
       scheme: bearer
@@ -924,6 +992,22 @@ components:
       type: string
       pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
       description: 128 random bits, Crockford base32 uppercase. One use, 10 minutes.
+    WatchToken:
+      type: string
+      pattern: '^[A-Za-z0-9_-]{43}$'
+      description: 32 random bytes, base64url, no padding.
+    FrameWatch:
+      type: object
+      required: [name, connected, battery_pct, low_battery_pct, last_seen_at, sync_interval_s]
+      properties:
+        name: { $ref: '#/components/schemas/FrameName' }
+        connected: { type: boolean }
+        battery_pct: { type: [integer, 'null'] }
+        low_battery_pct:
+          type: [integer, 'null']
+          description: The owner's warning level; `null` = no warning.
+        last_seen_at: { type: [string, 'null'], format: date-time }
+        sync_interval_s: { type: integer }
     FrameName:
       type: string
       minLength: 1

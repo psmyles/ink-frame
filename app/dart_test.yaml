@@ -1,3 +1,9 @@
 tags:
   live:
     # Needs the dev project; run through tools/dev/app-live-test.ts.
+  preview:
+    # Renders screens to PNGs; PREVIEW=1, see test/preview/preview_test.dart.
+  tool:
+    # Draws the app icon; ICON=1, see test/tool/app_icon_test.dart.
+  bench:
+    # Benchmarks on real photos; see test/imaging/*_bench_test.dart.

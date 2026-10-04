@@ -76,6 +76,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1100));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text("I've been invited"), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2)); // the slow store's last reads
   });
 
   testWidgets("a frame's card: its name and Loading… until it's read", (tester) async {

@@ -46,10 +46,17 @@ class FramesRepository {
   FrameConnection connection(FrameAddress address) =>
       _connections.putIfAbsent(address, () => _connect(address, _store));
 
-  /// The connection with its saved session restored (once per run).
+  /// The connection with its saved session restored (once per run; again after
+  /// it couldn't get an answer).
   Future<FrameConnection> ready(FrameAddress address) async {
     final c = connection(address);
-    await _restored.putIfAbsent(address, c.restore);
+    final restoring = _restored.putIfAbsent(address, c.restore);
+    try {
+      await restoring;
+    } on ApiException {
+      if (identical(_restored[address], restoring)) _restored.remove(address);
+      rethrow;
+    }
     return c;
   }
 
@@ -60,6 +67,11 @@ class FramesRepository {
     final c = _connect(address, _store);
     try {
       await c.signIn(credential);
+    } on ApiException catch (e) {
+      final gone = e.code != ApiException.asleep && await c.isGone();
+      await c.dispose();
+      if (gone) throw const ApiException(ApiException.gone, 'The frame no longer exists.');
+      rethrow;
     } catch (_) {
       await c.dispose();
       rethrow;
@@ -80,11 +92,19 @@ class FramesRepository {
   }
 
   /// Returning on a new device: sign in to each frame (from a link or the directory)
-  /// and keep the ones you're still on. Returns the ones skipped because you're not.
+  /// and keep the ones you're still on. Returns the ones skipped because you're not,
+  /// or because they no longer exist.
   Future<List<FrameAddress>> signInAll(List<FrameAddress> frames, Credential credential) async {
     final skipped = <FrameAddress>[];
     for (final f in frames) {
-      final c = await signIn(f, credential);
+      final FrameConnection c;
+      try {
+        c = await signIn(f, credential);
+      } on ApiException catch (e) {
+        if (e.code != ApiException.gone) rethrow;
+        skipped.add(f);
+        continue;
+      }
       try {
         await remember(f, await c.loadSummary());
         await add(f);

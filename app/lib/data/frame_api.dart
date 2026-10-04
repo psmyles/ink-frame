@@ -27,6 +27,10 @@ class FrameApi {
   Future<PairingToken> createPairingToken() async =>
       PairingToken.fromJson(await conn.callApi('POST', '/pairing-tokens') as Map<String, dynamic>);
 
+  /// A read-only token for this phone's battery checks (`POST /watch-tokens`).
+  Future<String> createWatchToken() async =>
+      ((await conn.callApi('POST', '/watch-tokens')) as Map<String, dynamic>)['watch_token'] as String;
+
   /// Disconnects the hardware (owner): it wipes itself at its next check.
   Future<void> disconnect() => conn.callApi('POST', '/frame/disconnect');
 

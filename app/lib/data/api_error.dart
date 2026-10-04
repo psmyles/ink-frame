@@ -24,10 +24,15 @@ class ApiException implements Exception {
   /// Google/Apple/email sign-in to the frame's project was refused.
   static const signInFailed = 'sign_in_failed';
 
+  /// The frame's project was deleted: Supabase answers HTTP 410 for a while, then
+  /// the address stops existing (FrameConnection.isGone).
+  static const gone = 'frame_gone';
+
   bool get isAsleep => code == asleep;
 
   factory ApiException.fromResponse(int status, Object? body) {
     if (status == 540) return const ApiException(asleep, 'The frame is asleep.', status: 540);
+    if (status == 410) return const ApiException(gone, 'The frame no longer exists.', status: 410);
     final error = body is Map<String, dynamic> ? body['error'] : null;
     if (error is Map<String, dynamic> && error['code'] is String) {
       return ApiException(

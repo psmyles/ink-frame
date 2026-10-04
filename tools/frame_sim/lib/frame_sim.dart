@@ -139,7 +139,7 @@ class Frame {
       body = await _post('${config['api_base_url']}/device-api/sync', {
         'manifest_version': since,
         'fw_version': fwVersion,
-        'battery_pct': 100,
+        'battery_pct': config['battery_pct'] as int? ?? 100,
         'rssi': -50,
         'sd_free_bytes': null,
         'local_ids': localIds,

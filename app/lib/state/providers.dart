@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/sign_in_service.dart';
+import '../battery/battery_watch.dart';
+import '../battery/notifications.dart';
 import '../config/app_config.dart';
 import '../data/api_error.dart';
+import '../data/frame_api.dart';
 import '../data/frame_connection.dart';
 import '../data/frame_directory.dart';
 import '../data/frame_link.dart';
@@ -20,6 +24,13 @@ final framesRepositoryProvider = Provider<FramesRepository>((ref) => FramesRepos
 final signInServiceProvider = Provider<SignInService>((ref) => SignInService());
 
 final frameDirectoryProvider = Provider<FrameDirectory>((ref) => FrameDirectory(ref.watch(storeProvider)));
+
+/// The low-battery notification's watch tokens (phones only).
+final batteryWatchProvider = Provider<BatteryWatch>(
+  (ref) => BatteryWatch(SecureStore.background(), supported: Platform.isAndroid || Platform.isIOS),
+);
+
+final notificationsProvider = Provider<Notifications>((ref) => Notifications());
 
 /// A frame's connection. Invalidated when the frame is removed or signed in to
 /// again, so everything read through it (the frame, photos, people, …) is read
@@ -44,12 +55,21 @@ class FramesNotifier extends AsyncNotifier<List<FrameAddress>> {
   Future<void> reload() async => state = AsyncData(await _repo.load());
 
   Future<void> remove(FrameAddress a) async {
+    unawaited(ref.read(batteryWatchProvider).forget(a));
     await _repo.remove(a);
     ref.invalidate(connectionProvider(a));
     await reload();
   }
 
+  /// "Remove from this device" for a frame you were removed from or that no longer
+  /// exists: also off your account's list, so other devices stop offering it.
+  Future<void> drop(FrameAddress a) async {
+    unawaited(ref.read(frameDirectoryProvider).remove([a]));
+    await remove(a);
+  }
+
   Future<void> signOutAll() async {
+    unawaited(ref.read(batteryWatchProvider).forgetAll());
     await _repo.signOutAll();
     ref.invalidate(connectionProvider);
     await reload();
@@ -80,20 +100,24 @@ class FrameView {
 final frameViewProvider = FutureProvider.family<FrameView, FrameAddress>((ref, address) async {
   ref.watch(connectionProvider(address));
   final repo = ref.read(framesRepositoryProvider);
+  ApiException error;
   try {
     final conn = await repo.ready(address);
-    if (!conn.isSignedIn) {
-      return FrameView(
-        error: const ApiException(ApiException.signedOut, 'Not signed in.'),
-        cached: await repo.cached(address),
-      );
-    }
+    if (!conn.isSignedIn) throw const ApiException(ApiException.signedOut, 'Not signed in.');
     final summary = await conn.loadSummary();
     await repo.remember(address, summary);
+    unawaited(ref.read(batteryWatchProvider).sync(address, summary, FrameApi(conn)).catchError((_) {}));
     return FrameView(summary: summary);
   } on ApiException catch (e) {
-    return FrameView(error: e, cached: await repo.cached(address));
+    error = e;
   }
+  // A deleted project looks offline (its address is gone) or signed out (the
+  // refresh was refused), so ask.
+  const known = {ApiException.asleep, ApiException.notMember, ApiException.gone};
+  if (!known.contains(error.code) && await repo.connection(address).isGone()) {
+    error = const ApiException(ApiException.gone, 'The frame no longer exists.');
+  }
+  return FrameView(error: error, cached: await repo.cached(address));
 });
 
 /// The frame's name and owner as last seen, for its card while it loads.

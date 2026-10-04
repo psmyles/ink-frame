@@ -39,6 +39,15 @@ import '../widget/frame_screen_test.dart' as fs;
 import '../widget/prepare_screen_test.dart' as ps;
 import 'package:ink_frame/features/prepare/prepare_screen.dart';
 import '../widget/layout_test.dart' as layout;
+import '../widget/more_frames_test.dart' as more;
+import '../unit/battery_watch_test.dart' show FakeNotifications, FakeWatchServer;
+import '../unit/fake_bluetooth.dart';
+import '../unit/fake_platform.dart' show testBundle;
+import 'package:ink_frame/battery/battery_watch.dart';
+import 'package:ink_frame/data/secure_store.dart';
+import 'package:ink_frame/features/connect/connect_frame_screen.dart';
+import 'package:ink_frame/state/connect_frame.dart';
+import 'package:ink_frame/state/setup.dart';
 
 Future<void> loadFonts() async {
   // flutter test sets FLUTTER_ROOT.
@@ -241,6 +250,62 @@ void main() {
         address: fs.kitchen, me: me, owner: me, api: api(), size: phone, dark: true);
     await shot(t, '3d_storage');
   });
+  // 3f/3g screens, dark mode.
+  Future<void> settle(WidgetTester t) async {
+    for (var i = 0; i < 40; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+    }
+  }
+
+  testWidgets('3f connect the frame', (t) async {
+    final fake = FakeFrameApi(frame: frameJson(connected: false), members: [me]);
+    final hw = FakeHardware(claim: (p, info) async {
+      fake.claimed(info.hwId);
+      return null;
+    });
+    await pumpFrameScreen(
+      t,
+      () => Builder(
+        builder: (c) => Scaffold(body: TextButton(onPressed: () => openConnectFrame(c, fs.kitchen), child: const Text('open'))),
+      ),
+      address: fs.kitchen, me: me, owner: me, api: fake, size: phone, dark: true,
+      overrides: [
+        frameBluetoothProvider.overrideWithValue(FakeBluetooth([hw])),
+        backendBundleProvider.overrideWith((ref) async => testBundle),
+      ],
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await shot(t, '3f_connect_ready');
+    await t.tap(find.text('Find the frame'));
+    await settle(t);
+    await t.tap(find.text('Home'));
+    await t.pump();
+    await t.enterText(find.widgetWithText(TextField, 'Wi-Fi password'), 'correct horse');
+    await t.pump();
+    await shot(t, '3f_connect_wifi');
+    await t.tap(find.widgetWithText(FilledButton, 'Connect'));
+    await settle(t);
+    await shot(t, '3f_connect_done');
+  });
+
+  testWidgets('3g settings: battery notification', (t) async {
+    await pumpFrameScreen(t, () => const SettingsScreen(address: fs.kitchen),
+        address: fs.kitchen, me: me, owner: me, api: api(), size: const Size(400, 1400), dark: true,
+        overrides: [
+          batteryWatchProvider.overrideWithValue(BatteryWatch(MemoryStore(), httpClient: FakeWatchServer().client)),
+          notificationsProvider.overrideWithValue(FakeNotifications()),
+        ]);
+    await shot(t, '3g_settings_notify');
+  });
+
+  testWidgets('3g home: more frames on your account', (t) async {
+    await more.open(t);
+    await t.pumpWidget(Container());
+    await more.open(t, dark: true);
+    await shot(t, '3g_home_more');
+  });
+
   testWidgets('3d desktop side panel', (t) async {
     await pumpFrameScreen(
       t,

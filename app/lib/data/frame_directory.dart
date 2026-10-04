@@ -43,12 +43,31 @@ class FrameDirectory {
 
   Future<List<FrameAddress>> _signIn(IdTokenCredential credential) async {
     final r = await _call('POST', '/sign-in', body: {'id_token': credential.idToken}) as Map<String, dynamic>;
-    await _save((await _load()).withToken(r['token'] as String));
+    await _save((await _load()).withToken(r['token'] as String, provider: credential.provider.name));
     return await _flush() ?? _frames(r);
   }
 
   static List<FrameAddress> _frames(Object? response) =>
       [for (final f in (response as Map<String, dynamic>)['frames'] as List) FrameAddress.fromJson(f as Map<String, dynamic>)];
+
+  /// The account's frames, to find ones added on another device (app-flow §1.4).
+  /// Null without a device token or when the directory can't be reached.
+  Future<List<FrameAddress>?> list() => _serial(() async {
+        if (!available) return null;
+        final changed = await _flush();
+        if (changed != null) return changed;
+        final s = await _load();
+        if (s.token == null) return null;
+        try {
+          return _frames(await _call('GET', '/frames', token: s.token));
+        } on ApiException catch (e) {
+          if (e.code == 'invalid_token') await _save((await _load()).withToken(null));
+          return null;
+        }
+      });
+
+  /// How this device signed in to the directory: `google` or `apple` (null if unknown).
+  Future<String?> provider() => _serial(() async => (await _load()).provider);
 
   /// Puts frames on the account's list after joining or signing in to them with
   /// [signedInWith]; that sign-in also gets this device a token if it has none.
@@ -164,20 +183,25 @@ class FrameDirectory {
 
 /// The device token and the changes not sent yet.
 class _State {
-  const _State({this.token, this.add = const [], this.remove = const []});
+  const _State({this.token, this.provider, this.add = const [], this.remove = const []});
 
   final String? token;
+
+  /// `google` or `apple`: which sign-in finds this account's frames.
+  final String? provider;
   final List<FrameAddress> add;
   final List<String> remove;
 
   bool get isEmpty => add.isEmpty && remove.isEmpty;
 
-  _State withToken(String? t) => _State(token: t, add: add, remove: remove);
+  _State withToken(String? t, {String? provider}) =>
+      _State(token: t, provider: provider ?? this.provider, add: add, remove: remove);
 
   _State adding(List<FrameAddress> frames) {
     final urls = {for (final f in frames) f.url};
     return _State(
       token: token,
+      provider: provider,
       add: [for (final f in add) if (!urls.contains(f.url)) f, ...frames],
       remove: [for (final u in remove) if (!urls.contains(u)) u],
     );
@@ -187,6 +211,7 @@ class _State {
     final urls = {for (final f in frames) f.url};
     return _State(
       token: token,
+      provider: provider,
       add: [for (final f in add) if (!urls.contains(f.url)) f],
       remove: [...remove.where((u) => !urls.contains(u)), ...urls],
     );
@@ -195,18 +220,21 @@ class _State {
   /// What's left after [sent] went out (changes made meanwhile stay).
   _State without(_State sent) => _State(
         token: token,
+        provider: provider,
         add: [for (final f in add) if (!sent.add.contains(f)) f],
         remove: [for (final u in remove) if (!sent.remove.contains(u)) u],
       );
 
   Map<String, Object?> toJson() => {
         'token': token,
+        'provider': provider,
         'add': [for (final f in add) f.toJson()],
         'remove': remove,
       };
 
   factory _State.fromJson(Map<String, dynamic> j) => _State(
         token: j['token'] as String?,
+        provider: j['provider'] as String?,
         add: [for (final f in j['add'] as List? ?? const []) FrameAddress.fromJson(f as Map<String, dynamic>)],
         remove: [for (final u in j['remove'] as List? ?? const []) u as String],
       );

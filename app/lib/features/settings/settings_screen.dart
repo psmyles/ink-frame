@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../battery/battery_watch.dart';
 import '../../data/api_error.dart';
 import '../../data/frame_link.dart';
 import '../../data/models.dart';
@@ -206,8 +207,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (owner) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Row(children: [
-              Expanded(child: Text(l.order, style: theme.textTheme.bodyLarge)),
+            // Large text: the buttons go under the label.
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+              Text(l.order, style: theme.textTheme.bodyLarge),
               SegmentedButton<String>(
                 segments: [
                   ButtonSegment(value: 'random', label: Text(l.orderShuffle)),
@@ -217,7 +224,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 showSelectedIcon: false,
                 onSelectionChanged: (v) => _save({'display_order': v.single}),
               ),
-            ]),
+            ],
+            ),
           ),
           SwitchListTile(
             title: Text(l.quietHours),
@@ -289,6 +297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 }
               : null,
         ),
+        if (ref.watch(batteryWatchProvider).supported) _NotifyTile(address: _a, summary: s, warningOn: battery != null),
         _Section(l.sectionHardware),
         ListTile(
           title: Text(l.frameModel),
@@ -328,6 +337,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           OwnerTools(address: _a, frameName: name),
         ],
       ],
+    );
+  }
+}
+
+/// "Notify me when it's low" on this phone (PLAN.md §15): each person chooses; on by
+/// default for the owner.
+class _NotifyTile extends ConsumerStatefulWidget {
+  const _NotifyTile({required this.address, required this.summary, required this.warningOn});
+
+  final FrameAddress address;
+  final FrameSummary summary;
+  final bool warningOn;
+
+  @override
+  ConsumerState<_NotifyTile> createState() => _NotifyTileState();
+}
+
+class _NotifyTileState extends ConsumerState<_NotifyTile> {
+  bool? _on;
+  var _available = true;
+  var _allowed = true;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+  }
+
+  Future<void> _read() async {
+    final watch = ref.read(batteryWatchProvider);
+    final choice = await watch.choice(widget.address);
+    final available = await watch.available(widget.address);
+    final allowed = await ref.read(notificationsProvider).allowed();
+    if (!mounted) return;
+    setState(() {
+      _on = BatteryWatch.wanted(choice, isOwner: widget.summary.isMine);
+      _available = available;
+      _allowed = allowed;
+    });
+  }
+
+  Future<void> _set(bool on) async {
+    setState(() {
+      _busy = true;
+      _on = on;
+    });
+    try {
+      if (on) await ref.read(notificationsProvider).request();
+      await ref.read(batteryWatchProvider).choose(widget.address, on, ref.read(frameApiProvider(widget.address)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).couldntSave)));
+    }
+    await _read();
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final on = _on;
+    final String hint;
+    if (!widget.warningOn) {
+      hint = l.notifyWarningOff;
+    } else if (!_available) {
+      hint = widget.summary.isMine ? l.notifyNeedsUpdateOwner : l.notifyNeedsUpdate(widget.summary.owner.displayName);
+    } else if (on == true && !_allowed) {
+      hint = l.notifyBlocked;
+    } else {
+      hint = l.notifyLowBatteryHint;
+    }
+    return SwitchListTile(
+      title: Text(l.notifyLowBattery),
+      subtitle: Text(hint),
+      value: (on ?? false) && widget.warningOn && _available,
+      onChanged: on == null || _busy || !widget.warningOn || !_available ? null : _set,
     );
   }
 }

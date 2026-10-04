@@ -6,6 +6,7 @@ import '../features/home/home_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../state/providers.dart';
 import 'frame_card.dart';
+import 'more_frames_card.dart';
 
 /// Two panes from 900 px wide, otherwise the phone layout (app-flow §2.3). Chosen
 /// by window width only, never by platform.
@@ -71,6 +72,7 @@ class _Sidebar extends ConsumerWidget {
                       onTap: () => context.go('/frame/${f.ref}'),
                     ),
                   Align(alignment: Alignment.centerLeft, child: AddMenuButton(label: l.setUpOrJoin)),
+                  const Padding(padding: EdgeInsets.fromLTRB(4, 8, 4, 0), child: MoreFramesCard()),
                 ],
               ),
             ),

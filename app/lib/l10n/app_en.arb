@@ -150,6 +150,16 @@
   "theOwner": "the person who set it up",
   "removedFromFrame": "You're no longer on this frame.",
   "removeFromDevice": "Remove from this device",
+  "frameGone": "{frame} no longer exists: its photo storage was deleted.",
+  "@frameGone": {
+    "placeholders": {
+      "frame": {
+        "type": "String"
+      }
+    }
+  },
+  "frameGoneShort": "No longer exists",
+  "frameGoneJoin": "This frame no longer exists: its photo storage was deleted.",
   "signedOutOfFrame": "You were signed out of this frame.",
   "signInAgain": "Sign in again",
   "unknownFrame": "A frame",
@@ -686,5 +696,33 @@
   "disconnectFrame": "Disconnect",
   "disconnectConfirm": "Disconnect the frame? It clears its photos and settings at its next check. The photos stay in {name}, ready for new hardware.",
   "@disconnectConfirm": {"placeholders": {"name": {"type": "String"}}},
-  "disconnected": "Disconnected. The frame clears itself at its next check."
+  "disconnected": "Disconnected. The frame clears itself at its next check.",
+  "moreFrames": "{count, plural, =1{1 more frame is on your account} other{{count} more frames are on your account}}",
+  "@moreFrames": {"placeholders": {"count": {"type": "int"}}},
+  "moreFramesBody": "{count, plural, =1{It was added on another device. Sign in again to see it here too.} other{They were added on another device. Sign in again to see them here too.}}",
+  "@moreFramesBody": {"placeholders": {"count": {"type": "int"}}},
+  "addToDevice": "Add to this device",
+  "notNow": "Not now",
+  "moreFramesElsewhere": "Your account uses Sign in with Apple, which this device doesn't have. Use Account → Use on another device on your iPhone or Mac instead.",
+  "moreFramesFailed": "Couldn't add them. Check your internet connection and try again.",
+  "batteryLowTitle": "{name}'s battery is low",
+  "@batteryLowTitle": {"placeholders": {"name": {"type": "String"}}},
+  "batteryLowBody": "{pct} % left. Charge it soon so it keeps showing new photos.",
+  "@batteryLowBody": {"placeholders": {"pct": {"type": "int"}}},
+  "batteryChannel": "Low battery",
+  "notifyLowBattery": "Notify me when it's low",
+  "notifyLowBatteryHint": "On this phone.",
+  "notifyBlocked": "Notifications are off for Ink Frame on this phone. Allow them in the phone's settings.",
+  "notifyWarningOff": "Turn on the low battery warning first.",
+  "notifyNeedsUpdateOwner": "Needs the frame update in Owner tools first.",
+  "notifyNeedsUpdate": "Needs {owner} to update the frame first.",
+  "@notifyNeedsUpdate": {"placeholders": {"owner": {"type": "String"}}},
+  "connectedNotifyNote": "This phone will tell you when its battery is low.",
+  "checkBatteriesNow": "Check batteries now",
+  "checkBatteriesNowBody": "Runs the background low-battery check once.",
+  "checkedBatteries": "Checked. Frames with a low battery get a notification (once).",
+  "stepDone": "done",
+  "stepRunning": "in progress",
+  "stepFailed": "didn't work",
+  "stepWaiting": "not started yet"
 }

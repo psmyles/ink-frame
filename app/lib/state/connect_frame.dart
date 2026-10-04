@@ -135,10 +135,11 @@ class ConnectFrame extends Notifier<ConnectState> {
 
   /// Finding gives up after this; with one frame found it connects after [settle].
   static const findLimit = Duration(seconds: 30);
+  static const scanLimit = Duration(seconds: 20);
   static const settle = Duration(seconds: 2);
 
   StreamSubscription<FoundFrame>? _scan;
-  Timer? _findTimer, _settleTimer, _quiet;
+  Timer? _findTimer, _settleTimer, _quiet, _scanTimer;
   StreamSubscription<WifiNetwork>? _wifi;
   StreamSubscription<LinkStatus>? _status;
   PairingLink? _link;
@@ -304,20 +305,28 @@ class ConnectFrame extends Notifier<ConnectState> {
     final link = _link;
     if (link == null) return;
     unawaited(_wifi?.cancel());
+    _scanTimer?.cancel();
     final seen = <String, WifiNetwork>{};
     _emit(state.copyWith(networks: const [], scanningWifi: true).withProblem(null));
-    _wifi = link.wifiScan().timeout(const Duration(seconds: 20)).listen(
+    void stop() {
+      _scanTimer?.cancel();
+      unawaited(_wifi?.cancel());
+      _wifi = null;
+      _emit(state.copyWith(scanningWifi: false));
+    }
+
+    // A frame that never says "done" doesn't keep the list spinning. (Not
+    // Stream.timeout, which holds back the end of the stream.)
+    _scanTimer = Timer(scanLimit, stop);
+    _wifi = link.wifiScan().listen(
       (n) {
         if (n.ssid.isEmpty) return;
         final old = seen[n.ssid];
         if (old == null || n.rssi > old.rssi) seen[n.ssid] = n;
         _emit(state.copyWith(networks: [...seen.values]..sort((a, b) => b.rssi.compareTo(a.rssi))));
       },
-      onError: (Object _) {
-        unawaited(_wifi?.cancel());
-        _emit(state.copyWith(scanningWifi: false));
-      },
-      onDone: () => _emit(state.copyWith(scanningWifi: false)),
+      onError: (Object _) => stop(),
+      onDone: stop,
     );
   }
 
@@ -331,6 +340,7 @@ class ConnectFrame extends Notifier<ConnectState> {
       return;
     }
     unawaited(_wifi?.cancel());
+    _scanTimer?.cancel();
     _password = password;
     _tokenRetried = false;
     _emit(state.copyWith(step: ConnectStep.finishing, ssid: ssid, scanningWifi: false, clearProgress: true).withProblem(null));
@@ -451,11 +461,13 @@ class ConnectFrame extends Notifier<ConnectState> {
     _status = null;
     unawaited(_wifi?.cancel());
     _wifi = null;
+    _scanTimer?.cancel();
     await link?.close();
   }
 
   void _teardown() {
     _quiet?.cancel();
+    _scanTimer?.cancel();
     unawaited(_stopScan());
     unawaited(_closeLink());
   }

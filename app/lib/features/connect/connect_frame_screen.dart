@@ -11,6 +11,7 @@ import '../../state/connect_frame.dart';
 import '../../state/frame_admin.dart';
 import '../../state/providers.dart';
 import '../../state/setup.dart';
+import '../../widgets/checklist_row.dart';
 import 'dev_connect_screen.dart';
 
 /// Opens Connect the frame over everything else (owner only).
@@ -284,22 +285,14 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
       LinkState.claiming => 1,
       _ => 2,
     };
-    Widget row(int i, String title) {
-      final icon = i < at
-          ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-          : i == at
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Padding(padding: EdgeInsets.all(2), child: CircularProgressIndicator(strokeWidth: 2.5)),
-                )
-              : Icon(Icons.radio_button_unchecked, color: theme.colorScheme.outline);
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: icon,
-        title: Text(title, style: TextStyle(fontWeight: i == at ? FontWeight.w600 : null)),
-      );
-    }
+    Widget row(int i, String title) => ChecklistRow(
+          title: title,
+          state: i < at
+              ? CheckState.done
+              : i == at
+                  ? CheckState.running
+                  : CheckState.waiting,
+        );
 
     return [
       Text(l.connectingNamed(name), style: theme.textTheme.headlineSmall),
@@ -319,9 +312,27 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
       Text(l.frameConnected(name), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
       const SizedBox(height: 8),
       Text(l.frameConnectedBody, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+      if (_notifies) ...[
+        const SizedBox(height: 8),
+        Text(l.connectedNotifyNote, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+      ],
       const SizedBox(height: 24),
-      FilledButton(onPressed: () => Navigator.pop(context), child: Text(l.done)),
+      FilledButton(onPressed: _finish, child: Text(l.done)),
     ];
+  }
+
+  /// The owner's phone notifies about low battery unless they turned it off.
+  bool get _notifies =>
+      ref.watch(batteryWatchProvider).supported &&
+      (ref.watch(frameViewProvider(widget.address)).value?.summary?.isMine ?? false);
+
+  /// Done: a good moment to ask for permission to notify (PLAN.md §15).
+  Future<void> _finish() async {
+    final nav = Navigator.of(context);
+    if (_notifies && (await ref.read(batteryWatchProvider).choice(widget.address) ?? true)) {
+      await ref.read(notificationsProvider).request();
+    }
+    nav.pop();
   }
 
   // ── Problems (app-flow §6.2) ──
@@ -378,9 +389,11 @@ class _FrameShowingCode extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    // A picture of the frame's screen: it doesn't grow with the text size.
     return Semantics(
       excludeSemantics: true,
-      child: SizedBox(
+      child: MediaQuery.withNoTextScaling(
+        child: SizedBox(
         width: 220,
         height: 150,
         child: Stack(children: [
@@ -412,6 +425,7 @@ class _FrameShowingCode extends StatelessWidget {
             ),
           ),
         ]),
+        ),
       ),
     );
   }

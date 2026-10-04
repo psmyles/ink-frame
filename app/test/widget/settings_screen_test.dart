@@ -2,12 +2,15 @@
 // others read. The battery warning is app-only ("Saved", no "next check").
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ink_frame/battery/battery_watch.dart';
 import 'package:ink_frame/data/api_error.dart';
 import 'package:ink_frame/data/frames_repository.dart';
 import 'package:ink_frame/data/secure_store.dart';
 import 'package:ink_frame/features/settings/settings_screen.dart';
+import 'package:ink_frame/state/providers.dart';
 import 'package:ink_frame/state/setup.dart';
 
+import '../unit/battery_watch_test.dart' show FakeNotifications, FakeWatchServer;
 import '../unit/fake_platform.dart';
 import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' show alice, kitchen, priya;
@@ -212,6 +215,60 @@ void main() {
     expect(find.text('Not connected yet'), findsOneWidget);
     expect(find.text('Connect the frame'), findsOneWidget);
     expect(find.text('Disconnect'), findsNothing);
+  });
+
+  Future<(FakeFrameApi, FakeWatchServer, FakeNotifications)> withNotify(WidgetTester tester,
+      {bool owner = true, bool allow = true, int? warning = 20}) async {
+    final server = FakeWatchServer();
+    final notifications = FakeNotifications(allow: allow);
+    final api = await pumpFrameScreen(
+      tester,
+      () => const SettingsScreen(address: kitchen),
+      address: kitchen,
+      me: owner ? priya : alice,
+      owner: priya,
+      api: FakeFrameApi(frame: {...frameJson(), 'low_battery_pct': warning}, members: [priya, alice]),
+      overrides: [
+        batteryWatchProvider.overrideWithValue(BatteryWatch(MemoryStore(), httpClient: server.client)),
+        notificationsProvider.overrideWithValue(notifications),
+      ],
+    );
+    await tester.scrollUntilVisible(find.text("Notify me when it's low"), 200);
+    return (api, server, notifications);
+  }
+
+  bool switchOn(WidgetTester tester) => tester.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, "Notify me when it's low")).value;
+
+  testWidgets('notify me when the battery is low: on for the owner, can be turned off', (tester) async {
+    final (api, server, _) = await withNotify(tester);
+    expect(switchOn(tester), isTrue);
+    expect(find.text('On this phone.'), findsOneWidget);
+
+    await tester.tap(find.text("Notify me when it's low"));
+    await tester.pumpAndSettle();
+    expect(switchOn(tester), isFalse);
+    expect(server.revoked, isEmpty, reason: 'no token was made yet in this test');
+  });
+
+  testWidgets('others turn it on themselves; the phone asks for permission', (tester) async {
+    final (api, _, notifications) = await withNotify(tester, owner: false);
+    expect(switchOn(tester), isFalse);
+    await tester.tap(find.text("Notify me when it's low"));
+    await tester.pumpAndSettle();
+    expect(switchOn(tester), isTrue);
+    expect(notifications.asked, 1);
+    expect(api.watchTokens, hasLength(1));
+  });
+
+  testWidgets('notifications blocked, or the warning off: it says so', (tester) async {
+    await withNotify(tester, allow: false);
+    expect(find.textContaining('Notifications are off for Ink Frame'), findsOneWidget);
+  });
+
+  testWidgets('with the warning off there is nothing to notify about', (tester) async {
+    await withNotify(tester, warning: null);
+    expect(switchOn(tester), isFalse);
+    expect(find.text('Turn on the low battery warning first.'), findsOneWidget);
   });
 
   testWidgets('others see no owner tools and no Change', (tester) async {

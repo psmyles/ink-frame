@@ -120,6 +120,19 @@ class FakeFrameApi implements FrameApi {
     return PairingToken(t, DateTime.now().add(const Duration(minutes: 10)));
   }
 
+  /// Watch tokens handed out; [noWatchTokens] acts like a backend from before them.
+  final watchTokens = <String>[];
+  var noWatchTokens = false;
+
+  @override
+  Future<String> createWatchToken() async {
+    if (noWatchTokens) throw const ApiException('not_found', 'No such endpoint.', status: 404);
+    _write('watch-token');
+    final t = 'w${watchTokens.length + 1}'.padRight(43, 'x');
+    watchTokens.add(t);
+    return t;
+  }
+
   @override
   Future<void> disconnect() async {
     _write('disconnect');

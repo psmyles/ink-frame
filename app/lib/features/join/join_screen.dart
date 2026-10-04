@@ -12,6 +12,7 @@ import '../../data/frame_connection.dart';
 import '../../data/frame_link.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
+import '../../widgets/paste_link.dart';
 import '../../widgets/sign_in_buttons.dart';
 import 'scan_screen.dart';
 
@@ -211,6 +212,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         'invalid_invite' => l.inviteInvalid,
         ApiException.offline => l.offline,
         ApiException.asleep => l.asleepJoin,
+        ApiException.gone => l.frameGoneJoin,
         _ => _devDetail(l.somethingWrong, e),
       };
 
@@ -220,7 +222,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   @override
   Widget build(BuildContext context) {
     final title = widget.returning && !(_link?.isInvite ?? false) ? l.signInTitle : l.joinTitle;
-    return Scaffold(
+    final page = Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: Align(
@@ -245,6 +247,14 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
           ),
         ),
       ),
+    );
+    return PasteLinkShortcut(
+      onLink: (link) {
+        if (_step != _Step.link || _busy) return;
+        _linkField.text = link;
+        _submitLink();
+      },
+      child: page,
     );
   }
 

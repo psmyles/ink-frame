@@ -70,6 +70,7 @@ Deno.test({
     let frameId = "";
     let device = { secret: "", hwId: "" };
     let version = 0;
+    let bobWatch = "";
     const imageIds: string[] = [];
     const pngs: Uint8Array<ArrayBuffer>[] = [];
     const upToDate = async () => (await A.db.from("frame").select("up_to_date").single()).data?.up_to_date;
@@ -426,6 +427,37 @@ Deno.test({
         device = { secret: inky.secret, hwId: hw(8) };
       });
 
+      await t.step("watch tokens: battery checks without a session", async () => {
+        const make = async (u: User) => {
+          const r = await call("POST", "/app-api/watch-tokens", { token: u.token });
+          assertEquals(r.status, 201, JSON.stringify(r.body));
+          assertEquals(r.body.watch_token.length, 43);
+          return r.body.watch_token as string;
+        };
+        const watch = (token?: string) => call("GET", "/app-api/watch", { headers: token ? { "x-watch-token": token } : {} });
+        expectError(await call("POST", "/app-api/watch-tokens", { token: (await newUser("stranger")).token }), 403, "not_member");
+
+        const alice = await make(A);
+        bobWatch = await make(B);
+        await sql(env, "update public.frame set battery_pct = 15");
+        const w = await watch(bobWatch);
+        assertEquals(w.status, 200, JSON.stringify(w.body));
+        assertEquals(Object.keys(w.body).sort(), ["battery_pct", "connected", "last_seen_at", "low_battery_pct", "name", "sync_interval_s"]);
+        assertEquals([w.body.battery_pct, w.body.connected], [15, true]);
+
+        expectError(await watch(), 401, "invalid_watch_token");
+        expectError(await watch("not-a-token"), 401, "invalid_watch_token");
+        expectError(await call("GET", "/app-api/watch", { token: A.token }), 401, "invalid_watch_token");
+
+        assertEquals((await call("DELETE", "/app-api/watch", { headers: { "x-watch-token": alice } })).status, 204);
+        expectError(await watch(alice), 401, "invalid_watch_token");
+
+        for (let i = 0; i < 11; i++) await make(B);
+        const [{ n }] = await sql<{ n: number }>(env, `select count(*)::int as n from private.watch_tokens where user_id = '${B.id}'`);
+        assertEquals(n, 10, "only the 10 newest are kept");
+        bobWatch = await make(B);
+      });
+
       await t.step("members: leave, remove, owner stays; photos stay", async () => {
         const p = await upload(B, await makePng(800, 480, 60));
         assertEquals(p.status, 200);
@@ -434,6 +466,7 @@ Deno.test({
         assertEquals((await call("DELETE", `/app-api/members/${C.id}`, { token: C.token })).status, 204, "C leaves");
         assertEquals((await C.db.from("frame").select("id")).data, []);
         assertEquals((await call("DELETE", `/app-api/members/${B.id}`, { token: A.token })).status, 204, "A removes B");
+        expectError(await call("GET", "/app-api/watch", { headers: { "x-watch-token": bobWatch } }), 401, "invalid_watch_token");
         expectError(await call("GET", "/app-api/usage", { token: B.token }), 403, "not_member");
         expectError(await call("DELETE", `/app-api/members/${B.id}`, { token: A.token }), 404, "member_not_found");
         const [img] = await sql<{ uploaded_by: string }>(env, `select uploaded_by from public.images where id = '${p.body.id}'`);

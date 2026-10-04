@@ -272,6 +272,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromDevice => 'Remove from this device';
 
   @override
+  String frameGone(String frame) {
+    return '$frame no longer exists: its photo storage was deleted.';
+  }
+
+  @override
+  String get frameGoneShort => 'No longer exists';
+
+  @override
+  String get frameGoneJoin =>
+      'This frame no longer exists: its photo storage was deleted.';
+
+  @override
   String get signedOutOfFrame => 'You were signed out of this frame.';
 
   @override
@@ -1303,4 +1315,102 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get disconnected =>
       'Disconnected. The frame clears itself at its next check.';
+
+  @override
+  String moreFrames(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more frames are on your account',
+      one: '1 more frame is on your account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moreFramesBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'They were added on another device. Sign in again to see them here too.',
+      one: 'It was added on another device. Sign in again to see it here too.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get addToDevice => 'Add to this device';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get moreFramesElsewhere =>
+      'Your account uses Sign in with Apple, which this device doesn\'t have. Use Account → Use on another device on your iPhone or Mac instead.';
+
+  @override
+  String get moreFramesFailed =>
+      'Couldn\'t add them. Check your internet connection and try again.';
+
+  @override
+  String batteryLowTitle(String name) {
+    return '$name\'s battery is low';
+  }
+
+  @override
+  String batteryLowBody(int pct) {
+    return '$pct % left. Charge it soon so it keeps showing new photos.';
+  }
+
+  @override
+  String get batteryChannel => 'Low battery';
+
+  @override
+  String get notifyLowBattery => 'Notify me when it\'s low';
+
+  @override
+  String get notifyLowBatteryHint => 'On this phone.';
+
+  @override
+  String get notifyBlocked =>
+      'Notifications are off for Ink Frame on this phone. Allow them in the phone\'s settings.';
+
+  @override
+  String get notifyWarningOff => 'Turn on the low battery warning first.';
+
+  @override
+  String get notifyNeedsUpdateOwner =>
+      'Needs the frame update in Owner tools first.';
+
+  @override
+  String notifyNeedsUpdate(String owner) {
+    return 'Needs $owner to update the frame first.';
+  }
+
+  @override
+  String get connectedNotifyNote =>
+      'This phone will tell you when its battery is low.';
+
+  @override
+  String get checkBatteriesNow => 'Check batteries now';
+
+  @override
+  String get checkBatteriesNowBody =>
+      'Runs the background low-battery check once.';
+
+  @override
+  String get checkedBatteries =>
+      'Checked. Frames with a low battery get a notification (once).';
+
+  @override
+  String get stepDone => 'done';
+
+  @override
+  String get stepRunning => 'in progress';
+
+  @override
+  String get stepFailed => 'didn\'t work';
+
+  @override
+  String get stepWaiting => 'not started yet';
 }

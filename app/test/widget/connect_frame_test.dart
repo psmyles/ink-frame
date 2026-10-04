@@ -97,6 +97,8 @@ void main() {
     // Strongest first.
     final names = [for (final t in tester.widgetList<ListTile>(find.byType(ListTile))) ((t.title as Text?)?.data)];
     expect(names.take(4), ['Home', 'Cafe', 'Neighbour', 'Other network…']);
+    expect(find.text('Looking for networks…'), findsNothing, reason: 'the scan finished');
+    expect(find.text('Look again'), findsOneWidget);
     expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Connect')).onPressed, isNull);
 
     await joinWifi(tester, 'Home', 'correct horse');

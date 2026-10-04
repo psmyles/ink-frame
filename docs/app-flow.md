@@ -113,6 +113,7 @@ The app needs each frame's address to sign in. A new device has none, and it may
 - **Use a link or QR code instead** (also the only way for dev-mode email accounts): **Account → "Use on another device"** on a device you still have shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`. Any invite link works too.
 - **Keeping the list**: joining (or signing in with a link) adds frames; leaving takes the frame off; Delete my account removes the account from the directory; sign out only forgets this device's directory token. Changes that can't be sent (offline) go out when the app next starts. The app never waits for the directory, and works without it.
 - An owner on a new device also reconnects Supabase from the frame's settings (§4.4) to regain owner tools.
+- **Frames added on another device** (built in 3g): the app asks the directory at start and on refresh. Frames on the account but not on this device show as a card on Home (and in the desktop sidebar): "1 more frame is on your account. It was added on another device. Sign in again to see it here too." **Add to this device** (Google or Apple, whichever found the account) / **Not now** (until the next start). No names: the directory doesn't keep them.
 
 ---
 
@@ -271,6 +272,7 @@ Card = latest photo as the cover, name, "Set up by …" when it isn't yours, and
 | Time zone | searchable list | defaults to the owner's phone; shown as "Europe/Berlin (CET)" |
 | Check for new photos | picker | 1 h … 2 days, **1 day**; hint: "More often uses more battery" |
 | Low battery warning | picker | Off, 10 %, **20 %**, 30 %; "Shows a warning when the battery drops below this." App-only (the hardware never gets it), so it only says "Saved" and doesn't make the frame "Changes waiting". Notifications for it come in 3g (who gets them: decided then; default the owner) |
+| Notify me when it's low | switch (phones) | Per person and phone: on by default for the owner, off for others; "On this phone." Says why when it can't (warning off, notifications blocked, the frame needs an update). Built in 3g |
 | Frame model | read-only row + "Change" | changing warns "All N photos will be removed, because they were made for the <old> screen", then clears them |
 | Hardware | status + actions | "Connected · reTerminal E1002 · firmware 1.0.2" · **Connect new hardware** (same model keeps the photos) · **Disconnect** (the frame wipes itself at its next check) |
 
@@ -412,6 +414,7 @@ Both go through the contract first (CLAUDE.md rule).
 - **Asleep** (any API returns HTTP 540): owner → "Kitchen's photo storage is asleep because it wasn't used for a while. **Wake it up** (about 3 minutes)." with progress; others → "Kitchen is asleep because it wasn't used for a while. Ask Priya to open Ink Frame to wake it up." The frame keeps showing its photos meanwhile.
 - **Update ready** (owner, bundled backend newer): "An update for Kitchen is ready. **Update** (a few seconds)."
 - **App too old** (backend newer than the app knows): "Update Ink Frame to keep using Kitchen."
+- **No longer exists** (its project was deleted: HTTP 410, or its address is gone while Supabase answers): "Kitchen no longer exists: its photo storage was deleted." **Remove from this device** (also off your account's list). The same button follows "You're no longer on this frame."
 
 ---
 

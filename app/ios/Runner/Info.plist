@@ -46,6 +46,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.psmyles.inkframe.battery</string>
+	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Connect your frame and give it your Wi-Fi details.</string>
 	<key>NSCameraUsageDescription</key>
@@ -91,6 +95,10 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
 	</array>
 </dict>
 </plist>

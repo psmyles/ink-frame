@@ -1,7 +1,7 @@
 // frame_sim: a command-line stand-in for an Ink Frame (PLAN.md §11 Phase 1B step 7).
 //
 //   dart run bin/frame_sim.dart claim --ref <project_ref> --token <pairing token>
-//   dart run bin/frame_sim.dart sync [--force]
+//   dart run bin/frame_sim.dart sync [--force] [--battery 15]
 //   dart run bin/frame_sim.dart status
 //   dart run bin/frame_sim.dart render [--out current.png] [--prev]
 //   dart run bin/frame_sim.dart reset
@@ -22,7 +22,9 @@ Future<void> main(List<String> argv) async {
     ..addOption('ref', help: 'Project ref; sets the API URL to https://<ref>.supabase.co/functions/v1.')
     ..addOption('api', help: 'API base URL, if not using --ref.')
     ..addOption('model', help: 'Model id (default reterminal-e1002).');
-  parser.addCommand('sync').addFlag('force', negatable: false, help: 'Ask for the full manifest.');
+  parser.addCommand('sync')
+    ..addFlag('force', negatable: false, help: 'Ask for the full manifest.')
+    ..addOption('battery', help: 'Battery level to report from now on (default 100).');
   parser.addCommand('status');
   parser.addCommand('render')
     ..addOption('out', help: 'Where to copy the image (default <state>/current.png).')
@@ -49,6 +51,11 @@ Future<void> main(List<String> argv) async {
         final id = await frame.claim(apiBaseUrl: api, pairingToken: cmd.option('token')!, modelId: cmd.option('model'));
         stdout.writeln('claimed frame $id (hw_id ${frame.config['hw_id']})');
       case 'sync':
+        final battery = cmd.option('battery');
+        if (battery != null) {
+          frame.config['battery_pct'] = int.parse(battery).clamp(0, 100);
+          await frame.save();
+        }
         final r = await frame.sync(force: cmd.flag('force'));
         if (!r.manifestChanged) {
           stdout.writeln('manifest ${r.manifestVersion} unchanged; ${r.total} images cached');

@@ -28,6 +28,8 @@ class FakeConnection extends FrameConnection {
   @override
   Future<void> signOut() async => _signedIn = false;
   @override
+  Future<bool> isGone() async => false;
+  @override
   Future<FrameSummary> loadSummary() async =>
       _signedIn ? summary : throw const ApiException(ApiException.signedOut, 'Not signed in.');
 }

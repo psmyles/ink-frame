@@ -514,6 +514,24 @@ abstract class AppLocalizations {
   /// **'Remove from this device'**
   String get removeFromDevice;
 
+  /// No description provided for @frameGone.
+  ///
+  /// In en, this message translates to:
+  /// **'{frame} no longer exists: its photo storage was deleted.'**
+  String frameGone(String frame);
+
+  /// No description provided for @frameGoneShort.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer exists'**
+  String get frameGoneShort;
+
+  /// No description provided for @frameGoneJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'This frame no longer exists: its photo storage was deleted.'**
+  String get frameGoneJoin;
+
   /// No description provided for @signedOutOfFrame.
   ///
   /// In en, this message translates to:
@@ -2157,6 +2175,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnected. The frame clears itself at its next check.'**
   String get disconnected;
+
+  /// No description provided for @moreFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more frame is on your account} other{{count} more frames are on your account}}'**
+  String moreFrames(int count);
+
+  /// No description provided for @moreFramesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{It was added on another device. Sign in again to see it here too.} other{They were added on another device. Sign in again to see them here too.}}'**
+  String moreFramesBody(int count);
+
+  /// No description provided for @addToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to this device'**
+  String get addToDevice;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @moreFramesElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account uses Sign in with Apple, which this device doesn\'t have. Use Account → Use on another device on your iPhone or Mac instead.'**
+  String get moreFramesElsewhere;
+
+  /// No description provided for @moreFramesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add them. Check your internet connection and try again.'**
+  String get moreFramesFailed;
+
+  /// No description provided for @batteryLowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s battery is low'**
+  String batteryLowTitle(String name);
+
+  /// No description provided for @batteryLowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct} % left. Charge it soon so it keeps showing new photos.'**
+  String batteryLowBody(int pct);
+
+  /// No description provided for @batteryChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Low battery'**
+  String get batteryChannel;
+
+  /// No description provided for @notifyLowBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when it\'s low'**
+  String get notifyLowBattery;
+
+  /// No description provided for @notifyLowBatteryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone.'**
+  String get notifyLowBatteryHint;
+
+  /// No description provided for @notifyBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for Ink Frame on this phone. Allow them in the phone\'s settings.'**
+  String get notifyBlocked;
+
+  /// No description provided for @notifyWarningOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the low battery warning first.'**
+  String get notifyWarningOff;
+
+  /// No description provided for @notifyNeedsUpdateOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the frame update in Owner tools first.'**
+  String get notifyNeedsUpdateOwner;
+
+  /// No description provided for @notifyNeedsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs {owner} to update the frame first.'**
+  String notifyNeedsUpdate(String owner);
+
+  /// No description provided for @connectedNotifyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone will tell you when its battery is low.'**
+  String get connectedNotifyNote;
+
+  /// No description provided for @checkBatteriesNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check batteries now'**
+  String get checkBatteriesNow;
+
+  /// No description provided for @checkBatteriesNowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs the background low-battery check once.'**
+  String get checkBatteriesNowBody;
+
+  /// No description provided for @checkedBatteries.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked. Frames with a low battery get a notification (once).'**
+  String get checkedBatteries;
+
+  /// No description provided for @stepDone.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get stepDone;
+
+  /// No description provided for @stepRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'in progress'**
+  String get stepRunning;
+
+  /// No description provided for @stepFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'didn\'t work'**
+  String get stepFailed;
+
+  /// No description provided for @stepWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'not started yet'**
+  String get stepWaiting;
 }
 
 class _AppLocalizationsDelegate

@@ -69,6 +69,19 @@ class FramePage extends StatelessWidget {
                     },
                   ),
                 ]),
+                Row(children: [
+                  Text('Battery ${frame.battery} %'),
+                  Expanded(
+                    child: Slider(
+                      value: frame.battery.toDouble(),
+                      max: 100,
+                      divisions: 20,
+                      label: '${frame.battery} %',
+                      onChanged: (v) => frame.setBattery(v.round()),
+                    ),
+                  ),
+                  const Text('(sent at the next check)'),
+                ]),
                 Text(
                   'Pretend Wi-Fi: any password works except "wrong"; "Far away" is never found. '
                   'hw_id ${frame.hwId}',

@@ -74,6 +74,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       bindings: {
         const SingleActivator(LogicalKeyboardKey.arrowRight): () => _go(1, images.length),
         const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _go(-1, images.length),
+        const SingleActivator(LogicalKeyboardKey.escape): () => Navigator.maybePop(context),
       },
       child: Focus(
         autofocus: true,
