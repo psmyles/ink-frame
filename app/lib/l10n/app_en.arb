@@ -4,7 +4,6 @@
   "tagline": "Your family's photos on e-ink frames.",
   "invited": "I've been invited",
   "setUpFrame": "Set up a frame",
-  "alreadyUse": "Already use Ink Frame? Sign in",
   "joinWithInvite": "Join with an invite",
   "continueAction": "Continue",
   "tryAgain": "Try again",
@@ -19,12 +18,11 @@
   "signInLinkHelp": "Paste the link from \"Use on another device\" on your other phone or computer, or any invite link.",
   "invalidLink": "That doesn't look like an Ink Frame link. Copy the whole link and try again.",
   "signInExplain": "Your account is only used to recognise you, and to find your frames when you sign in on a new device.",
-  "findExplain": "Sign in with the account you used before, and your frames will appear.",
   "findingFrames": "Looking for your frames…",
-  "noFramesFound": "No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.",
+  "noFramesOnAccount": "There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.",
+  "differentAccount": "Use a different account",
   "findOffline": "Can't look for your frames right now. Check your internet connection and try again.",
   "findFailed": "Couldn't look for your frames. Try again, or use a link or QR code.",
-  "useLinkInstead": "Use a link or QR code instead",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
   "appleHint": "Use Google if you also want to use Ink Frame on Android or a computer.",
@@ -608,7 +606,7 @@
     }
   },
   "anotherDevice": "Use on another device",
-  "anotherDeviceExplain": "On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don't, choose “Use a link or QR code instead” there and scan this.",
+  "anotherDeviceExplain": "On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don't, choose “I've been invited” there and scan this.",
   "deleteAccount": "Delete my account",
   "deleteAccountBody": "You'll leave these frames and your account on them is deleted:",
   "deletePhotosToo": "Also delete my photos",
@@ -640,7 +638,27 @@
   "lookingForFrame": "Looking for the frame…",
   "lookingHint": "Keep it close, with the code showing on its screen.",
   "whichFrame": "Which frame?",
-  "whichFrameHint": "Pick the name shown on the frame's screen.",
+  "whichFrameHint": "Pick the one whose 4 characters match the frame's screen.",
+  "isThisYourFrame": "Is this your frame?",
+  "matchFrameHint": "Check that the frame's screen shows the same 4 characters.",
+  "yesConnect": "Yes, connect",
+  "notThisOne": "Not this one? Look again",
+  "pairingNamed": "Connecting to {name}…",
+  "@pairingNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectedTo": "Connected to {name}",
+  "@connectedTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "pairingTitle": "Connecting to the frame…",
   "pairingHint": "When asked, type the 6-digit code shown on the frame.",
   "startAgain": "Start again",

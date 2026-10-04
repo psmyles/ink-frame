@@ -12,7 +12,9 @@ App side: `app/lib/ble/` (built in 3f). Firmware side: `src/ble/provisioning.*` 
   6-digit **passkey**, shows it on screen with its name, and advertises for 10 minutes,
   then sleeps.
 - Name `InkFrame-XXXX`, where `XXXX` is the last 4 hex digits of its `hw_id`, upper
-  case, also shown on screen, so a list of several frames can be matched to the right one.
+  case, also shown on screen (large, next to the passkey). The app always asks you to
+  match it before connecting, even when it finds only one frame, so a neighbour's frame
+  in PAIRING isn't taken by mistake.
 - The advertisement carries the service UUID (the app scans for it). The name goes in
   the **scan response**: flags + a 128-bit UUID + the name don't fit in 31 bytes.
 - Connectable, one connection at a time.

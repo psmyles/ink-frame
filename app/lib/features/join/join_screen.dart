@@ -12,23 +12,22 @@ import '../../data/frame_connection.dart';
 import '../../data/frame_link.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/providers.dart';
+import '../../widgets/password_sign_in.dart';
 import '../../widgets/paste_link.dart';
 import '../../widgets/sign_in_buttons.dart';
 import 'scan_screen.dart';
 
-enum _Step { find, link, signIn, name }
+enum _Step { link, signIn, name }
 
-/// Join with an invite, or sign in on a new device (app-flow §1.2, §1.4).
-///
-/// On a new device, signing in with Google/Apple asks the directory for your frames.
-/// A link works too: an invite link (with a code) joins one frame; a "Use on another
-/// device" link signs in to every frame in it that you're still on.
+/// Join with a link (app-flow §1.2, §1.4): an invite link (with a code) joins one
+/// frame; a "Use on another device" link signs in to every frame in it that you're
+/// still on. A recent sign-in (Welcome, §1.1) is used without asking again.
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key, this.initialLink, this.returning = false});
 
   final String? initialLink;
 
-  /// Opened from "Already use Ink Frame? Sign in".
+  /// Opened from "Sign in again" on a frame you were signed out of.
   final bool returning;
 
   @override
@@ -38,8 +37,6 @@ class JoinScreen extends ConsumerStatefulWidget {
 class _JoinScreenState extends ConsumerState<JoinScreen> {
   final _linkField = TextEditingController();
   final _nameField = TextEditingController();
-  final _emailField = TextEditingController();
-  final _passwordField = TextEditingController();
 
   var _step = _Step.link;
   FrameLink? _link;
@@ -52,7 +49,6 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   void initState() {
     super.initState();
     final initial = widget.initialLink;
-    if (widget.returning && initial == null && _canFind) _step = _Step.find;
     if (initial != null) {
       _linkField.text = initial;
       WidgetsBinding.instance.addPostFrameCallback((_) => _submitLink());
@@ -61,55 +57,13 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
   @override
   void dispose() {
-    for (final c in [_linkField, _nameField, _emailField, _passwordField]) {
+    for (final c in [_linkField, _nameField]) {
       c.dispose();
     }
     super.dispose();
   }
 
   AppLocalizations get l => AppLocalizations.of(context);
-
-  /// The directory needs a Google or Apple sign-in (not dev-mode email).
-  bool get _canFind =>
-      ref.read(frameDirectoryProvider).available &&
-      ref.read(signInServiceProvider).methods(devMode: false).isNotEmpty;
-
-  /// New device: sign in, ask the directory for your frames, sign in to each.
-  Future<void> _find(Future<IdTokenCredential> Function() get) async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final credential = await get();
-      final directory = ref.read(frameDirectoryProvider);
-      final List<FrameAddress> frames;
-      try {
-        frames = await directory.signIn(credential);
-      } on ApiException catch (e) {
-        setState(() => _error = e.code == ApiException.offline ? l.findOffline : _devDetail(l.findFailed, e));
-        return;
-      }
-      ref.read(lastCredentialProvider.notifier).set(credential);
-      final skipped = await ref.read(framesRepositoryProvider).signInAll(frames, credential);
-      unawaited(directory.remove(skipped));
-      await ref.read(framesProvider.notifier).signedIn(frames);
-      if (!mounted) return;
-      if (skipped.length == frames.length) {
-        setState(() => _error = l.noFramesFound);
-        return;
-      }
-      context.go('/home');
-    } on SignInCancelled {
-      // Stay put, no error.
-    } on ApiException catch (e) {
-      setState(() => _error = _message(e));
-    } catch (e) {
-      setState(() => _error = _devDetail(l.somethingWrong, e));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
 
   void _submitLink() {
     final link = FrameLink.parse(_linkField.text);
@@ -236,7 +190,6 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                 child: KeyedSubtree(
                   key: ValueKey(_step),
                   child: switch (_step) {
-                    _Step.find => _findStep(),
                     _Step.link => _linkStep(),
                     _Step.signIn => _signInStep(),
                     _Step.name => _nameStep(),
@@ -298,37 +251,6 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         ],
       );
 
-  Widget _findStep() {
-    final methods = ref.read(signInServiceProvider).methods(devMode: false);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _help(l.findExplain),
-        SignInButtons(methods: methods, onPressed: _find, busy: _busy),
-        if (_busy)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5)),
-              const SizedBox(width: 12),
-              Text(l.findingFrames),
-            ]),
-          ),
-        _errorText(),
-        const SizedBox(height: 24),
-        TextButton(
-          onPressed: _busy
-              ? null
-              : () => setState(() {
-                    _step = _Step.link;
-                    _error = null;
-                  }),
-          child: Text(l.useLinkInstead),
-        ),
-      ],
-    );
-  }
-
   Widget _signInStep() {
     final devMode = ref.watch(devModeProvider).value ?? false;
     final methods = ref.read(signInServiceProvider).methods(devMode: devMode);
@@ -338,36 +260,12 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         _help(l.signInExplain),
         if (methods.isEmpty) _help(l.noSignInMethods),
         SignInButtons(methods: methods, onPressed: _signIn, busy: _busy),
-        if (methods.contains(SignInMethod.password)) ...[
-          const SizedBox(height: 8),
-          Text(l.devSignIn, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _emailField,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            decoration: InputDecoration(labelText: l.email),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _passwordField,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l.password),
-            onSubmitted: (_) => _passwordSignIn(),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : _passwordSignIn, child: Text(l.signIn)),
-        ],
+        if (methods.contains(SignInMethod.password))
+          PasswordSignIn(busy: _busy, onSignIn: (c) => _signIn(() async => c)),
         if (_busy) const Padding(padding: EdgeInsets.only(top: 20), child: Center(child: CircularProgressIndicator())),
         _errorText(),
       ],
     );
-  }
-
-  void _passwordSignIn() {
-    final email = _emailField.text.trim(), password = _passwordField.text;
-    if (email.isEmpty || password.length < 6) return;
-    _signIn(() async => PasswordCredential(email, password));
   }
 
   Widget _nameStep() => Column(

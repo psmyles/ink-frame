@@ -74,10 +74,10 @@ Future<void> pumpApp(WidgetTester tester, Size size, {List<FrameAddress> frames 
 }
 
 void main() {
-  testWidgets('no frames: Welcome', (tester) async {
+  testWidgets('no frames: Welcome, which starts with signing in', (tester) async {
     await pumpApp(tester, const Size(400, 800));
-    expect(find.text("I've been invited"), findsOneWidget);
-    expect(find.text('Set up a frame'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Set up a frame'), findsNothing);
   });
 
   testWidgets('narrow window: the phone layout, a list of frame cards', (tester) async {

@@ -55,10 +55,17 @@ Future<void> run(WidgetTester tester, [Duration d = const Duration(milliseconds:
   }
 }
 
-/// Find → (settle) → pair → the Wi-Fi list.
-Future<void> findAndPair(WidgetTester tester) async {
+/// Find → (settle) → the frames found.
+Future<void> findFrames(WidgetTester tester) async {
   await tester.tap(find.text('Find the frame'));
   await run(tester, ConnectFrame.settle + const Duration(milliseconds: 500));
+}
+
+/// Find → "Is this your frame?" → Yes, connect → pair → the Wi-Fi list.
+Future<void> findAndPair(WidgetTester tester) async {
+  await findFrames(tester);
+  await tester.tap(find.text('Yes, connect'));
+  await run(tester);
 }
 
 Future<void> joinWifi(WidgetTester tester, String ssid, String password) async {
@@ -93,10 +100,11 @@ void main() {
 
     await findAndPair(tester);
     expect(hw.pairings, 1);
+    expect(find.text('Connected to InkFrame-1A2B'), findsOneWidget);
     expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
     // Strongest first.
     final names = [for (final t in tester.widgetList<ListTile>(find.byType(ListTile))) ((t.title as Text?)?.data)];
-    expect(names.take(4), ['Home', 'Cafe', 'Neighbour', 'Other network…']);
+    expect(names.take(5), ['Connected to InkFrame-1A2B', 'Home', 'Cafe', 'Neighbour', 'Other network…']);
     expect(find.text('Looking for networks…'), findsNothing, reason: 'the scan finished');
     expect(find.text('Look again'), findsOneWidget);
     expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Connect')).onPressed, isNull);
@@ -241,12 +249,33 @@ void main() {
     final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
     final a = FakeHardware(suffix: '1A2B'), b = FakeHardware(suffix: '9F00');
     await open(tester, FakeBluetooth([b, a]), api: api);
-    await findAndPair(tester);
+    await findFrames(tester);
     expect(find.text('Which frame?'), findsOneWidget);
-    expect(find.text('InkFrame-1A2B'), findsOneWidget);
-    await tester.tap(find.text('InkFrame-9F00'));
+    expect(find.text('1A2B'), findsOneWidget);
+    await tester.tap(find.text('9F00'));
     await run(tester);
     expect((a.pairings, b.pairings), (0, 1));
+  });
+
+  testWidgets('one frame found: nothing happens until you match its 4 characters', (tester) async {
+    final api = FakeFrameApi(frame: frameJson(connected: false), members: [priya]);
+    final hw = hardware(api);
+    await open(tester, FakeBluetooth([hw]), api: api);
+    await findFrames(tester);
+    await run(tester, const Duration(seconds: 5));
+    expect(find.text('Is this your frame?'), findsOneWidget);
+    expect(find.text('1A2B'), findsOneWidget);
+    expect(hw.pairings, 0, reason: 'not connected until you say so');
+
+    await tester.tap(find.text('Not this one? Look again'));
+    await run(tester);
+    expect(find.text('Looking for the frame…'), findsOneWidget);
+    await run(tester, ConnectFrame.settle);
+    await tester.tap(find.text('Yes, connect'));
+    await run(tester);
+    expect(find.text('Connecting to InkFrame-1A2B…'), findsNothing, reason: 'paired already');
+    expect(find.text('Connected to InkFrame-1A2B'), findsOneWidget);
+    expect(hw.pairings, 1);
   });
 
   testWidgets('Bluetooth off, permission refused, nothing found', (tester) async {

@@ -43,7 +43,7 @@ Future<FakeLinks> pump(WidgetTester tester) async {
 void main() {
   testWidgets('an invite link opens Join with the link filled in', (tester) async {
     final links = await pump(tester);
-    expect(find.text("I've been invited"), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
     final invite = FrameLink([kitchen], 'ABCDE-FGHJK');
     links.controller.add(Uri.parse('inkframe://join?${invite.toHttps().split('#').last}'));
     await tester.pumpAndSettle();
@@ -57,6 +57,6 @@ void main() {
     container.read(routerProvider).go('/?u=https://x.supabase.co&k=sb_publishable_x');
     await tester.pumpAndSettle();
     expect(find.textContaining('Page Not Found', findRichText: true), findsNothing);
-    expect(find.text("I've been invited"), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
   });
 }

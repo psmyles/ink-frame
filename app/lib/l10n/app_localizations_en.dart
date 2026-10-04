@@ -22,9 +22,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setUpFrame => 'Set up a frame';
 
   @override
-  String get alreadyUse => 'Already use Ink Frame? Sign in';
-
-  @override
   String get joinWithInvite => 'Join with an invite';
 
   @override
@@ -71,15 +68,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account is only used to recognise you, and to find your frames when you sign in on a new device.';
 
   @override
-  String get findExplain =>
-      'Sign in with the account you used before, and your frames will appear.';
-
-  @override
   String get findingFrames => 'Looking for your frames…';
 
   @override
-  String get noFramesFound =>
-      'No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.';
+  String get noFramesOnAccount =>
+      'There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.';
+
+  @override
+  String get differentAccount => 'Use a different account';
 
   @override
   String get findOffline =>
@@ -88,9 +84,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get findFailed =>
       'Couldn\'t look for your frames. Try again, or use a link or QR code.';
-
-  @override
-  String get useLinkInstead => 'Use a link or QR code instead';
 
   @override
   String get continueWithGoogle => 'Continue with Google';
@@ -1066,7 +1059,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anotherDeviceExplain =>
-      'On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don\'t, choose “Use a link or QR code instead” there and scan this.';
+      'On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.';
 
   @override
   String get deleteAccount => 'Delete my account';
@@ -1146,7 +1139,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whichFrame => 'Which frame?';
 
   @override
-  String get whichFrameHint => 'Pick the name shown on the frame\'s screen.';
+  String get whichFrameHint =>
+      'Pick the one whose 4 characters match the frame\'s screen.';
+
+  @override
+  String get isThisYourFrame => 'Is this your frame?';
+
+  @override
+  String get matchFrameHint =>
+      'Check that the frame\'s screen shows the same 4 characters.';
+
+  @override
+  String get yesConnect => 'Yes, connect';
+
+  @override
+  String get notThisOne => 'Not this one? Look again';
+
+  @override
+  String pairingNamed(String name) {
+    return 'Connecting to $name…';
+  }
+
+  @override
+  String connectedTo(String name) {
+    return 'Connected to $name';
+  }
 
   @override
   String get pairingTitle => 'Connecting to the frame…';

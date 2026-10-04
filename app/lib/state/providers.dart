@@ -157,6 +157,12 @@ class LastCredential extends Notifier<Credential?> {
     state = c;
   }
 
+  /// Signed out, or choosing another account.
+  void clear() {
+    _at = null;
+    state = null;
+  }
+
   Credential? get fresh =>
       state != null && DateTime.now().difference(_at!) < const Duration(minutes: 50) ? state : null;
 }

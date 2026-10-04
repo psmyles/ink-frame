@@ -134,8 +134,24 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
     ];
   }
 
+  /// You match the 4 characters the frame shows (`InkFrame-XXXX`) before connecting,
+  /// even with one frame found: a neighbour's could be the one nearby.
   List<Widget> _choose(ConnectState s) {
     final theme = Theme.of(context);
+    final lookAgain = TextButton(onPressed: _flow.start, child: Text(l.notThisOne));
+    if (s.found.length == 1) {
+      final f = s.found.single;
+      return [
+        Text(l.isThisYourFrame, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: 8),
+        Text(l.matchFrameHint),
+        const SizedBox(height: 24),
+        Center(child: _Suffix(f)),
+        const SizedBox(height: 32),
+        FilledButton(onPressed: () => _flow.choose(f), child: Text(l.yesConnect)),
+        lookAgain,
+      ];
+    }
     return [
       Text(l.whichFrame, style: theme.textTheme.headlineSmall),
       const SizedBox(height: 8),
@@ -145,18 +161,23 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
         Card(
           child: ListTile(
             leading: const Icon(Icons.crop_landscape),
-            title: Text(f.label),
+            title: Text(f.suffix.isEmpty ? f.label : f.suffix, style: _suffixStyle(theme.textTheme.titleLarge)),
+            subtitle: Text(f.label),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _flow.choose(f),
           ),
         ),
       const SizedBox(height: 16),
       const LinearProgressIndicator(),
+      lookAgain,
     ];
   }
 
   List<Widget> _pairing(ConnectState s, String name) {
-    if (s.problem == null) return _waiting(l.pairingTitle, l.pairingHint);
+    if (s.problem == null) {
+      final target = s.target;
+      return _waiting(target == null ? l.pairingTitle : l.pairingNamed(target.label), l.pairingHint);
+    }
     if (s.problem == ConnectProblem.modelMismatch) return _modelMismatch(s, name);
     return [
       ..._problem(s, name),
@@ -198,6 +219,10 @@ class _ConnectFrameScreenState extends ConsumerState<ConnectFrameScreen> {
     final needsPassword = _other || (picked?.secure ?? false);
     final ready = ssid.isNotEmpty && (!needsPassword || _other || _password.text.length >= 8);
     return [
+      if (s.target case final t?) ...[
+        ChecklistRow(title: l.connectedTo(t.label), state: CheckState.done),
+        const SizedBox(height: 12),
+      ],
       Text(l.wifiTitle, style: theme.textTheme.headlineSmall),
       const SizedBox(height: 8),
       Text(l.wifiHint),
@@ -432,6 +457,37 @@ class _FrameShowingCode extends StatelessWidget {
 }
 
 /// What [FoundFrame] lists show when the name hasn't arrived yet.
+TextStyle? _suffixStyle(TextStyle? base) =>
+    base?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 4, fontFeatures: const [FontFeature.tabularFigures()]);
+
+/// A found frame's `XXXX`, large, to compare with the frame's screen.
+class _Suffix extends StatelessWidget {
+  const _Suffix(this.frame);
+
+  final FoundFrame frame;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      label: frame.label,
+      excludeSemantics: true,
+      child: Column(children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.colorScheme.outline, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(frame.suffix.isEmpty ? '····' : frame.suffix, style: _suffixStyle(theme.textTheme.displaySmall)),
+        ),
+        const SizedBox(height: 8),
+        Text(frame.label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+      ]),
+    );
+  }
+}
+
 extension FoundFrameName on FoundFrame {
   String get label => name.isEmpty ? Pairing.namePrefix : name;
 }

@@ -40,26 +40,32 @@
 ## 1. First run
 
 ### 1.1 Welcome
+Signing in always comes first (changed 2026-10-04; it was "I've been invited" / "Set up a frame" / "Already use Ink Frame? Sign in").
 ```
-┌─────────────────────────────┐
-│        [frame illustration]  │
-│         Ink Frame            │
-│  Your family's photos on     │
-│  e-ink frames.               │
-│                              │
-│  [ I've been invited ]       │  ← primary: most people are invited
-│  [ Set up a frame ]          │  ← secondary: the person who owns the frame
-│                              │
-│  Already use Ink Frame? Sign in │ (new phone: see 1.4)
-└─────────────────────────────┘
+┌─────────────────────────────┐      ┌─────────────────────────────┐
+│        [frame illustration]  │      │        [frame illustration]  │
+│         Ink Frame            │      │        No frames yet         │
+│  Your family's photos on     │      │  There are no frames on this │
+│  e-ink frames.               │ ───► │  account yet. Set up your    │
+│                              │ none │  own frame, or join one with │
+│  [ Continue with Google ]    │      │  the invite you were sent. … │
+│  [ Continue with Apple ]     │      │  [ I've been invited ]       │ ← primary: most people are invited
+│  Your account is only used   │      │  [ Set up a frame ]          │
+│  to recognise you, …         │      │  Use a different account     │
+└─────────────────────────────┘      └─────────────────────────────┘
 ```
+- **Continue with Google/Apple** (and email/password in developer mode) → "Looking for your frames…": the directory (§1.4) lists the account's frames, the app signs in to each, then **Home**. Frames you were removed from, or that no longer exist, are skipped and taken off the list.
+- **None found** → the right-hand screen. **I've been invited** and **Set up a frame** reuse this sign-in (it stays usable for about 50 minutes), so neither asks again. **Use a different account** goes back to signing in, and Google asks which account.
+- **Couldn't look** (offline, the directory down, a frame asleep): the same screen with the reason and **Try again** in place of "No frames yet", so setting up or joining is never blocked. Without a directory, or with a developer email sign-in, it goes straight to that screen without the "on this account" sentence.
+- Coming back to Welcome with the sign-in still recent (after leaving your last frame) opens the right-hand screen; after **Sign out** or deleting the account it starts with signing in.
+- An invite link opened from outside the app still goes straight to Join (§1.2), which asks to sign in there if there's no recent sign-in.
 
 ### 1.2 Join a frame (invited)
 1. **Get the invite**: one of
    - opened from an invite link (skips this screen),
    - **Scan QR** (mobile),
    - **Paste link** (all platforms; desktop's main path). A bare code isn't enough because the app also needs the frame's address, so the paste box asks for the whole link.
-2. **Sign in**: "Continue with Google" / "Continue with Apple" (per platform, §7.1). Copy: *"Your account is only used to recognise you, and to find your frames when you sign in on a new device."* Joining a second frame reuses the same sign-in without asking again. After joining, the frame goes on your list in the directory (§1.4).
+2. **Sign in**: skipped after signing in on Welcome (§1.1); otherwise "Continue with Google" / "Continue with Apple" (per platform, §7.1). Copy: *"Your account is only used to recognise you, and to find your frames when you sign in on a new device."* Joining a second frame reuses the same sign-in without asking again. After joining, the frame goes on your list in the directory (§1.4).
 3. **Your name**: "What should the others see?" For the first frame it's empty (with the Google/Apple first name as a suggestion chip); for later frames it's pre-filled with the name you used before.
 4. `POST /invites/accept` → the **Frame** screen, with a one-time tip: *"Add photos with the + button. The frame checks for new photos once a day, or press its green button to check now."*
 
@@ -95,22 +101,9 @@ Set up a frame
 ### 1.4 Returning on a new device
 The app needs each frame's address to sign in. A new device has none, and it may be the only device the person has left, so signing in alone has to be enough. The **directory** (`central/directory/`, `shared/api/directory.yaml`) keeps, for each Google or Apple account, the addresses of the frames it's on. Addresses (project URL + publishable key) aren't secret; the directory stores a hash of the account ID, not names or emails.
 
-```
-┌─────────────────────────────┐
-│ Sign in                      │
-│ Sign in with the account you │
-│ used before, and your frames │
-│ will appear.                 │
-│ [ Continue with Google ]     │
-│ [ Continue with Apple ]      │  (iOS/macOS)
-│                              │
-│ Use a link or QR code instead│
-└─────────────────────────────┘
-```
-
-- "Already use Ink Frame? Sign in" → **Continue with Google/Apple** → "Looking for your frames…" → signed in to each → Home. Frames you've since been removed from are skipped and taken off your list, without a note.
-- **Nothing found**: "No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite." Offline: "Can't look for your frames right now…"
-- **Use a link or QR code instead** (also the only way for dev-mode email accounts): **Account → "Use on another device"** on a device you still have shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`. Any invite link works too.
+- Signing in on Welcome (§1.1) is the whole flow: "Looking for your frames…" → signed in to each → Home. Frames you've since been removed from are skipped and taken off your list, without a note.
+- **Nothing found**: "No frames yet" with set up / join (§1.1), and "If you used a different account before, try that one." Offline: "Can't look for your frames right now…"
+- **A link or QR code instead** (also the only way for dev-mode email accounts): **Account → "Use on another device"** on a device you still have shows a QR and a link holding the addresses of **all** your frames (no invite codes): `…/join#u=<url1>&k=<key1>&u=<url2>&k=<key2>`. On the new device: sign in, then **I've been invited** → scan or paste it. Any invite link works too.
 - **Keeping the list**: joining (or signing in with a link) adds frames; leaving takes the frame off; Delete my account removes the account from the directory; sign out only forgets this device's directory token. Changes that can't be sent (offline) go out when the app next starts. The app never waits for the directory, and works without it.
 - An owner on a new device also reconnects Supabase from the frame's settings (§4.4) to regain owner tools.
 - **Frames added on another device** (built in 3g): the app asks the directory at start and on refresh. Frames on the account but not on this device show as a card on Home (and in the desktop sidebar): "1 more frame is on your account. It was added on another device. Sign in again to see it here too." **Add to this device** (Google or Apple, whichever found the account) / **Not now** (until the next start). No names: the directory doesn't keep them.
@@ -311,8 +304,8 @@ Reached from setup (§1.3), from "Not connected yet", or from Settings → Hardw
 
 ### 6.1 Steps
 1. **Get ready**: illustration: "Hold the frame's green button for 3 seconds until it shows a 6-digit code." (First-time frames show it on power-up.)
-2. **Find**: scan for `InkFrame-XXXX`. One found → auto-select; several → list with the XXXX suffix matching the frame's screen.
-3. **Connect**: the OS pairing prompt asks for the code shown on the frame.
+2. **Find**: scan for `InkFrame-XXXX`, then **always ask** (changed 2026-10-04; one frame used to be picked by itself): one found → "Is this your frame? Check that the frame's screen shows the same 4 characters." with `XXXX` large, **Yes, connect** / **Not this one? Look again**; several → a list, each with its `XXXX` large. Nothing connects until you've matched it.
+3. **Connect**: "Connecting to InkFrame-XXXX…"; the OS pairing prompt asks for the 6-digit code shown on the frame. Then the Wi-Fi step starts with "✓ Connected to InkFrame-XXXX".
 4. **Wi-Fi**: networks the frame can see (from `wifi_scan`), strongest first; pick one, enter the password (show/hide). Note: *"The frame needs a 2.4 GHz network."* "Other network…" for hidden SSIDs.
 5. **Finishing**: a checklist driven by `status` notifications: Joining Wi-Fi → Linking to Kitchen → Getting photos → **Done**. The frame's screen shows its first photo, or "Ready. Add photos in the Ink Frame app."
 
@@ -334,7 +327,7 @@ The pairing token is requested just before step 5 and re-requested automatically
 ### 6.3 Without Bluetooth (desktop testing, dev mode)
 "Connect the frame" offers **Connect with a code (developer)**: shows a pairing token to paste into `frame_sim claim`. The frame shows as connected after its first check.
 
-**Built in 3f** (protocol: docs/pairing.md): one full-screen page that moves through the steps. Get ready shows a drawing of the frame with its name and code and the green button, and, when hardware is already connected, "The frame connected to Kitchen now stops showing photos once this one is connected. The photos stay." Find auto-picks a single frame after 2 s. The model and link checks happen right after pairing (from `info`), before Wi-Fi. Wi-Fi failures say why when the frame knows (wrong password / network not found / other), plus "The frame joined Home but couldn't reach the internet." Finishing has three rows (Joining Home, Linking to Kitchen, Getting photos); the end is "Kitchen is connected" + "It shows a photo in a moment. Photos you add appear at its next check, or press its green button to check now." The frame screen shows **Connect the frame** under "Not connected yet" (owner), and hides the green-button hint until a frame is connected. Settings → The frame: **Connect new hardware** and **Disconnect** (confirm: "It clears its photos and settings at its next check. The photos stay in Kitchen, ready for new hardware."), or **Connect the frame**. "Open settings" for a refused Bluetooth permission exists on iOS and macOS only (Android asks again on Try again). Connect with a code waits for the claim (a new `hw_id`, or the same one checking in again). To try it on a phone before the firmware: `tools/ble_frame`.
+**Built in 3f** (protocol: docs/pairing.md): one full-screen page that moves through the steps. Get ready shows a drawing of the frame with its name and code and the green button, and, when hardware is already connected, "The frame connected to Kitchen now stops showing photos once this one is connected. The photos stay." Find auto-picked a single frame after 2 s (now: always asks, §6.1). The model and link checks happen right after pairing (from `info`), before Wi-Fi. Wi-Fi failures say why when the frame knows (wrong password / network not found / other), plus "The frame joined Home but couldn't reach the internet." Finishing has three rows (Joining Home, Linking to Kitchen, Getting photos); the end is "Kitchen is connected" + "It shows a photo in a moment. Photos you add appear at its next check, or press its green button to check now." The frame screen shows **Connect the frame** under "Not connected yet" (owner), and hides the green-button hint until a frame is connected. Settings → The frame: **Connect new hardware** and **Disconnect** (confirm: "It clears its photos and settings at its next check. The photos stay in Kitchen, ready for new hardware."), or **Connect the frame**. "Open settings" for a refused Bluetooth permission exists on iOS and macOS only (Android asks again on Try again). Connect with a code waits for the claim (a new `hw_id`, or the same one checking in again). To try it on a phone before the firmware: `tools/ble_frame`.
 
 ---
 
@@ -396,7 +389,7 @@ Both go through the contract first (CLAUDE.md rule).
 
 | Screen | Loading | Empty | Error |
 |---|---|---|---|
-| Welcome | – | – | – |
+| Welcome (sign in first) | "Looking for your frames…" | "No frames yet" + I've been invited / Set up a frame | sign-in failed; couldn't look (offline, asleep) + Try again |
 | Join (invite, sign-in, name) | spinner on buttons | – | invalid invite; sign-in failed; network |
 | Set up a frame | per-step spinner | – | per-step error + retry; 2-frame limit; consent cancelled |
 | Home | skeleton cards | "No frames yet" | offline banner; per-card asleep / not checked in |

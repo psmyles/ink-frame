@@ -1,11 +1,16 @@
 // Text at 200 % (app-flow §8.3): the main screens lay out without overflowing at
 // phone size. An overflow fails the test.
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ink_frame/data/frame_connection.dart';
+import 'package:ink_frame/data/secure_store.dart';
 import 'package:ink_frame/features/settings/settings_screen.dart';
 import 'package:ink_frame/features/welcome/welcome_screen.dart';
 import 'package:ink_frame/l10n/app_localizations.dart';
+import 'package:ink_frame/state/providers.dart';
 import 'package:ink_frame/theme/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
 import '../unit/fake_bluetooth.dart';
 import 'connect_frame_test.dart' as connect;
@@ -30,20 +35,31 @@ void main() {
     }
   }
 
-  testWidgets('Welcome', (tester) async {
-    bigText(tester);
-    tester.view.physicalSize = const Size(420, 860);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(
-      theme: InkTheme.light(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const WelcomeScreen(),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.text("I've been invited"), findsOneWidget);
-  });
+  for (final signedIn in [false, true]) {
+    testWidgets(signedIn ? 'Welcome, signed in with no frames' : 'Welcome', (tester) async {
+      bigText(tester);
+      tester.view.physicalSize = const Size(420, 860);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final container = ProviderContainer(overrides: [storeProvider.overrideWithValue(MemoryStore())]);
+      addTearDown(container.dispose);
+      if (signedIn) {
+        container.read(lastCredentialProvider.notifier).set(const IdTokenCredential(provider: OAuthProvider.google, idToken: 't'));
+      }
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: InkTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const WelcomeScreen(),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      await scrollAll(tester);
+      expect(find.text(signedIn ? "I've been invited" : 'Continue with Google'), findsOneWidget);
+    });
+  }
 
   testWidgets('Home with a frame and the "more frames" card', (tester) async {
     bigText(tester);
@@ -77,12 +93,16 @@ void main() {
     await scrollAll(tester);
   });
 
-  testWidgets('Connect the frame: get ready, then Wi-Fi', (tester) async {
+  testWidgets('Connect the frame: get ready, is this your frame, then Wi-Fi', (tester) async {
     bigText(tester);
     await connect.open(tester, FakeBluetooth());
     expect(find.text('Get the frame ready'), findsOneWidget);
     await tester.ensureVisible(find.text('Find the frame'));
-    await connect.findAndPair(tester);
+    await connect.findFrames(tester);
+    expect(find.text('Is this your frame?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Yes, connect'));
+    await tester.tap(find.text('Yes, connect'));
+    await connect.run(tester);
     expect(find.text('Which Wi-Fi should the frame use?'), findsOneWidget);
     await scrollAll(tester);
   });

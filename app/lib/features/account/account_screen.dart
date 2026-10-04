@@ -59,6 +59,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       ),
     );
     if (ok != true) return;
+    _forgetSignIn();
     unawaited(ref.read(frameDirectoryProvider).signOut());
     await ref.read(framesProvider.notifier).signOutAll();
     if (mounted) context.go('/welcome');
@@ -145,8 +146,16 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     if (failed.isNotEmpty) {
       _snack(l.deleteFailed(failed.join(', ')));
     } else if ((ref.read(framesProvider).value ?? []).isEmpty) {
+      _forgetSignIn();
       context.go('/welcome');
     }
+  }
+
+  /// Welcome then asks to sign in again, instead of offering to set up or join with
+  /// the account just signed out of.
+  void _forgetSignIn() {
+    ref.read(lastCredentialProvider.notifier).clear();
+    unawaited(ref.read(signInServiceProvider).signOut());
   }
 
   void _versionTap() {

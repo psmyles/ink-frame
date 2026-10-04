@@ -26,12 +26,15 @@ import '../unit/fake_directory.dart';
 import '../unit/frame_directory_test.dart' show google;
 import 'fake_frame_api.dart';
 import 'frame_screen_test.dart' show alice, kitchen, priya;
+import 'join_screen_test.dart' show FakeSignIn;
 
 const grandma = FrameAddress('https://bbbbbbbbbbbbbbbbbbbb.supabase.co', 'sb_publishable_bbbbbbbbbbbb');
 const aliceOwner = Member(userId: 'alice', role: Role.owner, displayName: 'Alice');
 
 /// Management API calls made (owner tools); answers 200.
 final platformCalls = <String>[];
+
+late FakeSignIn signIn;
 
 /// Alice on Kitchen (Priya's) and on Grandma's (hers if [ownsGrandma], else Priya's).
 Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {bool ownsGrandma = false, FakeDirectoryServer? server}) async {
@@ -61,6 +64,7 @@ Future<(FakeFrameApi, FakeFrameApi, MemoryStore)> open(WidgetTester tester, {boo
       frameViewProvider(grandma).overrideWith((ref) async => ownsGrandma ? g.view(aliceOwner, aliceOwner) : g.view(alice, priya)),
       memberNamesProvider.overrideWith((ref, a) async => const {}),
       frameDirectoryProvider.overrideWithValue(directory),
+      signInServiceProvider.overrideWithValue(signIn = FakeSignIn('alice')),
       platformConnectedProvider.overrideWith((ref) async => true),
       provisionerProvider.overrideWith((ref) async => Provisioner(
             PlatformApi(() async => 'token', httpClient: MockClient((req) async {
@@ -106,7 +110,7 @@ void main() {
     await tester.tap(find.text('Use on another device'));
     await tester.pumpAndSettle();
     expect(find.byType(QrImageView), findsOneWidget);
-    expect(find.textContaining('Already use Ink Frame? Sign in'), findsOneWidget);
+    expect(find.textContaining('sign in with the same account'), findsOneWidget);
     await tester.tap(find.text('Copy link'));
     await tester.pumpAndSettle();
     final link = FrameLink.parse(copied!)!;
@@ -141,6 +145,8 @@ void main() {
   testWidgets('signing out forgets the frames on this device, not on your list', (tester) async {
     final server = FakeDirectoryServer()..accounts['alice'] = [kitchen, grandma];
     final (_, _, store) = await open(tester, server: server);
+    final container = ProviderScope.containerOf(tester.element(find.byType(AccountScreen)));
+    container.read(lastCredentialProvider.notifier).set(google('alice'));
     await tester.scrollUntilVisible(find.text('Sign out'), 100);
     await tester.tap(find.text('Sign out'));
     await tester.pumpAndSettle();
@@ -150,6 +156,9 @@ void main() {
     expect(server.calls.last, 'POST /sign-out');
     expect(server.tokens, isEmpty);
     expect(server.accounts['alice'], [kitchen, grandma]);
+    // Welcome asks to sign in again, and Google asks which account.
+    expect(container.read(lastCredentialProvider), isNull);
+    expect(signIn.signedOut, 1);
   });
 
   testWidgets("deleting your account also deletes the frames you set up", (tester) async {

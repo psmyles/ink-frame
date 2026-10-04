@@ -108,13 +108,15 @@ class _Screen extends StatelessWidget {
     final theme = Theme.of(context);
     final Widget content;
     if (frame.advertising) {
+      // Like the real frame's PAIRING screen: XXXX large (the app asks you to match
+      // it), then the code the phone asks for.
+      final big = theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 4);
       content = Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(frame.name, style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(
-          '${frame.passkey.substring(0, 3)} ${frame.passkey.substring(3)}',
-          style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 4),
-        ),
+        Text(frame.suffix, style: big),
+        const SizedBox(height: 16),
+        Text('Code', style: theme.textTheme.labelLarge),
+        Text('${frame.passkey.substring(0, 3)} ${frame.passkey.substring(3)}', style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         const Text('Open Ink Frame on your phone → Connect the frame'),
         if (frame.central != null) const Padding(padding: EdgeInsets.only(top: 8), child: Text('Phone connected')),

@@ -38,15 +38,30 @@ class SignInService {
 
   bool _googleReady = false;
 
+  Future<void> _initGoogle() async {
+    if (_googleReady) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: _apple ? AppConfig.googleIosClientId : null,
+      serverClientId: AppConfig.googleWebClientId.isEmpty ? null : AppConfig.googleWebClientId,
+    );
+    _googleReady = true;
+  }
+
+  /// Forgets the Google account chosen last, so the next sign-in asks which one
+  /// (signing out, or "Use a different account").
+  Future<void> signOut() async {
+    if (_desktopBrowser || !_googleConfigured) return;
+    try {
+      await _initGoogle();
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {
+      // Nothing to forget.
+    }
+  }
+
   Future<IdTokenCredential> google() async {
     if (_desktopBrowser) return _googleLoopback();
-    if (!_googleReady) {
-      await GoogleSignIn.instance.initialize(
-        clientId: _apple ? AppConfig.googleIosClientId : null,
-        serverClientId: AppConfig.googleWebClientId.isEmpty ? null : AppConfig.googleWebClientId,
-      );
-      _googleReady = true;
-    }
+    await _initGoogle();
     try {
       final account = await GoogleSignIn.instance.authenticate();
       final idToken = account.authentication.idToken;

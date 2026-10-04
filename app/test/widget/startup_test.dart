@@ -50,11 +50,11 @@ void main() {
   testWidgets('signed in: "Loading your frames…", never "no frames" or sign-in buttons', (tester) async {
     await start(tester, SlowStore()..values.addAll(await kitchenOnDevice()));
     expect(find.text('No frames yet'), findsNothing);
-    expect(find.text("I've been invited"), findsNothing);
+    expect(find.text('Continue with Google'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Loading your frames…'), findsOneWidget);
-    expect(find.text("I've been invited"), findsNothing);
+    expect(find.text('Continue with Google'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 300));
@@ -71,11 +71,12 @@ void main() {
     expect(find.text('Loading your frames…'), findsNothing);
   });
 
-  testWidgets('no frames on this device: Welcome', (tester) async {
+  testWidgets('no frames on this device: Welcome, which starts with signing in', (tester) async {
     await start(tester, SlowStore());
     await tester.pump(const Duration(milliseconds: 1100));
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text("I've been invited"), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text("I've been invited"), findsNothing);
     await tester.pump(const Duration(seconds: 2)); // the slow store's last reads
   });
 

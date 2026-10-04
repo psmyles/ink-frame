@@ -39,6 +39,7 @@ class ConnectState {
   const ConnectState({
     this.step = ConnectStep.ready,
     this.found = const [],
+    this.target,
     this.info,
     this.networks = const [],
     this.scanningWifi = false,
@@ -54,6 +55,9 @@ class ConnectState {
 
   /// Frames seen while finding, by their `XXXX`.
   final List<FoundFrame> found;
+
+  /// The frame chosen (its `XXXX` matched the frame's screen), once connecting.
+  final FoundFrame? target;
 
   /// The connected hardware's `info`, once paired.
   final FrameInfo? info;
@@ -82,6 +86,7 @@ class ConnectState {
   ConnectState copyWith({
     ConnectStep? step,
     List<FoundFrame>? found,
+    FoundFrame? target,
     FrameInfo? info,
     List<WifiNetwork>? networks,
     bool? scanningWifi,
@@ -93,6 +98,7 @@ class ConnectState {
       ConnectState(
         step: step ?? this.step,
         found: found ?? this.found,
+        target: target ?? this.target,
         info: info ?? this.info,
         networks: networks ?? this.networks,
         scanningWifi: scanningWifi ?? this.scanningWifi,
@@ -108,6 +114,7 @@ class ConnectState {
   ConnectState withProblem(ConnectProblem? problem, {String? reason, String? detail}) => ConnectState(
         step: step,
         found: found,
+        target: target,
         info: info,
         networks: networks,
         scanningWifi: scanningWifi,
@@ -133,7 +140,9 @@ class ConnectFrame extends Notifier<ConnectState> {
   static const quietLimit = Duration(seconds: 45);
   static const syncLimit = Duration(minutes: 3);
 
-  /// Finding gives up after this; with one frame found it connects after [settle].
+  /// Finding gives up after this. Once a frame is found, the ones seen within
+  /// [settle] are offered: you match one's `XXXX` with the frame's screen, even when
+  /// it's the only one (a neighbour's frame in PAIRING would otherwise be taken).
   static const findLimit = Duration(seconds: 30);
   static const scanLimit = Duration(seconds: 20);
   static const settle = Duration(seconds: 2);
@@ -197,15 +206,7 @@ class ConnectFrame extends Notifier<ConnectState> {
         // The name can come later than the first sighting (scan response).
         found[f.id] = f.name.isEmpty && found[f.id] != null ? found[f.id]! : f;
         _emit(state.copyWith(found: sorted()));
-        if (first) {
-          _settleTimer = Timer(settle, () {
-            if (found.length == 1) {
-              choose(found.values.single);
-            } else {
-              _emit(state.copyWith(step: ConnectStep.choose));
-            }
-          });
-        }
+        if (first) _settleTimer = Timer(settle, () => _emit(state.copyWith(step: ConnectStep.choose)));
       },
       onError: (Object e) async {
         await _stopScan();
@@ -225,12 +226,13 @@ class ConnectFrame extends Notifier<ConnectState> {
 
   // ── Pair ──
 
-  /// Connects to [frame]; the OS asks for the code on the frame's screen.
+  /// Connects to [frame], whose `XXXX` you matched with the frame's screen; the OS
+  /// asks for the code on the frame's screen.
   Future<void> choose(FoundFrame frame) async {
     await _stopScan();
     await _closeLink();
     _target = frame;
-    _emit(ConnectState(step: ConnectStep.pairing, found: state.found));
+    _emit(ConnectState(step: ConnectStep.pairing, found: state.found, target: frame));
     try {
       final link = await _bt.connect(frame);
       if (!ref.mounted) {

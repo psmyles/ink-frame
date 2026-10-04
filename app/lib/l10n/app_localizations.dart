@@ -118,12 +118,6 @@ abstract class AppLocalizations {
   /// **'Set up a frame'**
   String get setUpFrame;
 
-  /// No description provided for @alreadyUse.
-  ///
-  /// In en, this message translates to:
-  /// **'Already use Ink Frame? Sign in'**
-  String get alreadyUse;
-
   /// No description provided for @joinWithInvite.
   ///
   /// In en, this message translates to:
@@ -208,23 +202,23 @@ abstract class AppLocalizations {
   /// **'Your account is only used to recognise you, and to find your frames when you sign in on a new device.'**
   String get signInExplain;
 
-  /// No description provided for @findExplain.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in with the account you used before, and your frames will appear.'**
-  String get findExplain;
-
   /// No description provided for @findingFrames.
   ///
   /// In en, this message translates to:
   /// **'Looking for your frames…'**
   String get findingFrames;
 
-  /// No description provided for @noFramesFound.
+  /// No description provided for @noFramesOnAccount.
   ///
   /// In en, this message translates to:
-  /// **'No frames found for this account. If you used a different account before, try that one, or ask someone on your frame for an invite.'**
-  String get noFramesFound;
+  /// **'There are no frames on this account yet. Set up your own frame, or join one with the invite you were sent. If you used a different account before, try that one.'**
+  String get noFramesOnAccount;
+
+  /// No description provided for @differentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different account'**
+  String get differentAccount;
 
   /// No description provided for @findOffline.
   ///
@@ -237,12 +231,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t look for your frames. Try again, or use a link or QR code.'**
   String get findFailed;
-
-  /// No description provided for @useLinkInstead.
-  ///
-  /// In en, this message translates to:
-  /// **'Use a link or QR code instead'**
-  String get useLinkInstead;
 
   /// No description provided for @continueWithGoogle.
   ///
@@ -1759,7 +1747,7 @@ abstract class AppLocalizations {
   /// No description provided for @anotherDeviceExplain.
   ///
   /// In en, this message translates to:
-  /// **'On your other phone or computer, choose “Already use Ink Frame? Sign in” and use the same account: your frames come back by themselves. If they don\'t, choose “Use a link or QR code instead” there and scan this.'**
+  /// **'On your other phone or computer, sign in with the same account: your frames come back by themselves. If they don\'t, choose “I\'ve been invited” there and scan this.'**
   String get anotherDeviceExplain;
 
   /// No description provided for @deleteAccount.
@@ -1903,8 +1891,44 @@ abstract class AppLocalizations {
   /// No description provided for @whichFrameHint.
   ///
   /// In en, this message translates to:
-  /// **'Pick the name shown on the frame\'s screen.'**
+  /// **'Pick the one whose 4 characters match the frame\'s screen.'**
   String get whichFrameHint;
+
+  /// No description provided for @isThisYourFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this your frame?'**
+  String get isThisYourFrame;
+
+  /// No description provided for @matchFrameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the frame\'s screen shows the same 4 characters.'**
+  String get matchFrameHint;
+
+  /// No description provided for @yesConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, connect'**
+  String get yesConnect;
+
+  /// No description provided for @notThisOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Not this one? Look again'**
+  String get notThisOne;
+
+  /// No description provided for @pairingNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {name}…'**
+  String pairingNamed(String name);
+
+  /// No description provided for @connectedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to {name}'**
+  String connectedTo(String name);
 
   /// No description provided for @pairingTitle.
   ///

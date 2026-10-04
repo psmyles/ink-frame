@@ -165,7 +165,9 @@ class SetupController extends AsyncNotifier<SetupState> {
       await step(SetupStep.auth, (r) => p.configureSignIn(r, keepEmail: keepEmail));
       await step(SetupStep.describe, (r) => p.describeFrame(r, name: plan!.name, modelId: plan!.modelId, timezone: plan!.timezone));
 
-      final c = credential ?? ref.read(lastCredentialProvider.notifier).fresh;
+      // A dev-mode email sign-in only works where email sign-in was kept.
+      final fresh = ref.read(lastCredentialProvider.notifier).fresh;
+      final c = credential ?? (fresh is PasswordCredential && !keepEmail ? null : fresh);
       if (c == null) {
         state = AsyncData(SetupState(plan: plan, needsSignIn: true));
         return;
