@@ -10,6 +10,7 @@
 #include "core/manifest.h"
 #include "core/schedule.h"
 #include "display/display.h"
+#include "net/ota.h"
 #include "net/sync.h"
 #include "net/wifi.h"
 #include "power/power.h"
@@ -29,6 +30,9 @@ RTC_DATA_ATTR static char rtcLastId[40] = {0};
 
 #ifndef INKFRAME_CONSOLE
 #define INKFRAME_CONSOLE 1  // the serial console (developer builds; README.md)
+#endif
+#ifndef INKFRAME_AUTO_UPDATE
+#define INKFRAME_AUTO_UPDATE 0  // firmware updates from the feed (release builds; docs/ota.md)
 #endif
 
 static const uint32_t kConsoleIdleMs = 10 * 60000;
@@ -87,6 +91,9 @@ static bool showNext(const Config& cfg, bool previous, int battery) {
 void setup() {
   Serial.setRxBufferSize(4096);  // room for the console's `show` transfers
   Serial.begin(115200);
+#ifdef INKFRAME_TEST_CRASH
+  abort();  // a firmware that never starts, for trying the rollback (docs/ota.md)
+#endif
   pinMode(GREEN_BUTTON, INPUT_PULLUP);
   pinMode(WHITE_BUTTON_RIGHT, INPUT_PULLUP);
   pinMode(WHITE_BUTTON_LEFT, INPUT_PULLUP);
@@ -112,6 +119,11 @@ void setup() {
     }
   }
   if (wake == power::Wake::white) previous = power::leftWhiteHeld();
+
+  // A new firmware's first start: check for photos straight away, and keep it only if
+  // that works (docs/ota.md).
+  const bool trial = ota::beginTrial();
+  if (trial) forced = true;
 
   const int battery = power::batteryPercent();
   card::mount();
@@ -146,14 +158,35 @@ void setup() {
   // ── Check for new photos ──
   schedule::Now t = now();
   const bool due = forced || !t.timeKnown || t.epoch >= nextSyncAt(cfg);
+  bool decided = !trial;
   if (due && cfg.hasWifi()) {
     rtcLastAttemptAt = t.epoch;
     photos::Result result = photos::Result::failed;
-    if (wifi::connect(cfg.ssid, cfg.password) == wifi::Join::ok) {
-      photos::Report report;
-      result = photos::sync(cfg, battery, false, report);
+    // A trial gets a second go: the network worked moments ago, before the restart.
+    for (int attempt = 0; attempt < (trial ? 2 : 1) && result == photos::Result::failed; attempt++) {
+      if (attempt > 0) delay(10000);
+      if (wifi::connect(cfg.ssid, cfg.password) == wifi::Join::ok) {
+        photos::Report report;
+        result = photos::sync(cfg, battery, false, report);
+#if INKFRAME_AUTO_UPDATE
+        if (result == photos::Result::ok && !trial && (forced || ota::due(now().epoch))) {
+          const ota::Result update = ota::check(FIRMWARE_FEED_URL, battery);
+          ota::markChecked(now().epoch);
+          if (update.installed) {
+            wifi::off();
+            card::unmount();
+            ESP.restart();  // into the new firmware's trial
+          }
+        }
+#endif
+      }
+      wifi::off();
     }
-    wifi::off();
+    if (trial) {
+      // Removed from its album is still a firmware that works.
+      result == photos::Result::failed ? ota::giveUp() : ota::keep();
+      decided = true;
+    }
     if (result == photos::Result::removed) {
       card::unmount();
       display::showRemoved();
@@ -163,6 +196,7 @@ void setup() {
     t = now();
     if (t.timeKnown) rtcLastAttemptAt = t.epoch;
   }
+  if (!decided) ota::keep();  // no Wi-Fi to try it with
 
   // ── Show ──
   const schedule::Settings& s = cfg.settings.schedule;

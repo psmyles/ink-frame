@@ -1,5 +1,7 @@
-# Publishes central/site/ (the /join and /oauth pages; later the firmware feed) to
-# GitHub Pages. Needs Settings → Pages → Source: "GitHub Actions".
+# Publishes central/site/ (the /join and /oauth pages) to GitHub Pages, with the
+# firmware feed: the newest fw-v* release's manifest and image under firmware/<model>/
+# (docs/ota.md; the Firmware workflow starts this after a release). Needs Settings →
+# Pages → Source: "GitHub Actions".
 name: Pages
 
 on:
@@ -28,6 +30,21 @@ jobs:
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
       - run: deno test central/tests/
+      - name: Firmware feed (the newest fw-v* release)
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          tag=$(gh release list --limit 50 --json tagName,isDraft,isPrerelease \
+            --jq '[.[] | select(.tagName | startswith("fw-v")) | select((.isDraft or .isPrerelease) | not)][0].tagName // empty')
+          if [ -z "$tag" ]; then echo "No firmware release yet"; exit 0; fi
+          mkdir -p release && gh release download "$tag" --dir release --pattern '*-manifest.json' --pattern '*.bin'
+          for m in release/*-manifest.json; do
+            model=$(basename "$m" -manifest.json)
+            v=$(jq -r .version "$m")
+            mkdir -p "central/site/firmware/$model"
+            cp "$m" "central/site/firmware/$model/manifest.json"
+            cp "release/$model-$v.bin" "central/site/firmware/$model/$v.bin"
+            echo "Feed: $model $v ($tag)"
+          done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: central/site }

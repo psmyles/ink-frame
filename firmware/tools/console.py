@@ -11,6 +11,8 @@ PlatformIO's Python, which has pyserial (README.md):
   console.py show image.png [--minutes 30]          draw a PNG as it is (calibration), then
                                                     sleep that long keeping it on screen
   console.py log [seconds]                          just the logs, after a reset
+  console.py ota [--feed URL]                       a firmware update now (docs/ota.md); after
+                                                    "installed", `log 90` shows its trial
 """
 import argparse
 import getpass
@@ -112,6 +114,8 @@ def main():
     shp = sub.add_parser("show")
     shp.add_argument("image")
     shp.add_argument("--minutes", type=int, default=30)
+    op = sub.add_parser("ota")
+    op.add_argument("--feed", help="a test feed (http:// allowed), else the real one")
     lp = sub.add_parser("log")
     lp.add_argument("seconds", nargs="?", type=float, default=20)
     a = p.parse_args()
@@ -134,6 +138,9 @@ def main():
         return run(a.port, {"cmd": "wifi_scan"}, lambda r: r.get("done"), 60, a.logs)
     if a.cmd == "sync":
         return run(a.port, {"cmd": "sync", "full": a.full}, lambda r: "sync" in r, 600, a.logs)
+    if a.cmd == "ota":
+        cmd = {"cmd": "ota", **({"feed": a.feed} if a.feed else {})}
+        return run(a.port, cmd, lambda r: "ota" in r, 300, a.logs)
     timeouts = {"erase_sd": 300}
     return run(a.port, {"cmd": a.cmd}, lambda r: True, timeouts.get(a.cmd, 30), a.logs)
 

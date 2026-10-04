@@ -1,0 +1,102 @@
+# Firmware (docs/ota.md). On pushes that touch it: the native tests, the signing tool's
+# tests and both builds. On a fw-v* tag (or by hand for an existing tag, e.g. to change
+# the rollout): a release build with that version, signed with the secret
+# FW_SIGNING_KEY, published as a GitHub release; then the Pages workflow puts the newest
+# release in the firmware feed.
+name: Firmware
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["firmware/**", "tools/firmware/**", ".github/workflows/firmware.yml"]
+    tags: ["fw-v*"]
+  pull_request:
+    paths: ["firmware/**", "tools/firmware/**", ".github/workflows/firmware.yml"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release to publish again, e.g. fw-v0.2.0"
+        required: true
+      rollout_percent:
+        description: "Share of frames that get it (0–100; 0 pauses it)"
+        default: "100"
+      min_battery_pct:
+        description: "Frames below this battery level wait"
+        default: "30"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/platformio.ini') }}
+      - run: pip install platformio==6.2.0
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: deno test tools/firmware/
+      - working-directory: firmware
+        run: |
+          pio test -e native
+          pio run -e reterminal_e1002 -e release
+
+  release:
+    # After a successful build on a tag; on its own when started by hand (build is skipped
+    # then, which would skip this too without !cancelled()).
+    needs: build
+    if: >-
+      ${{ !cancelled() && (github.event_name == 'workflow_dispatch' ||
+      (startsWith(github.ref, 'refs/tags/fw-v') && needs.build.result == 'success')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the release
+      actions: write # start the Pages workflow
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      ROLLOUT: ${{ inputs.rollout_percent || '100' }}
+      MIN_BATTERY: ${{ inputs.min_battery_pct || '30' }}
+      MODEL: reterminal-e1002
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ inputs.tag || github.ref }}" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/platformio.ini') }}
+      - run: pip install platformio==6.2.0
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - name: Build
+        working-directory: firmware
+        run: INKFRAME_FW_VERSION="${TAG#fw-v}" pio run -e release
+      - name: Sign
+        env:
+          FW_SIGNING_KEY: ${{ secrets.FW_SIGNING_KEY }}
+        run: >
+          deno run --allow-read --allow-write --allow-env tools/firmware/release.ts sign
+          --bin firmware/.pio/build/release/firmware.bin --version "${TAG#fw-v}" --model "$MODEL"
+          --rollout "$ROLLOUT" --min-battery "$MIN_BATTERY" --out feed
+      - name: Publish the release
+        run: |
+          v="${TAG#fw-v}"
+          cp "feed/$MODEL/manifest.json" "$MODEL-manifest.json"
+          cp "feed/$MODEL/$v.bin" "$MODEL-$v.bin"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$MODEL-manifest.json" "$MODEL-$v.bin" --clobber
+          else
+            gh release create "$TAG" "$MODEL-manifest.json" "$MODEL-$v.bin" --title "Firmware $v" \
+              --notes "Ink Frame firmware $v for the reTerminal E1002 (docs/ota.md). Frames install it from the feed by themselves."
+          fi
+      - name: Into the feed
+        run: gh workflow run pages.yml --ref main

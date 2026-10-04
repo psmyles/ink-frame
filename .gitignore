@@ -63,3 +63,6 @@ dist/
 
 # Calibration patterns and renders (regenerate with tools/calibration/make_patterns.py)
 tools/calibration/patterns/
+
+# The firmware signing key (tools/firmware/release.ts keygen; the GitHub secret FW_SIGNING_KEY)
+firmware/fw-signing-key.pem

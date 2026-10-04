@@ -39,11 +39,13 @@ void main() {
 
   test('random dither: noise averages out, strength 40', () {
     final pal = palettes['spectra6']!;
-    // A mid grey between palette colours: with noise, several colours appear;
-    // without it, only the nearest one.
+    // A colour 45 % of the way from green to white (whatever the calibration):
+    // with noise, both appear; without it, only the nearer one.
+    final (green, white) = (pal[3], pal[1]);
+    final colour = [for (var k = 0; k < 3; k++) (green[k] + 0.45 * (white[k] - green[k])).round()];
     final rgba = Uint8List(200 * 200 * 4);
     for (var i = 0; i < rgba.length; i += 4) {
-      rgba.setAll(i, [110, 118, 125, 255]);
+      rgba.setAll(i, [...colour, 255]);
     }
     final plain = quantize(rgba, 200, 200, pal).toSet();
     expect(plain.length, 1);

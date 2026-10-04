@@ -5,7 +5,8 @@ PLAN.md §9; the server side: `shared/api/openapi.yaml` (`device-api`); pairing:
 `docs/pairing.md`.
 
 The frame shows photos, checks for new ones and follows its settings (4a), and is set up
-from the app over Bluetooth (4b; docs/pairing.md). Updates over the air come in 4c.
+from the app over Bluetooth (4b; docs/pairing.md), and updates itself from a signed
+feed (4c; docs/ota.md).
 
 ## Build, flash, test
 
@@ -15,8 +16,14 @@ From `firmware/`, with the E1002 on USB-C and its power switch on:
 pio run                      # build
 pio run -t upload            # build and flash (about 40 s)
 pio device monitor           # logs (115200)
-pio test -e native           # unit tests on the computer (schedule, photo list)
+pio test -e native           # unit tests on the computer (schedule, photo list, updates)
+INKFRAME_FW_VERSION=0.2.0 pio run -e release   # a release build (docs/ota.md)
 ```
+
+Two builds: the **developer build** (`pio run`; version `0.1.0-dev`, or
+`INKFRAME_FW_VERSION`) has the serial console and never updates itself; the **release
+build** (`pio run -e release`, what the Firmware workflow publishes for a `fw-v*` tag) has
+no console and installs new releases from the feed after its checks for photos.
 
 ## Set it up
 
@@ -27,8 +34,8 @@ refused until a factory reset (green button 10 s).
 
 ### Over USB (developer builds)
 
-The serial console is compiled in while `INKFRAME_CONSOLE` is 1 (the default here; release
-builds will set it to 0, 4c). In setup it runs alongside Bluetooth. Opening the serial
+The serial console is compiled in while `INKFRAME_CONSOLE` is 1 (developer builds; release
+builds set it to 0). In setup it runs alongside Bluetooth. Opening the serial
 port resets the frame, which then listens for a command for 1.5 s.
 `tools/console.py` does that. Run it with PlatformIO's Python, which has pyserial:
 
@@ -40,6 +47,7 @@ $PY tools/console.py provision --ssid Home --api-base-url https://<ref>.supabase
 $PY tools/console.py sync [--full] | erase_sd | reset
 $PY tools/console.py log 30        # just the logs, for 30 s after a reset
 $PY tools/console.py show picture.png [--minutes 30]   # draw an 800×480 PNG as it is, then sleep (tools/calibration)
+$PY tools/console.py ota [--feed http://<mac>:8765]   # a firmware update now (docs/ota.md)
 ```
 
 `provision` asks for the Wi-Fi password (or reads `WIFI_PASSWORD`). For a pairing token:
@@ -67,11 +75,11 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
 | | |
 |---|---|
 | `main.cpp` | the boot state machine (PLAN.md §9.4): every wake ends in deep sleep |
-| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next) |
+| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next), `firmware_update` (versions, rollout, the signed text, whether to install) |
 | `board/` | the E1002's pins; the SPI bus the display and card share |
 | `display/` | PNG decoding into a PSRAM frame buffer, photos and screens (GxEPD2) |
 | `storage/` | `sd_card` (mount, card states, format), `cache` (photos under `/cache`) |
-| `net/` | Wi-Fi and NTP, HTTPS with the built-in CA bundle, the sync and mirror |
+| `net/` | Wi-Fi and NTP, HTTPS with the built-in CA bundle, the sync and mirror, firmware updates (`ota`, the release keys in `ota_keys.h`) |
 | `config/` | what's kept in flash (NVS) |
 | `power/` | battery, wake reason, deep sleep |
 | `ble/` | Bluetooth for Connect the frame (NimBLE: advertising, LE Secure Connections with the code on screen, the four characteristics) |

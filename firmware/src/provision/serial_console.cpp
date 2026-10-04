@@ -4,6 +4,7 @@
 #include <SD.h>
 
 #include "display/display.h"
+#include "net/ota.h"
 #include "net/sync.h"
 #include "net/wifi.h"
 #include "power/power.h"
@@ -153,6 +154,24 @@ static Outcome handle(Config& cfg, String line, int batteryPct) {
       d["failed"] = r.failed;
     }
     reply(d);
+  } else if (cmd == "ota") {
+    // A firmware update now, whatever the rollout (docs/ota.md); "feed" for a test feed.
+    JsonDocument d;
+    if (!cfg.hasWifi() || wifi::connect(cfg.ssid, cfg.password) != wifi::Join::ok) {
+      d["ota"] = "no_wifi";
+      reply(d);
+    } else {
+      const ota::Result r = ota::check(req["feed"] | FIRMWARE_FEED_URL, batteryPct, true);
+      wifi::off();
+      d["ota"] = r.status;
+      if (r.version.length()) d["version"] = r.version;
+      reply(d);
+      if (r.installed) {
+        card::unmount();
+        Serial.flush();
+        ESP.restart();  // into the new firmware's trial
+      }
+    }
   } else if (cmd == "erase_sd") {
     JsonDocument d;
     d["erased"] = card::format();
