@@ -3,6 +3,7 @@
 #include <esp_sleep.h>
 
 #include "board/e1002.h"
+#include "core/battery.h"
 #include "display/display.h"
 #include "storage/sd_card.h"
 #include "util/log.h"
@@ -12,17 +13,20 @@ namespace power {
 int batteryPercent() {
   pinMode(BATTERY_ENABLE_PIN, OUTPUT);
   digitalWrite(BATTERY_ENABLE_PIN, HIGH);
+  analogSetPinAttenuation(BATTERY_ADC_PIN, ADC_11db);  // up to ~3.1 V; the pin sees ~2.1
   delay(50);
+  // analogReadMilliVolts applies this chip's factory ADC calibration (eFuse). The raw
+  // count × 3.3 V / 4095 that the reference used skips it and read low on the E1002: a
+  // full battery showed 74 %.
   uint32_t sum = 0;
   for (int i = 0; i < 16; i++) {
-    sum += analogRead(BATTERY_ADC_PIN);
+    sum += analogReadMilliVolts(BATTERY_ADC_PIN);
     delay(5);
   }
   digitalWrite(BATTERY_ENABLE_PIN, LOW);
-  const float volts = (sum / 16 / ADC_RESOLUTION) * ADC_REFERENCE_VOLTAGE * VOLTAGE_DIVIDER_RATIO;
-  int pct = static_cast<int>((volts - BATTERY_EMPTY_VOLTAGE) / (BATTERY_FULL_VOLTAGE - BATTERY_EMPTY_VOLTAGE) * 100.0f);
-  pct = constrain(pct, 0, 100);
-  LOGF("battery: %.2f V, %d %%\n", volts, pct);
+  const int mv = static_cast<int>(sum / 16 * BATTERY_DIVIDER_RATIO);
+  const int pct = battery::percentFromMillivolts(mv);
+  LOGF("battery: %d mV, %d %%\n", mv, pct);
   return pct;
 }
 

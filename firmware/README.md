@@ -78,7 +78,7 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
 | | |
 |---|---|
 | `main.cpp` | the boot state machine (PLAN.md §9.4): every wake ends in deep sleep |
-| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next), `firmware_update` (versions, rollout, the signed text, whether to install), `overlay` (the battery over a photo: bar or number, black or white digits) |
+| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next), `firmware_update` (versions, rollout, the signed text, whether to install), `overlay` (the battery over a photo: bar or number, black or white digits), `battery` (percent from the cell's voltage, along a Li-Po curve) |
 | `board/` | the E1002's pins; the SPI bus the display and card share |
 | `display/` | PNG decoding into a PSRAM frame buffer, photos and screens (GxEPD2) |
 | `storage/` | `sd_card` (mount, card states, format), `cache` (photos under `/cache`) |

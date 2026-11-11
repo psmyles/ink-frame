@@ -17,9 +17,11 @@
 #define SD_DET_PIN 15  // LOW = card inserted
 #define SD_EN_PIN 16   // power for the card slot
 
-// Battery
+// Battery: GPIO21 high connects a divider that halves the cell's voltage onto GPIO1.
+// Its voltage → percent is core/battery.
 #define BATTERY_ADC_PIN 1
 #define BATTERY_ENABLE_PIN 21
+#define BATTERY_DIVIDER_RATIO 2
 
 // Buttons (active LOW, internal pull-up)
 #define GREEN_BUTTON 3
@@ -28,9 +30,3 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 480
-
-#define BATTERY_FULL_VOLTAGE 4.2f
-#define BATTERY_EMPTY_VOLTAGE 3.0f
-#define VOLTAGE_DIVIDER_RATIO 2.0f
-#define ADC_REFERENCE_VOLTAGE 3.3f
-#define ADC_RESOLUTION 4095.0f
