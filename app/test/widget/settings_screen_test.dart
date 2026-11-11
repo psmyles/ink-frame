@@ -73,6 +73,33 @@ void main() {
     expect(api.calls, hasLength(1));
   });
 
+  testWidgets('the battery on the frame: a bar or a small number; it reaches the frame', (tester) async {
+    final api = await open(tester);
+    expect(find.text('Battery on the frame'), findsOneWidget);
+    expect(find.text('A thin line along the bottom, or a small number in the corner.'), findsOneWidget);
+    await tester.tap(find.text('Number'));
+    await tester.pumpAndSettle();
+    expect(api.calls, ['settings {battery_display: number}']);
+    expect(find.text('Saved · the frame gets it at its next check'), findsOneWidget);
+    final segments = tester.widget<SegmentedButton<String>>(
+        find.ancestor(of: find.text('Number'), matching: find.byType(SegmentedButton<String>)));
+    expect(segments.selected, {'number'});
+  });
+
+  testWidgets('a project without the update has no battery choice (it could not save)', (tester) async {
+    await pumpFrameScreen(
+      tester,
+      () => const SettingsScreen(address: kitchen),
+      address: kitchen,
+      me: priya,
+      owner: priya,
+      size: const Size(420, 2000),
+      api: FakeFrameApi(frame: frameJson()..remove('battery_display'), members: [priya]),
+    );
+    expect(find.text('Low battery warning'), findsOneWidget);
+    expect(find.text('Battery on the frame'), findsNothing);
+  });
+
   testWidgets('quiet hours: on with 22:00–07:00, then off', (tester) async {
     final api = await open(tester);
     await tester.tap(find.text('Quiet hours'));
@@ -132,6 +159,8 @@ void main() {
     expect(find.byType(Switch), findsNothing);
     expect(find.text('Shuffle'), findsOneWidget);
     expect(find.text('Off'), findsOneWidget); // quiet hours
+    expect(find.widgetWithText(ListTile, 'Battery on the frame'), findsOneWidget);
+    expect(find.text('Bar'), findsOneWidget);
     expect(api.calls, isEmpty);
   });
 

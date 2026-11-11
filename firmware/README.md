@@ -65,7 +65,10 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
 - **Green button:** press to check for new photos now; hold 3 s to set it up again;
   hold 10 s for a factory reset (Wi-Fi, link and photo cache cleared).
 - **White buttons:** the next photo (left: the previous one, when in order).
-- **Bottom row:** the battery bar; a short red mark at its left end after a failed check.
+- **Battery** (the album's setting, `battery_display`): a 1-pixel line along the bottom row,
+  black for the charge left and white for the rest, or a small "73%" in the bottom-left
+  corner, white over a dark part of the photo and black over a light one. After a failed
+  check, a small red mark: at the bar's left end, or a dot after the number.
 - **Screens:** set up (the frame's name, its 4 characters and the Bluetooth code, large;
   without the code once setup times out), Ready (no photos
   yet), not connected to an album (its album was deleted, or the frame was disconnected), no memory card, can't read the memory card.
@@ -75,7 +78,7 @@ SUPABASE_PROJECT_REF=<ref> deno run --allow-all tools/dev/usb-connect.ts remove
 | | |
 |---|---|
 | `main.cpp` | the boot state machine (PLAN.md §9.4): every wake ends in deep sleep |
-| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next), `firmware_update` (versions, rollout, the signed text, whether to install) |
+| `core/` | pure logic with unit tests: `schedule` (quiet hours, next wake, backoff), `manifest` (photo list, where photos live on the card, what fits, which photo next), `firmware_update` (versions, rollout, the signed text, whether to install), `overlay` (the battery over a photo: bar or number, black or white digits) |
 | `board/` | the E1002's pins; the SPI bus the display and card share |
 | `display/` | PNG decoding into a PSRAM frame buffer, photos and screens (GxEPD2) |
 | `storage/` | `sd_card` (mount, card states, format), `cache` (photos under `/cache`) |

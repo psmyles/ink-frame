@@ -271,6 +271,7 @@ Grouped (2026-10-04) as **Album** (name, storage), **The frame** (the hardware: 
 | Quiet hours | toggle + two time pickers | e.g. 22:00–07:00; "The frame won't change photos during these hours" |
 | Time zone | searchable list | defaults to the owner's phone; shown as "Europe/Berlin (CET)" |
 | Check for new photos | picker | 1 h … 2 days, **1 day**; hint: "More often uses more battery" |
+| Battery on the frame | segmented (owner); plain value (others) | **Bar** / Number; "A thin line along the bottom, or a small number in the corner." The bar is black for the charge left and white for the rest; the number is small, in the bottom-left corner, black or white to suit the photo. Reaches the frame at its next check. Added 2026-11-11; not shown for a project that hasn't had the update |
 | Low battery warning | picker | Off, 10 %, **20 %**, 30 %; "Shows a warning when the battery drops below this." App-only (the hardware never gets it), so it only says "Saved" and doesn't make the frame "Changes waiting". Notifications for it come in 3g (who gets them: decided then; default the owner) |
 | Notify me when it's low | switch (phones) | Per person and phone: on by default for the owner, off for others; "On this phone." Says why when it can't (warning off, notifications blocked, the frame needs an update). Built in 3g |
 | Frame model | read-only row + "Change" | changing warns "All N photos will be removed, because they were made for the <old> screen", then clears them |

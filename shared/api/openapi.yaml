@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Ink Frame frame-project API
-  version: 2.2.0
+  version: 2.3.0
   description: |
     Contract for the two Edge Functions deployed into every frame's Supabase project
     (PLAN.md §7.3, §7.4). **One project holds one frame.** The functions,
@@ -221,6 +221,7 @@ paths:
                   quiet_start: '22:00'
                   quiet_end: '07:00'
                   tz_posix: CET-1CEST,M3.5.0,M10.5.0/3
+                  battery_display: bar
                 images:
                   - id: 3f1c9a52-8d0e-4b7a-9c61-2a5e0f4d7b18
                     sha256: 9b74c9897bac770ffc029102a200c5de9b74c9897bac770ffc029102a200c5de
@@ -1043,6 +1044,14 @@ components:
     DisplayOrder:
       type: string
       enum: [random, sequential]
+    BatteryDisplay:
+      type: string
+      enum: [bar, number]
+      description: >-
+        How the frame shows its battery over a photo: `bar`, a 1-pixel line along the
+        bottom (black for the charge left, white for the rest), or `number`, a small
+        percentage in the bottom-left corner. Default `bar`. Since 2.3.0; a frame that
+        gets no value shows the bar.
     LocalTime:
       type: string
       pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
@@ -1054,7 +1063,7 @@ components:
 
     DeviceSettings:
       type: object
-      required: [image_interval_s, display_order, sync_interval_s, quiet_start, quiet_end, tz_posix]
+      required: [image_interval_s, display_order, sync_interval_s, quiet_start, quiet_end, tz_posix, battery_display]
       properties:
         image_interval_s: { type: integer }
         display_order: { $ref: '#/components/schemas/DisplayOrder' }
@@ -1064,6 +1073,7 @@ components:
         tz_posix:
           type: string
           description: POSIX TZ string for `setenv("TZ")`, derived from the IANA timezone.
+        battery_display: { $ref: '#/components/schemas/BatteryDisplay' }
 
     ManifestImage:
       type: object
@@ -1101,7 +1111,7 @@ components:
     Frame:
       type: object
       required: [id, name, model_id, connected, up_to_date, image_interval_s, display_order, sync_interval_s,
-                 quiet_start, quiet_end, timezone, low_battery_pct]
+                 quiet_start, quiet_end, timezone, low_battery_pct, battery_display]
       properties:
         id: { $ref: '#/components/schemas/Uuid' }
         name: { $ref: '#/components/schemas/FrameName' }
@@ -1145,6 +1155,7 @@ components:
             The app warns when `battery_pct` drops below this; `null` = no warning.
             App-only: not sent to the hardware, so changing it doesn't make the frame
             "Changes waiting". Default 20.
+        battery_display: { $ref: '#/components/schemas/BatteryDisplay' }
 
     FrameSettingsPatch:
       type: object
@@ -1173,6 +1184,7 @@ components:
           minimum: 5
           maximum: 50
           description: Battery warning level in percent; `null` turns the warning off.
+        battery_display: { $ref: '#/components/schemas/BatteryDisplay' }
 
     UsageEntry:
       type: object

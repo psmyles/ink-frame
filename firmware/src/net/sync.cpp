@@ -20,6 +20,7 @@ static FrameSettings parseSettings(JsonVariantConst s) {
   f.schedule.quietEnd = schedule::parseHhmm(s["quiet_end"] | static_cast<const char*>(nullptr));
   f.sequential = String(s["display_order"] | "random") == "sequential";
   f.tzPosix = s["tz_posix"] | "UTC0";
+  f.battery = overlay::parseBattery(s["battery_display"] | static_cast<const char*>(nullptr));
   return f;
 }
 

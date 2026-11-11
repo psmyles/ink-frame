@@ -92,7 +92,7 @@ static void show(size_t bytes) {
   free(buf);
   if (ok) {
     card::unmount();  // the display has the bus to itself while it refreshes
-    display::showPhoto(-1, false);
+    display::showPhoto(-1, overlay::Battery::bar, false);
     card::mount();
   }
   d["shown"] = ok;

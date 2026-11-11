@@ -921,6 +921,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkMoreOftenHint => 'More often uses more battery.';
 
   @override
+  String get batteryOnFrame => 'Battery on the frame';
+
+  @override
+  String get batteryOnFrameHint =>
+      'A thin line along the bottom, or a small number in the corner.';
+
+  @override
+  String get batteryBar => 'Bar';
+
+  @override
+  String get batteryNumber => 'Number';
+
+  @override
   String get lowBatteryWarning => 'Low battery warning';
 
   @override

@@ -3,12 +3,14 @@
 #pragma once
 #include <Arduino.h>
 
+#include "core/overlay.h"
 #include "core/schedule.h"
 
 struct FrameSettings {
   schedule::Settings schedule;
   bool sequential = false;
   String tzPosix = "UTC0";
+  overlay::Battery battery = overlay::Battery::bar;
 };
 
 struct Config {

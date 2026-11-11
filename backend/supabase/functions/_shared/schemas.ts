@@ -12,6 +12,7 @@ export const FrameName = z.string().trim().min(1).max(40);
 export const DisplayName = z.string().trim().min(1).max(40);
 export const LocalTime = z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/);
 export const DisplayOrder = z.enum(["random", "sequential"]);
+export const BatteryDisplay = z.enum(["bar", "number"]);
 export const Timezone = z.string().max(64);
 
 export const MAX_IMAGE_BYTES = 524288;

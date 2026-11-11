@@ -114,7 +114,7 @@ Deno.test({
         assertEquals(s.body.images, []);
         assertEquals(s.body.settings, {
           image_interval_s: 14400, display_order: "random", sync_interval_s: 86400,
-          quiet_start: null, quiet_end: null, tz_posix: "CET-1CEST,M3.5.0,M10.5.0/3",
+          quiet_start: null, quiet_end: null, tz_posix: "CET-1CEST,M3.5.0,M10.5.0/3", battery_display: "bar",
         });
         assert(Math.abs(s.body.server_time - Date.now() / 1000) < 120);
         version = s.body.manifest_version;
@@ -359,6 +359,18 @@ Deno.test({
         expectError(await patch(B.token, { low_battery_pct: 10 }), 403, "not_owner");
         const row = await B.db.from("frame").select("low_battery_pct").single();
         assertEquals(row.data?.low_battery_pct, null, "members read it directly");
+
+        // How the frame shows its battery reaches the hardware, so it is "Changes waiting".
+        const d = await patch(A.token, { battery_display: "number" });
+        assertEquals(d.status, 200, JSON.stringify(d.body));
+        assertEquals([d.body.battery_display, d.body.up_to_date], ["number", false]);
+        assertEquals((await sync(device.secret, version, imageIds)).body.settings.battery_display, "number");
+        assertEquals(await upToDate(), true);
+        expectError(await patch(A.token, { battery_display: "pie" }), 400, "invalid_request");
+        expectError(await patch(B.token, { battery_display: "bar" }), 403, "not_owner");
+        const shown = await B.db.from("frame").select("battery_display").single();
+        assertEquals(shown.data?.battery_display, "number", "members read it directly");
+        assertEquals((await patch(A.token, { battery_display: "bar" })).body.battery_display, "bar");
       });
 
       await t.step("rename; usage", async () => {

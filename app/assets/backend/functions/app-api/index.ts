@@ -9,6 +9,7 @@ import { base64url, normalizeCode, randomBytes, randomCode, sha256Hex } from "..
 import { admin, BUCKET, removeObjects, rpc } from "../_shared/db.ts";
 import { ApiError, bearer, body, check, errorResponse, fail } from "../_shared/http.ts";
 import {
+  BatteryDisplay,
   DisplayName,
   DisplayOrder,
   FrameName,
@@ -98,6 +99,7 @@ const SettingsPatch = z.strictObject({
   quiet_end: LocalTime.nullable(),
   timezone: Timezone,
   low_battery_pct: z.int().min(5).max(50).nullable(),
+  battery_display: BatteryDisplay,
 }).partial().refine((o) => Object.keys(o).length > 0, "Send at least one setting.");
 
 app.patch("/frame/settings", async (c) => {

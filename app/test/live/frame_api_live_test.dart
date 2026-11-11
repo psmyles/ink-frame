@@ -50,6 +50,11 @@ void main() {
     expect((f.imageIntervalS, f.quietStart, f.quietEnd), (7200, '22:30', '06:45'));
     f = await owner.updateSettings({'low_battery_pct': 30});
     expect(f.lowBatteryPct, 30);
+    expect(f.batteryDisplay, 'bar');
+    f = await owner.updateSettings({'battery_display': 'number'});
+    expect(f.batteryDisplay, 'number');
+    f = await owner.updateSettings({'battery_display': 'bar'});
+    expect(f.batteryDisplay, 'bar');
     f = await owner.updateSettings({'low_battery_pct': null, 'quiet_start': null, 'quiet_end': null, 'image_interval_s': 14400});
     expect((f.lowBatteryPct, f.hasQuietHours), (null, false));
     expect((await owner.rename('Hallway')).name, 'Hallway');

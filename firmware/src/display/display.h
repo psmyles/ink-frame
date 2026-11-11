@@ -3,13 +3,16 @@
 #pragma once
 #include <Arduino.h>
 
+#include "core/overlay.h"
+
 namespace display {
 
 // Decodes a PNG from the card into the PSRAM frame buffer (the card must be mounted).
 bool decodePhoto(const char* path);
-// Draws the decoded photo, with the battery bar along the bottom (none if batteryPct is
-// negative) and, after a failed check, a small red mark at its left end.
-void showPhoto(int batteryPct, bool checkFailed);
+// Draws the decoded photo with the battery over it (none if batteryPct is negative): a
+// black and white line along the bottom, or a small number in the bottom-left corner.
+// After a failed check, a small red mark: at the bar's left end, or after the number.
+void showPhoto(int batteryPct, overlay::Battery battery, bool checkFailed);
 
 // The frame's own screens. Each is drawn only if it isn't already showing.
 // Setup (PAIRING): the name, its 4 characters and the Bluetooth code, large.

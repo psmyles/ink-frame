@@ -28,6 +28,7 @@ Config load() {
   c.settings.schedule.quietEnd = p.getInt("q_end", -1);
   c.settings.sequential = p.getBool("seq", false);
   c.settings.tzPosix = str(p, "tz", "UTC0");
+  c.settings.battery = p.getUChar("batt", 0) == 1 ? overlay::Battery::number : overlay::Battery::bar;
   p.end();
   return c;
 }
@@ -65,13 +66,14 @@ void saveSync(int64_t manifestVersion, int64_t lastSyncAt, const FrameSettings& 
   p.putInt("q_end", s.schedule.quietEnd);
   p.putBool("seq", s.sequential);
   p.putString("tz", s.tzPosix);
+  p.putUChar("batt", static_cast<uint8_t>(s.battery));
   p.end();
 }
 
 void forgetLink() {
   Preferences p;
   p.begin(kNs, false);
-  for (const char* k : {"api", "secret", "frame", "mver", "synced", "img_s", "sync_s", "q_start", "q_end", "seq", "tz"}) {
+  for (const char* k : {"api", "secret", "frame", "mver", "synced", "img_s", "sync_s", "q_start", "q_end", "seq", "tz", "batt"}) {
     p.remove(k);
   }
   p.end();

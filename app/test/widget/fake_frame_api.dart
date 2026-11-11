@@ -41,6 +41,7 @@ Map<String, dynamic> frameJson(
       'quiet_end': null,
       'timezone': 'Asia/Kolkata',
       'low_battery_pct': 20,
+      'battery_display': 'bar',
       ...?card,
     };
 

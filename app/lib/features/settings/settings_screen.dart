@@ -177,6 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final timezone = _v('timezone', f.timezone);
     final battery = _v('low_battery_pct', f.lowBatteryPct);
     String batteryLabel(int? v) => v == null ? l.off : l.percent(v);
+    final batteryDisplay = _v('battery_display', f.batteryDisplay);
     final (city, region) = timeZoneParts(timezone);
     // "Frame F7C4" (what its setup screen shows), then its software and battery.
     final suffix = f.hwSuffix;
@@ -333,6 +334,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               : null,
         ),
         _Section(l.sectionBattery),
+        // How the frame shows its battery over the photo. Not on a project that hasn't
+        // had the update yet (no `battery_display`): it couldn't save.
+        if (batteryDisplay != null && owner) ...[
+          ListTile(title: Text(l.batteryOnFrame), subtitle: Text(l.batteryOnFrameHint)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(value: 'bar', label: Text(l.batteryBar)),
+                  ButtonSegment(value: 'number', label: Text(l.batteryNumber)),
+                ],
+                selected: {batteryDisplay},
+                showSelectedIcon: false,
+                onSelectionChanged: (v) => _save({'battery_display': v.single}),
+              ),
+            ),
+          ),
+        ] else if (batteryDisplay != null)
+          ListTile(
+            title: Text(l.batteryOnFrame),
+            subtitle: Text(batteryDisplay == 'number' ? l.batteryNumber : l.batteryBar),
+          ),
         ListTile(
           title: Text(l.lowBatteryWarning),
           subtitle: Text('${batteryLabel(battery)} · ${l.lowBatteryHint}'),

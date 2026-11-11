@@ -143,7 +143,8 @@ void _printSettings(Frame frame) {
   if (s == null) return;
   final quiet = s['quiet_start'] == null ? 'off' : '${s['quiet_start']}–${s['quiet_end']}';
   stdout.writeln('settings     every ${s['image_interval_s']} s, ${s['display_order']}, '
-      'sync every ${s['sync_interval_s']} s, quiet $quiet, TZ ${s['tz_posix']}');
+      'sync every ${s['sync_interval_s']} s, quiet $quiet, TZ ${s['tz_posix']}, '
+      'battery ${s['battery_display'] ?? 'bar'}');
 }
 
 Never _usage(ArgParser parser, [String? error]) {

@@ -80,7 +80,7 @@ static bool showNext(const Config& cfg, bool previous, int battery) {
       rtcSequentialIndex = st.sequentialIndex;
       strlcpy(rtcLastId, st.lastId.c_str(), sizeof rtcLastId);
       card::unmount();  // the display has the bus to itself while it refreshes
-      display::showPhoto(battery, rtcFailures > 0);
+      display::showPhoto(battery, cfg.settings.battery, rtcFailures > 0);
       return true;
     }
   }

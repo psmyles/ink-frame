@@ -62,6 +62,11 @@ static const uint16_t PALETTE_TO_EPD[] = {GxEPD_BLACK, GxEPD_WHITE,  GxEPD_GREEN
                                           GxEPD_RED,   GxEPD_YELLOW, GxEPD_ORANGE};
 static const uint8_t PALETTE_RGB[][3] = {{0, 0, 0},   {255, 255, 255}, {0, 255, 0},  {0, 0, 255},
                                          {255, 0, 0}, {255, 255, 0},   {255, 128, 0}};
+// How bright each one looks on the panel (Rec. 601 luma of the spectra6 `color`s in
+// shared/presets.json; orange, which the app never sends, between red and yellow), and
+// halfway between its black and white: the battery number goes white below that.
+static const uint8_t PALETTE_BRIGHTNESS[] = {37, 202, 97, 73, 59, 177, 118};
+static const uint8_t kDarkBelow = 120;
 
 static uint8_t* s_frame = nullptr;  // one palette index per pixel, in PSRAM
 static PNG s_png;
@@ -140,9 +145,25 @@ bool decodePhoto(const char* path) {
   return rc == PNG_SUCCESS;
 }
 
-void showPhoto(int batteryPct, bool checkFailed) {
+// The battery number: the classic GFX font, whose digits and % are 5 × 7 pixels with a
+// 6-pixel advance (about 1.4 mm tall on this panel), so it reads up close but not from
+// across the room. Its digits' top-left, 4 pixels in from the corner.
+static const int kGlyphH = 7, kAdvance = 6, kInset = 4;
+static const int kNumberX = kInset, kNumberY = SCREEN_HEIGHT - kInset - kGlyphH;
+static const int kDot = 5, kDotGap = 2;  // the failed-check mark after it
+
+void showPhoto(int batteryPct, overlay::Battery battery, bool checkFailed) {
   begin();
   s_shown = kPhoto;
+  const bool asNumber = battery == overlay::Battery::number;
+  char number[8] = "";
+  if (asNumber && batteryPct >= 0) snprintf(number, sizeof number, "%d%%", batteryPct);
+  const int numberW = number[0] ? static_cast<int>(strlen(number)) * kAdvance - 1 : 0;
+  // White digits over a dark part of the photo, black over a light one (the photo just
+  // around them included).
+  const bool white = number[0] && overlay::darkUnder(s_frame, SCREEN_WIDTH, SCREEN_HEIGHT, kNumberX - 1, kNumberY - 1,
+                                                     numberW + 2, kGlyphH + 2, PALETTE_BRIGHTNESS,
+                                                     sizeof PALETTE_BRIGHTNESS, kDarkBelow);
   epd.setFullWindow();
   epd.firstPage();
   do {
@@ -153,14 +174,29 @@ void showPhoto(int batteryPct, bool checkFailed) {
         if (row[x] != PAL_WHITE) epd.drawPixel(x, y, PALETTE_TO_EPD[row[x]]);
       }
     }
-    // Battery bar: the bottom row, green for the charge left, red for the rest.
-    if (batteryPct >= 0) {
-      const int green = (SCREEN_WIDTH * batteryPct) / 100;
-      for (int x = 0; x < SCREEN_WIDTH; x++) epd.drawPixel(x, SCREEN_HEIGHT - 1, x < green ? GxEPD_GREEN : GxEPD_RED);
+    if (!asNumber) {
+      // The bar: the bottom row, black for the charge left, white for the rest; the
+      // failed-check mark over its left end.
+      if (batteryPct >= 0) {
+        const int left = overlay::barLength(SCREEN_WIDTH, batteryPct);
+        for (int x = 0; x < SCREEN_WIDTH; x++) epd.drawPixel(x, SCREEN_HEIGHT - 1, x < left ? GxEPD_BLACK : GxEPD_WHITE);
+      }
+      if (checkFailed) epd.fillRect(0, SCREEN_HEIGHT - 4, 24, 4, GxEPD_RED);
+    } else {
+      if (number[0]) {
+        epd.setFont(nullptr);
+        epd.setTextSize(1);
+        epd.setTextColor(white ? GxEPD_WHITE : GxEPD_BLACK);  // no background: the photo shows between
+        epd.setCursor(kNumberX, kNumberY);
+        epd.print(number);
+      }
+      // The failed-check mark: a small red dot just after the number, level with it.
+      if (checkFailed) {
+        epd.fillRect(number[0] ? kNumberX + numberW + kDotGap : kNumberX, kNumberY + 1, kDot, kDot, GxEPD_RED);
+      }
     }
-    if (checkFailed) epd.fillRect(0, SCREEN_HEIGHT - 4, 24, 4, GxEPD_RED);
   } while (epd.nextPage());
-  LOGLN("display: photo shown");
+  LOGF("display: photo shown (battery %s)\n", asNumber ? "number" : "bar");
 }
 
 // ── Screens ─────────────────────────────────────────────────────────────────────

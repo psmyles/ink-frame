@@ -1534,6 +1534,30 @@ abstract class AppLocalizations {
   /// **'More often uses more battery.'**
   String get checkMoreOftenHint;
 
+  /// No description provided for @batteryOnFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery on the frame'**
+  String get batteryOnFrame;
+
+  /// No description provided for @batteryOnFrameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A thin line along the bottom, or a small number in the corner.'**
+  String get batteryOnFrameHint;
+
+  /// No description provided for @batteryBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get batteryBar;
+
+  /// No description provided for @batteryNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get batteryNumber;
+
   /// No description provided for @lowBatteryWarning.
   ///
   /// In en, this message translates to:

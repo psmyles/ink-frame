@@ -21,6 +21,7 @@ class Frame {
     this.quietStart,
     this.quietEnd,
     this.lowBatteryPct = 20,
+    this.batteryDisplay = 'bar',
     this.hwId,
     this.sdTotalBytes,
     this.sdFreeBytes,
@@ -47,6 +48,11 @@ class Frame {
 
   /// Warn below this battery percentage; null = no warning (app-only setting).
   final int? lowBatteryPct;
+
+  /// How the frame shows its battery over a photo: `bar` (a thin line along the bottom)
+  /// or `number` (small, in the bottom-left corner). Null for a project from before
+  /// 0008, which can't change it (the frame shows the bar).
+  final String? batteryDisplay;
 
   /// The connected hardware's id (`public.frame` only; app-api leaves it out).
   final String? hwId;
@@ -99,6 +105,7 @@ class Frame {
         quietEnd: _hhmm(j['quiet_end']),
         // A project from before the battery warning (0005) has no column: the default.
         lowBatteryPct: j.containsKey('low_battery_pct') ? j['low_battery_pct'] as int? : 20,
+        batteryDisplay: j['battery_display'] as String?,
         hwId: j['hw_id'] as String?,
         sdTotalBytes: (j['sd_total_bytes'] as num?)?.toInt(),
         sdFreeBytes: (j['sd_free_bytes'] as num?)?.toInt(),
